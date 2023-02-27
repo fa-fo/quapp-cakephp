@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Model\Entity\Round;
-use Cake\I18n\FrozenTime;
 
 /**
  * Rounds Controller
@@ -15,11 +14,13 @@ class RoundsController extends AppController
 {
     public function all($includeStats = false, $year_id = false, $day_id = false)
     {
+        // only current day !!!
         $settings = $this->getSettings();
-        $year = $this->getCurrentYear();
+        $currentYear = $this->getCurrentYear()->toArray();
+        $day = $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd');
 
-        $year_id = $year_id ?: $year->id;
-        $day_id = $day_id ?: $this->getCurrentDayId();
+        $year_id = $year_id ?: $settings['currentYear_id'];
+        $day_id = $day_id ?: $settings['currentDay_id'];
 
         $year = array();
         $year['rounds'] = $this->Rounds->find('all', array(
@@ -55,7 +56,7 @@ class RoundsController extends AppController
                 $r['matchesWithResult'] = $query2->count();
             }
 
-            $r['timeStart'] = $r['timeStartDay' . $day_id];
+            $r['timeStart'] = $day . ' ' . $r['timeStartDay' . $day_id]->i18nFormat('HH:mm:ss');
             unset($r['timeStartDay' . $day_id]); // no need
         }
 
