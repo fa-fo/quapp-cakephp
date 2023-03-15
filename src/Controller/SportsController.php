@@ -21,7 +21,7 @@ class SportsController extends AppController
             'ssl_verify_peer_name' => false,
         ]);
 
-        $response = $http->get('https://modx.quattfo.de/api/getResource.php?id=16');
+        $response = $http->get('https://www.quattfo.de/api/getResource.php?id=16');
         $json = $response->getJson();
 
         $this->apiReturn($json);
