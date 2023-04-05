@@ -365,7 +365,7 @@ class AppController extends Controller
         $this->loadModel('MatcheventLogs');
         $query = $this->MatcheventLogs->find('all', array(
             'contain' => array(
-                'Matchevents' => array('fields' => array('code', 'name', 'playerFouledOutAfter', 'playerFoulSuspMinutes'))
+                'Matchevents' => array('fields' => array('code', 'name', 'playerFouledOutAfter', 'playerFoulSuspMinutes', 'showOnSportsOnly'))
             ),
             'conditions' => array('MatcheventLogs.match_id' => $match_id, 'MatcheventLogs.canceled' => 0),
             'order' => array('MatcheventLogs.id' => 'ASC')
@@ -395,6 +395,7 @@ class AppController extends Controller
             $calc['maxOffset'] = 0;
             $calc['minOffset'] = 9999;
             $lastAliveTime = null;
+            $matcheventFoulPersonal = false;
 
             foreach ($logs as $l) {
                 if (isset($l['matchevent'])) {
@@ -417,18 +418,43 @@ class AppController extends Controller
                             $calc[$code][$l['team_id']][$l['playerNumber']]['count'] ??= 0;
                             $calc[$code]['name'] = $l['matchevent']->name;
 
+                            if ($l['matchevent']->showOnSportsOnly == 1) { // BB only
+                                $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] ??= 0; // needed for later increment
+
+                                if (substr($code, 0, 13) == 'FOUL_PERSONAL') {
+                                    $matcheventFoulPersonal = $l['matchevent'];
+                                }
+                                if (substr($code, 0, 15) == 'FOUL_TECH_FLAGR') { // add tech. foul to pers. foul count
+                                    if ($calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] >= 0) { // add only if not foul-out yet
+                                        $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count']++;
+                                    }
+                                }
+                            }
+
                             if ($calc[$code][$l['team_id']][$l['playerNumber']]['count'] >= 0) { // add only if not foul-out yet
                                 $calc[$code][$l['team_id']][$l['playerNumber']]['count']++;
                             }
 
-                            if ($l['matchevent']->playerFouledOutAfter && $calc[$code][$l['team_id']][$l['playerNumber']]['count'] >= $l['matchevent']->playerFouledOutAfter) {
+                            if ($l['matchevent']->playerFouledOutAfter
+                                && $calc[$code][$l['team_id']][$l['playerNumber']]['count'] >= $l['matchevent']->playerFouledOutAfter) {
                                 // set negative value as marker to foul-out players
                                 $calc[$code][$l['team_id']][$l['playerNumber']]['count'] *= -1;
                                 $calc['foulOutLogIds'][] = $l['id'];
                             }
+
+                            if ($l['matchevent']->showOnSportsOnly == 1) { // BB only
+                                // needed for case PF+PF+TF: set negative value as marker to foul-out players
+                                if ($matcheventFoulPersonal
+                                    && $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] >= $matcheventFoulPersonal->playerFouledOutAfter) {
+                                    $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] *= -1;
+                                    $calc['foulOutLogIds'][] = $l['id'];
+                                }
+                            }
+
                             if (substr($code, 0, 16) == 'FOUL_CARD_YELLOW' && $calc[$code][$l['team_id']][$l['playerNumber']]['count'] > 1) {
                                 $calc['doubleYellowLogIds'][] = $l['id'];
                             }
+
                             if ($l['matchevent']->playerFoulSuspMinutes) {  // Fouls with suspension
                                 $rtime = FrozenTime::createFromFormat('Y-m-d H:i:s', $l['datetimeSent']->i18nFormat('yyyy-MM-dd HH:mm:ss'));
                                 $rtime = $rtime->addMinutes($l['matchevent']->playerFoulSuspMinutes);
