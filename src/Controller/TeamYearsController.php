@@ -53,6 +53,28 @@ class TeamYearsController extends AppController
         $this->apiReturn($teamYears);
     }
 
+    public function allWithPushTokenCount()
+    {
+        $year = $this->getCurrentYear();
+        /**
+         * @var Year $year
+         */
+
+        $teamYears = $this->TeamYears->find('all', array(
+            'fields' => array('id', 'team_id', 'canceled'),
+            'conditions' => array('year_id' => $year->id, 'OR' => array('Teams.hidden' => 0, 'canceled' => 0)),
+            'contain' => array('Teams' => array('fields' => array('name'))),
+            'order' => array('Teams.name' => 'ASC')
+        ))->toArray();
+
+        $this->loadModel('PushTokens');
+        foreach ($teamYears as $ty) {
+            $ty['countPushTokens'] = $this->PushTokens->find()->where(['my_team_id' => $ty['team_id']])->count();
+        }
+
+        $this->apiReturn($teamYears);
+    }
+
     public function pdfAllTeamsMatches()
     {
         $postData = $this->request->getData();
@@ -85,7 +107,6 @@ class TeamYearsController extends AppController
             $this->apiReturn(array());
         }
     }
-
 
     /*
     public function add()
