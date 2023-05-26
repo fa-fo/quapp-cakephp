@@ -244,6 +244,10 @@ class MatcheventLogsController extends AppController
                 }
 
                 if ((int)$postData['refereePIN'] != $refereePIN) {  // check 3nd PIN possiblity (ref subst team pin)
+                    if ($match['refereeTeamSubst_id'] === null) {
+                        return false;
+                    }
+
                     $refereePIN = $this->TeamYears->find()->where(['team_id' => $match['refereeTeamSubst_id'], 'year_id' => $this->getCurrentYearId()])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
                     if ($refereePIN === null || $refereePIN < 1) {
                         return false;
