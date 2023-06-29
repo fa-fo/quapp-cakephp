@@ -20,6 +20,7 @@ namespace App\Controller;
 use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match;
+use App\Model\Entity\Round;
 use App\Model\Entity\Year;
 use Cake\Controller\Controller;
 use Cake\Datasource\ConnectionManager;
@@ -70,7 +71,7 @@ class AppController extends Controller
 
             $year['settings'] = $this->getSettings();
 
-            // todo: delete after V2.0 complete rollout:
+            // todo: delete after V3.0 complete rollout:
             $year['isTest'] = $year['settings']['isTest'];
             $year['isCurrent'] = $year['settings']['currentYear_id'] == $year['id'] ? 1 : 0;
             $year['currentDay_id'] = $year['settings']['currentDay_id'];
@@ -134,6 +135,7 @@ class AppController extends Controller
     {
         $settings = $this->getSettings();
         $this->loadModel('Years');
+        // todo: put currentYear_id inside return
 
         return $this->Years->find('all', array(
             'conditions' => array('id' => $settings['currentYear_id']),
@@ -157,6 +159,20 @@ class AppController extends Controller
 
         $match = $this->Matches->find()->where(['id' => $id])->first();
         $group = $match ? $this->Groups->find()->where(['id' => $match->get('group_id')])->first() : false;
+
+        return $group ?: false;
+    }
+
+    protected function getGroupByTeamId($team_id, $year_id, $day_id)
+    {
+        $this->loadModel('Groups');
+        $this->loadModel('GroupTeams');
+        $groupteam = $this->GroupTeams->find('all', array(
+            'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
+            'conditions' => array('team_id' => $team_id, 'Groups.year_id' => $year_id, 'Groups.day_id' => $day_id),
+        ))->first();
+
+        $group = $groupteam ? $this->Groups->find()->where(['id' => $groupteam->get('group_id')])->first() : false;
 
         return $group ?: false;
     }
@@ -539,7 +555,7 @@ class AppController extends Controller
 
             if ($lastAliveTime !== null) {
                 $setting = $this->getSettings();
-                $aliveDiff = $lastAliveTime->diffInSeconds(FrozenTime::now()) % 3600; // clear timezone difference by modulus
+                $aliveDiff = $lastAliveTime->diffInSeconds(FrozenTime::now());
                 $calc['isLoggedIn'] = (int)($aliveDiff < ($setting['autoLogoutSecsAfter'] ?? 60)) * ($calc['isLoggedIn'] ?? 0);
             }
 
@@ -562,7 +578,7 @@ class AppController extends Controller
     }
 
 
-    protected function getCalcRanking($team1_id = false, $team2_id = false)
+    protected function getCalcRanking($team1_id = false, $team2_id = false, $doSetRanking = true)
     {
         $year = $this->getCurrentYear();
         /**
@@ -638,9 +654,11 @@ class AppController extends Controller
             }
         }
 
-        $this->setRanking($year);
+        if ($doSetRanking) {
+            $this->setRanking($year);
+        }
 
-        return array('countMatches' => $countMatches, 'countGroupTeams' => $countGroupTeams);
+        return array('countMatches' => $countMatches, 'countGroupTeams' => $countGroupTeams, 'doSetRanking' => $doSetRanking);
     }
 
 
@@ -706,6 +724,31 @@ class AppController extends Controller
         $alphabet = range('A', 'Z');
 
         return $alphabet[$number] ?? false;
+    }
+
+    protected function getMatchesByGroup($group): array
+    {
+        $this->loadModel('Rounds');
+        $rounds = $this->Rounds->find('all', array(
+            'fields' => array('id', 'timeStartDay' . $group->day_id, 'autoUpdateResults'),
+            'order' => array('id' => 'ASC')
+        ))->toArray();
+
+        if (count($rounds) > 0) {
+            foreach ($rounds as $round) {
+                /**
+                 * @var Round $round
+                 */
+                $conditionsArray = array(
+                    'group_id' => $group->id,
+                    'round_id' => $round->id,
+                );
+
+                $round['matches'] = $this->getMatches($conditionsArray);
+            }
+        }
+
+        return $rounds;
     }
 
     public function clearTest()
@@ -802,5 +845,19 @@ class AppController extends Controller
         ))->first();
 
         return $refereeGroup ?: false;
+    }
+
+    protected function getCurrentRoundId($offset = 0)
+    {
+        $time = FrozenTime::now();
+        $time = $time->addMinutes($offset);
+        $time = $time->subHours($this->getCurrentDayId() == 2 ? 1 : 2);
+        $cycle = (int)floor($time->hour / 8);
+
+        if ($cycle != 1) {
+            return 1;
+        }
+
+        return ($time->hour % 8 * 2 + 1) + (int)floor($time->minute / 30);
     }
 }

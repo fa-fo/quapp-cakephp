@@ -8,6 +8,7 @@ use App\Model\Entity\Match;
 use App\Model\Entity\TeamYear;
 use App\Model\Entity\Year;
 use Cake\Datasource\ConnectionManager;
+use Cake\I18n\FrozenTime;
 
 /**
  * TeamYears Controller
@@ -108,6 +109,51 @@ class TeamYearsController extends AppController
         }
     }
 
+    public function pdfAllTeamsMatchesWithGroupMatches($offset)
+    {
+        $postData = $this->request->getData();
+
+        //if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (1) {
+            $year = $this->getCurrentYear()->toArray();
+            $this->loadModel('Groups');
+            $this->loadModel('Matches');
+
+            $groups = $this->Groups->find('all', array(
+                'fields' => array('id', 'name', 'year_id', 'day_id'),
+                'conditions' => array('year_id' => $this->getCurrentYearId(), 'day_id' => $this->getCurrentDayId()),
+                'order' => array('name' => 'ASC')
+            ))->toArray();
+
+            foreach ($groups as $group) {
+                $group['rounds'] = $this->getMatchesByGroup($group);
+            }
+
+            $teamYears = $this->TeamYears->find('all', array(
+                'fields' => array('id', 'team_id', 'year_id', 'refereePIN', 'canceled'),
+                'conditions' => array('year_id' => $year['id']),
+                'contain' => array('Teams' => array('fields' => array('name'))),
+                'order' => array('Teams.name' => 'ASC')
+            ))->offset($offset * 32)->limit(32); // set limit because of execution timeout
+
+            foreach ($teamYears as $ty) {
+                $g = $this->getGroupByTeamId($ty->team_id, $year['id'], $this->getCurrentDayId());
+                $gN = $this->getGroupPosNumber($g->id);
+
+                $ty['infos'] = $this->getMatchesByTeam($ty->team_id, $year['id'], $this->getCurrentDayId(), 1);
+                $ty['day'] = FrozenTime::createFromFormat('Y-m-d H:i:s', $year['day' . $this->getCurrentDayId()]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                $ty['group'] = $groups[$gN];
+            }
+
+            $this->viewBuilder()->enableAutoLayout(false);
+            $this->viewBuilder()->setVar('teamYears', $teamYears);
+
+            $this->pdfReturn();
+        } else {
+            $this->apiReturn(array());
+        }
+    }
+
     /*
     public function add()
     {
@@ -168,7 +214,7 @@ class TeamYearsController extends AppController
 
                 if ($groupTeam) {
                     /**
-                     * @var GroupTeams $groupTeam
+                     * @var GroupTeam $groupTeam
                      */
                     $groupTeam->set('canceled', $undo ? 0 : 1);
                     $this->GroupTeams->save($groupTeam);

@@ -43,7 +43,7 @@ INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE n
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Die Kellerkinder";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Sponge Balls";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Sportfreunde Promiller";
-INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Im Niveau flexibel";
+INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="The Quattforce";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Freies Bewegen im Raum";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Dobenreuther Möpse";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Unsportlicher Haufen";

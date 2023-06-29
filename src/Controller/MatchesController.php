@@ -6,7 +6,6 @@ namespace App\Controller;
 use App\Model\Entity\Group;
 use App\Model\Entity\Match;
 use App\Model\Entity\MatchschedulingPattern16;
-use App\Model\Entity\Round;
 use App\Model\Entity\Year;
 use Cake\I18n\FrozenTime;
 
@@ -59,31 +58,6 @@ class MatchesController extends AppController
         $this->apiReturn(array());
     }
 
-    private function getMatchesByGroup($group): array
-    {
-        $this->loadModel('Rounds');
-        $rounds = $this->Rounds->find('all', array(
-            'fields' => array('id', 'timeStartDay' . $group->day_id, 'autoUpdateResults'),
-            'order' => array('id' => 'ASC')
-        ))->toArray();
-
-        if (count($rounds) > 0) {
-            foreach ($rounds as $round) {
-                /**
-                 * @var Round $round
-                 */
-                $conditionsArray = array(
-                    'group_id' => $group->id,
-                    'round_id' => $round->id,
-                );
-
-                $round['matches'] = $this->getMatches($conditionsArray);
-            }
-        }
-
-        return $rounds;
-    }
-
     public function pdfMatchesByGroup()
     {
         $postData = $this->request->getData();
@@ -96,9 +70,8 @@ class MatchesController extends AppController
                 'order' => array('name' => 'ASC')
             ));
 
-            $settings = $this->getSettings();
             $currentYear = $this->getCurrentYear()->toArray();
-            $day = FrozenTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+            $day = FrozenTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $this->getCurrentDayId()]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
             foreach ($groups as $group) {
                 $group['rounds'] = $this->getMatchesByGroup($group);
@@ -124,13 +97,14 @@ class MatchesController extends AppController
         if ($showTime !== 0) {
             $return['showTime'] = $showTime;
         } else {
-
             $this->loadModel('Groups');
             $return['groups'] = $this->Groups->find('all', array(
                 'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
                 'conditions' => array('year_id' => $year_id, 'day_id' => $day_id),
                 'order' => array('Groups.name' => 'ASC')
             ))->toArray();
+
+            $round_id = $round_id > 0 ? $round_id : $this->getCurrentRoundId(10);
 
             if ($round_id && count($return['groups']) > 0) {
                 foreach ($return['groups'] as $group) {
@@ -144,7 +118,8 @@ class MatchesController extends AppController
                         'group_id' => $group['id'],
                     );
 
-                    $group['matches'] = $this->getMatches($conditionsArray, $includeLogs, !$includeLogs, $includeLogs);
+                    // use parameter for same sort as Excel: $sortBySportId=!$includeLogs
+                    $group['matches'] = $this->getMatches($conditionsArray, $includeLogs, (1 || !$includeLogs), $includeLogs);
                 }
 
                 $this->loadModel('Rounds');
@@ -230,6 +205,7 @@ class MatchesController extends AppController
     }
 
 
+    // todo: deprecated: after V3 complete rollout: function not needed anymore
     public
     function confirm($id = false)
     {
@@ -305,6 +281,91 @@ class MatchesController extends AppController
         }
 
         $this->apiReturn($match);
+    }
+
+    public
+    function confirmMulti()
+    {
+        $matches = false;
+        $postData = $this->request->getData();
+
+        if (isset($postData['matchIds']) && isset($postData['mode']) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $mode = $postData['mode'];
+            $matchIds = explode(',', $postData['matchIds']);
+            $count = count($matchIds);
+
+            if ($count > 0) {
+                $c = 0;
+                foreach ($matchIds as $id) {
+                    $c++;
+                    $conditionsArray = array('Matches.id' => $id);
+                    $match = $id ? ($this->getMatches($conditionsArray, 1))[0] : false;
+
+                    if ($match && $match->isTime2confirm && $this->isConfirmable($match, $match->logsCalc, $mode)) {
+                        if ($mode == 1 && isset($postData['goals1']) && isset($postData['goals2'])) {
+                            $score1 = $postData['goals1'];
+                            $score2 = $postData['goals2'];
+                        } else {
+                            $score1 = $match->logsCalc['score'][$match->team1_id] ?? 0;
+                            $score2 = $match->logsCalc['score'][$match->team2_id] ?? 0;
+                        }
+                        // Goal factor
+                        $this->loadModel('Sports');
+                        $factor = $this->Sports->find()->where(['id' => $match->sport_id])->first()->get('goalFactor');
+
+                        $rTrend = $match->logsCalc['teamWon'] ?? 0; // Mode 0: regular with same result (score and teamWon)
+
+                        if ($mode == 1) { // like Score with not same result (score and teamWon)
+                            $rTrend = $score1 - $score2 > 0 ? 1 : ($score1 - $score2 < 0 ? 2 : 0);
+                        } else if ($mode == 2) { // like teamWon with not same result (score and teamWon)
+                            $s1 = $rTrend == 1 ? max(array($score1, $score2)) : ($rTrend == 2 ? min(array($score1, $score2)) : $score1);
+                            $s2 = $rTrend == 1 ? min(array($score1, $score2)) : ($rTrend == 2 ? max(array($score1, $score2)) : $score1);
+                            $score1 = $s1;
+                            $score2 = $s2;
+                        } else if ($mode == 3) { // X:0-Wertung
+                            $score1 = $this->getFactorsLeastCommonMultiple() / $factor;
+                            $score2 = 0;
+                            $rTrend = 3;
+                        } else if ($mode == 4) { // 0:X-Wertung
+                            $score1 = 0;
+                            $score2 = $this->getFactorsLeastCommonMultiple() / $factor;
+                            $rTrend = 4;
+                        } else if ($mode == 5) { // X:X-Wertung
+                            $score1 = 0;
+                            $score2 = 0;
+                            $rTrend = 5;
+                        } else if ($mode == 6) { // 0:0-Wertung
+                            $score1 = 0;
+                            $score2 = 0;
+                            $rTrend = 6;
+                        }
+
+                        $match->set('resultTrend', $rTrend);
+
+                        $match->set('resultGoals1', (int)($score1 * $factor));
+                        $match->set('resultGoals2', (int)($score2 * $factor));
+
+                        $this->Matches->save($match);
+
+                        // create event_log 'result confirmed'
+                        $this->loadModel('Matchevents');
+                        $newLog = $this->MatcheventLogs->newEmptyEntity();
+                        $newLog->set('match_id', $match->id);
+                        $newLog->set('datetime', FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                        $newLog->set('matchEvent_id', $this->Matchevents->find()->where(['code' => 'RESULT_CONFIRM'])->first()->get('id'));
+                        $this->MatcheventLogs->save($newLog);
+
+                        if ($match->round->autoUpdateResults) {
+                            $calcRanking = $this->getCalcRanking($match->team1_id, $match->team2_id, $c == $count);
+                            $matches[$c] = $match->toArray();
+                            $matches['calcRanking'][$c] = $calcRanking;
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->apiReturn($matches);
     }
 
 
