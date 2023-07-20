@@ -3,7 +3,7 @@ INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE n
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Egelsamer Faulenzer";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Gwinna will I";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Bamboocha";
-INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Playaz Darmstadt";
+INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Jeden zweiten Freitag";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Die Bergziegen";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Alkohooligens";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Doc's Team";
@@ -19,7 +19,7 @@ INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE n
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Tante Hillas Gespür für Kaffee 2.0";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Schwenkergespann Saarland";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Sternburgsportweltmeister";
-INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="SG Süd Blumenau";
+INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="_spielfrei1Team";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Quick & Dirty";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Zirkulatoren";
 INSERT INTO `team_years` (`year_id`, `team_id`) SELECT 26, id FROM teams WHERE name="Bewegungsminimalisten AIC";
