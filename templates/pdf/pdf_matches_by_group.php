@@ -58,11 +58,11 @@ foreach ($groups as $group) {
 
             $mpdf->WriteHTML('<table border="0" cellspacing="0" cellpadding="2" width="100%">');
             $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td>' . ellipsis($match->teams1->name) . '</td>');
+            $mpdf->WriteHTML('<td>' . ellipsis(!$match->canceled ? $match->teams1->name : '-') . '</td>');
             $mpdf->WriteHTML('<td class="g" width="10">' . $match->resultGoals1 . '&nbsp;</td>');
             $mpdf->WriteHTML('</tr>');
             $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td>' . ellipsis($match->teams2->name) . '</td>');
+            $mpdf->WriteHTML('<td>' . ellipsis(!$match->canceled ? $match->teams2->name : '-') . '</td>');
             $mpdf->WriteHTML('<td class="g">' . $match->resultGoals2 . '&nbsp;</td>');
             $mpdf->WriteHTML('</tr>');
             $mpdf->WriteHTML('</table>');
@@ -70,7 +70,7 @@ foreach ($groups as $group) {
             $mpdf->WriteHTML('</td>');
             $mpdf->WriteHTML('</tr>');
             $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td class="sr">' . ellipsis('SR: ' . $match->teams3->name, 28) . '</td>');
+            $mpdf->WriteHTML('<td class="sr">' . ellipsis('SR: ' . (!$match->canceled ? $match->teams3->name : '-'), 28) . '</td>');
             $mpdf->WriteHTML('</tr>');
             $mpdf->WriteHTML('</table>');
 
