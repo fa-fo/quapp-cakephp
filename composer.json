@@ -1,22 +1,24 @@
 {
     "name": "cakephp/app",
-    "description": "CakePHP skeleton app",
+    "description": "Quapp Backend",
     "homepage": "https://cakephp.org",
     "type": "project",
     "license": "MIT",
     "require": {
-        "php": ">=7.4",
-        "cakephp/cakephp": "~4.2.0",
-        "cakephp/migrations": "^3.0",
-        "cakephp/plugin-installer": "^1.3",
-        "friendsofcake/cakepdf": "4.1.1",
-        "mobiledetect/mobiledetectlib": "^2.8",
-        "mpdf/mpdf": "^8.1"
+        "php": "~8.2",
+        "cakephp/cakephp": "~4.4.15",
+        "cakephp/migrations": "^3.8.2",
+        "cakephp/plugin-installer": "^1.3.1",
+        "friendsofcake/cakepdf": "^4.1.2",
+        "mobiledetect/mobiledetectlib": "^2.8.41",
+        "mpdf/mpdf": "^8.1.6",
+        "ext-gmp": "*"
     },
     "require-dev": {
         "cakephp/bake": "^2.3",
-        "cakephp/debug_kit": "^4.4",
-        "josegonzalez/dotenv": "^3.2",
+        "cakephp/debug_kit": "^4.9.4",
+        "josegonzalez/dotenv": "^4.0.0",
+        "phpstan/phpstan": "~1.10.26",
         "phpunit/phpunit": "~8.5.0 || ^9.3",
         "psy/psysh": "@stable"
     },
