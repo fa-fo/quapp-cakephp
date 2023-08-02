@@ -14,7 +14,7 @@ use Cake\ORM\Entity;
  * @property int $needsTeamAssoc
  * @property int $needsPlayerAssoc
  */
-class Matchevent extends Entity
+class Match4event extends Entity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().

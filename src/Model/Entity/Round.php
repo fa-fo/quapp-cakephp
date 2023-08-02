@@ -12,8 +12,8 @@ use Cake\ORM\Entity;
  * @property \Cake\I18n\FrozenTime $timeStartDay1
  * @property \Cake\I18n\FrozenTime $timeStartDay2
  *
- * @property \App\Model\Entity\Match[] $matches
- * @property \App\Model\Entity\MatchschedulingPattern16[] $matchscheduling_pattern16
+ * @property \App\Model\Entity\Match4[] $matches
+ * @property \App\Model\Entity\Match4schedulingPattern16[] $matchscheduling_pattern16
  */
 class Round extends Entity
 {

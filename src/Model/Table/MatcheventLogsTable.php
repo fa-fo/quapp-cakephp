@@ -15,19 +15,19 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\MatcheventsTable&\Cake\ORM\Association\BelongsTo $Matchevents
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\BelongsTo $Teams
  *
- * @method \App\Model\Entity\MatcheventLog newEmptyEntity()
- * @method \App\Model\Entity\MatcheventLog newEntity(array $data, array $options = [])
- * @method \App\Model\Entity\MatcheventLog[] newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\MatcheventLog get($primaryKey, $options = [])
- * @method \App\Model\Entity\MatcheventLog findOrCreate($search, ?callable $callback = null, $options = [])
- * @method \App\Model\Entity\MatcheventLog patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \App\Model\Entity\MatcheventLog[] patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\MatcheventLog|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\MatcheventLog saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\MatcheventLog[]|\Cake\Datasource\ResultSetInterface|false saveMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\MatcheventLog[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
- * @method \App\Model\Entity\MatcheventLog[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\MatcheventLog[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4eventLog newEmptyEntity()
+ * @method \App\Model\Entity\Match4eventLog newEntity(array $data, array $options = [])
+ * @method \App\Model\Entity\Match4eventLog[] newEntities(array $data, array $options = [])
+ * @method \App\Model\Entity\Match4eventLog get($primaryKey, $options = [])
+ * @method \App\Model\Entity\Match4eventLog findOrCreate($search, ?callable $callback = null, $options = [])
+ * @method \App\Model\Entity\Match4eventLog patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
+ * @method \App\Model\Entity\Match4eventLog[] patchEntities(iterable $entities, array $data, array $options = [])
+ * @method \App\Model\Entity\Match4eventLog|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Match4eventLog saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Match4eventLog[]|\Cake\Datasource\ResultSetInterface|false saveMany(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4eventLog[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4eventLog[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4eventLog[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
  */
 class MatcheventLogsTable extends Table
 {

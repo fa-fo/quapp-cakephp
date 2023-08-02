@@ -31,9 +31,9 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Team $team2
  * @property \App\Model\Entity\Team $team3
  * @property \App\Model\Entity\Team|null $team4
- * @property \App\Model\Entity\MatcheventLog[] $match_event_logs
+ * @property \App\Model\Entity\Match4eventLog[] $match_event_logs
  */
-class Match extends Entity
+class Match4 extends Entity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().

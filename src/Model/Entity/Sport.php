@@ -14,8 +14,8 @@ use Cake\ORM\Entity;
  * @property string|null $color
  * @property string|null $icon
  *
- * @property \App\Model\Entity\Match[] $matches
- * @property \App\Model\Entity\MatchschedulingPattern16[] $matchscheduling_pattern16
+ * @property \App\Model\Entity\Match4[] $matches
+ * @property \App\Model\Entity\Match4schedulingPattern16[] $matchscheduling_pattern16
  */
 class Sport extends Entity
 {

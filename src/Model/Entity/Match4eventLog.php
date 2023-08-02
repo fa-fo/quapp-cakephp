@@ -19,11 +19,11 @@ use Cake\ORM\Entity;
  * @property int $canceled
  * @property \Cake\I18n\FrozenTime|null $cancelTime
  *
- * @property \App\Model\Entity\Match $match
- * @property \App\Model\Entity\Matchevent $matchevent
+ * @property \App\Model\Entity\Match4 $match
+ * @property \App\Model\Entity\Match4event $matchevent
  * @property \App\Model\Entity\Team $team
  */
-class MatcheventLog extends Entity
+class Match4eventLog extends Entity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().

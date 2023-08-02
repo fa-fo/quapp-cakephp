@@ -21,8 +21,8 @@ use Cake\ORM\Entity;
  * @property int|null $calcTotalRanking
  *
  * @property \App\Model\Entity\GroupTeam[] $group_teams
- * @property \App\Model\Entity\Match[] $matches
- * @property \App\Model\Entity\MatcheventLog[] $match_event_logs
+ * @property \App\Model\Entity\Match4[] $matches
+ * @property \App\Model\Entity\Match4eventLog[] $match_event_logs
  * @property \App\Model\Entity\TeamYear[] $team_years
  */
 class Team extends Entity

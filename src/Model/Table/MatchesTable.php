@@ -19,19 +19,19 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\BelongsTo $Teams3
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\BelongsTo $Teams4
  *
- * @method \App\Model\Entity\Match newEmptyEntity()
- * @method \App\Model\Entity\Match newEntity(array $data, array $options = [])
- * @method \App\Model\Entity\Match[] newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Match get($primaryKey, $options = [])
- * @method \App\Model\Entity\Match findOrCreate($search, ?callable $callback = null, $options = [])
- * @method \App\Model\Entity\Match patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \App\Model\Entity\Match[] patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Match|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\Match saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\Match[]|\Cake\Datasource\ResultSetInterface|false saveMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\Match[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
- * @method \App\Model\Entity\Match[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\Match[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4 newEmptyEntity()
+ * @method \App\Model\Entity\Match4 newEntity(array $data, array $options = [])
+ * @method \App\Model\Entity\Match4[] newEntities(array $data, array $options = [])
+ * @method \App\Model\Entity\Match4 get($primaryKey, $options = [])
+ * @method \App\Model\Entity\Match4 findOrCreate($search, ?callable $callback = null, $options = [])
+ * @method \App\Model\Entity\Match4 patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
+ * @method \App\Model\Entity\Match4[] patchEntities(iterable $entities, array $data, array $options = [])
+ * @method \App\Model\Entity\Match4|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Match4 saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Match4[]|\Cake\Datasource\ResultSetInterface|false saveMany(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
  */
 class MatchesTable extends Table
 {

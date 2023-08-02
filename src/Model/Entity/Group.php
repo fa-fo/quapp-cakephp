@@ -17,7 +17,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Year $year
  * @property \App\Model\Entity\Day $day
  * @property \App\Model\Entity\GroupTeam[] $group_teams
- * @property \App\Model\Entity\Match[] $matches
+ * @property \App\Model\Entity\Match4[] $matches
  */
 class Group extends Entity
 {

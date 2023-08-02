@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Model\Entity\Group;
-use App\Model\Entity\Match;
-use App\Model\Entity\MatchschedulingPattern16;
+use App\Model\Entity\Match4;
+use App\Model\Entity\Match4schedulingPattern16;
 use App\Model\Entity\Year;
 use Cake\I18n\FrozenTime;
 
@@ -374,7 +374,7 @@ class MatchesController extends AppController
     {
         /**
          * @var Group $group
-         * @var Match $match
+         * @var Match4 $match
          * @var Year $year
          */
 
@@ -456,7 +456,7 @@ class MatchesController extends AppController
                          */
                         foreach ($matchschedulings as $matchscheduling) {
                             /**
-                             * @var MatchschedulingPattern16 $matchscheduling
+                             * @var Match4schedulingPattern16 $matchscheduling
                              */
                             $groupteam1 = $this->GroupTeams->find('all', array(
                                 'conditions' => array('group_id' => $group->id, 'placeNumber' => $matchscheduling->placenumberTeam1)
@@ -534,9 +534,11 @@ class MatchesController extends AppController
         $this->loadModel('Matches');
         $matches = $this->getMatches($conditionsArray, 0, 0, 1);
 
-        foreach ($matches as $m) {
-            if ($m->isRefereeCanceled) {
-                $return['matches'][] = $m;
+        if ($matches) {
+            foreach ($matches as $m) {
+                if ($m->isRefereeCanceled) {
+                    $return['matches'][] = $m;
+                }
             }
         }
 
@@ -562,8 +564,8 @@ class MatchesController extends AppController
             $match2 = $this->Matches->find()->where(['id' => $id2])->first();
 
             /**
-             * @var Match $match1
-             * @var Match $match2
+             * @var Match4 $match1
+             * @var Match4 $match2
              */
             if ($match1 && $match1->isRefereeCanceled && $match2) {
                 $ref2 = $match2->refereeTeam_id;
@@ -586,8 +588,8 @@ class MatchesController extends AppController
             $match2 = $this->Matches->find()->where(['id' => $id2])->first();
 
             /**
-             * @var Match $match1
-             * @var Match $match2
+             * @var Match4 $match1
+             * @var Match4 $match2
              */
             if ($match1 && $match2 && in_array($match1->canceled, array(1, 2)) && in_array($match2->canceled, array(1, 2))) {
                 $t1 = $match1->canceled == 1 ? $match1->team1_id : $match1->team2_id;
@@ -623,7 +625,7 @@ class MatchesController extends AppController
                 if ($matches && count($matches) > 0) {
                     foreach ($matches as $m) {
                         /**
-                         * @var Match $m
+                         * @var Match4 $m
                          */
                         if ($m->resultTrend === null || $m->resultGoals1 === null || $m->resultGoals1 === null) {
                             $factor1 = ($m->team1) && ($m->team1)->calcTotalPointsPerYear ? ($m->team1)->calcTotalPointsPerYear / 7 : 1;

@@ -19,7 +19,7 @@ namespace App\Controller;
 
 use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
-use App\Model\Entity\Match;
+use App\Model\Entity\Match4;
 use App\Model\Entity\Round;
 use App\Model\Entity\Year;
 use Cake\Controller\Controller;
@@ -623,7 +623,7 @@ class AppController extends Controller
                 if ($matches && count($matches) > 0) {
                     foreach ($matches as $m) {
                         /**
-                         * @var Match $m
+                         * @var Match4 $m
                          */
 
                         if ($year->alwaysAutoUpdateResults || $m->round->autoUpdateResults) {

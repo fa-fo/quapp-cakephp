@@ -14,19 +14,19 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\RoundsTable&\Cake\ORM\Association\BelongsTo $Rounds
  * @property \App\Model\Table\SportsTable&\Cake\ORM\Association\BelongsTo $Sports
  *
- * @method \App\Model\Entity\MatchschedulingPattern16 newEmptyEntity()
- * @method \App\Model\Entity\MatchschedulingPattern16 newEntity(array $data, array $options = [])
- * @method \App\Model\Entity\MatchschedulingPattern16[] newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\MatchschedulingPattern16 get($primaryKey, $options = [])
- * @method \App\Model\Entity\MatchschedulingPattern16 findOrCreate($search, ?callable $callback = null, $options = [])
- * @method \App\Model\Entity\MatchschedulingPattern16 patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \App\Model\Entity\MatchschedulingPattern16[] patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\MatchschedulingPattern16|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\MatchschedulingPattern16 saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\MatchschedulingPattern16[]|\Cake\Datasource\ResultSetInterface|false saveMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\MatchschedulingPattern16[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
- * @method \App\Model\Entity\MatchschedulingPattern16[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\MatchschedulingPattern16[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16 newEmptyEntity()
+ * @method \App\Model\Entity\Match4schedulingPattern16 newEntity(array $data, array $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16[] newEntities(array $data, array $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16 get($primaryKey, $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16 findOrCreate($search, ?callable $callback = null, $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16 patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16[] patchEntities(iterable $entities, array $data, array $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16 saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16[]|\Cake\Datasource\ResultSetInterface|false saveMany(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4schedulingPattern16[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
  */
 class MatchschedulingPattern16Table extends Table
 {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Model\Entity\GroupTeam;
-use App\Model\Entity\Match;
+use App\Model\Entity\Match4;
 use App\Model\Entity\TeamYear;
 use App\Model\Entity\Year;
 use Cake\Datasource\ConnectionManager;
@@ -238,7 +238,7 @@ class TeamYearsController extends AppController
                 if ($matches) {
                     foreach ($matches as $m) {
                         /**
-                         * @var Match $m
+                         * @var Match4 $m
                          */
                         $a = $m->team1_id == $teamYear->get('team_id') ? 1 : 2;
                         $m->set('canceled', $undo ? $m->canceled - $a : $a + $m->canceled);

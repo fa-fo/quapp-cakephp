@@ -11,19 +11,19 @@ use Cake\Validation\Validator;
 /**
  * Matchevents Model
  *
- * @method \App\Model\Entity\Matchevent newEmptyEntity()
- * @method \App\Model\Entity\Matchevent newEntity(array $data, array $options = [])
- * @method \App\Model\Entity\Matchevent[] newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Matchevent get($primaryKey, $options = [])
- * @method \App\Model\Entity\Matchevent findOrCreate($search, ?callable $callback = null, $options = [])
- * @method \App\Model\Entity\Matchevent patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \App\Model\Entity\Matchevent[] patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Matchevent|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\Matchevent saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\Matchevent[]|\Cake\Datasource\ResultSetInterface|false saveMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\Matchevent[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
- * @method \App\Model\Entity\Matchevent[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\Matchevent[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4event newEmptyEntity()
+ * @method \App\Model\Entity\Match4event newEntity(array $data, array $options = [])
+ * @method \App\Model\Entity\Match4event[] newEntities(array $data, array $options = [])
+ * @method \App\Model\Entity\Match4event get($primaryKey, $options = [])
+ * @method \App\Model\Entity\Match4event findOrCreate($search, ?callable $callback = null, $options = [])
+ * @method \App\Model\Entity\Match4event patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
+ * @method \App\Model\Entity\Match4event[] patchEntities(iterable $entities, array $data, array $options = [])
+ * @method \App\Model\Entity\Match4event|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Match4event saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Match4event[]|\Cake\Datasource\ResultSetInterface|false saveMany(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4event[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4event[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Match4event[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
  */
 class MatcheventsTable extends Table
 {

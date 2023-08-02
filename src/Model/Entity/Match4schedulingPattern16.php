@@ -18,7 +18,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Round $round
  * @property \App\Model\Entity\Sport $sport
  */
-class MatchschedulingPattern16 extends Entity
+class Match4schedulingPattern16 extends Entity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().

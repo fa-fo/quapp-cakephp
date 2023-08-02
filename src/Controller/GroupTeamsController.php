@@ -5,7 +5,7 @@ namespace App\Controller;
 
 use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
-use App\Model\Entity\MatchschedulingPattern16;
+use App\Model\Entity\Match4schedulingPattern16;
 use App\Model\Entity\TeamYear;
 use App\Model\Entity\Year;
 use Cake\I18n\FrozenTime;
@@ -359,7 +359,7 @@ class GroupTeamsController extends AppController
 
         foreach ($matchschedulings as $msc) {
             /**
-             * @var MatchschedulingPattern16 $msc
+             * @var Match4schedulingPattern16 $msc
              */
 
             if ($currentDay_id > 1 && in_array($groupteam->prevPlaceNumber, array($msc->placenumberTeam1, $msc->placenumberTeam2))) {
