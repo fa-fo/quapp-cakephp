@@ -74,6 +74,10 @@ class RoundsTable extends Table
             ->requirePresence('timeStartDay2', 'create')
             ->notEmptyTime('timeStartDay2');
 
+        $validator
+            ->integer('autoUpdateResults')
+            ->notEmptyString('autoUpdateResults');
+
         return $validator;
     }
 }

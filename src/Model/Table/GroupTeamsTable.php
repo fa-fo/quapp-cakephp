@@ -99,6 +99,10 @@ class GroupTeamsTable extends Table
             ->integer('calcPointsMinus')
             ->allowEmptyString('calcPointsMinus');
 
+        $validator
+            ->integer('canceled')
+            ->notEmptyString('canceled');
+
         return $validator;
     }
 

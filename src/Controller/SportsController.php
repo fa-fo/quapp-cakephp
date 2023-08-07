@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Model\Entity\Year;
 use Cake\Http\Client;
 
 /**
@@ -13,7 +12,7 @@ use Cake\Http\Client;
  */
 class SportsController extends AppController
 {
-    public function getRules()
+    public function getRules(): void
     {
         $http = new Client([
             'ssl_verify_host' => false,
@@ -27,27 +26,20 @@ class SportsController extends AppController
         $this->apiReturn($json);
     }
 
-    public function pdfAllFieldsMatches()
+    public function pdfAllFieldsMatches(): void
     {
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $year = $this->getCurrentYear();
-            /**
-             * @var Year $year
-             */
-
             $sports = $this->Sports->find('all', array(
                 'order' => array('name' => 'ASC')
             ))->toArray();
 
-            $this->loadModel('Groups');
-            $groups = $this->Groups->find('all', array(
+            $groups = $this->fetchTable('Groups')->find('all', array(
                 'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
                 'order' => array('name' => 'ASC')
             ))->toArray();
-
-            $this->loadModel('Matches');
 
             foreach ($sports as $sport) {
                 $sport['fields'] = array();
@@ -62,6 +54,7 @@ class SportsController extends AppController
                 }
             }
 
+            $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('sports', $sports);
 

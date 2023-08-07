@@ -13,15 +13,10 @@ use App\Model\Entity\Year;
  */
 class GroupsController extends AppController
 {
-    public function all($year_id = false, $day_id = false)
+    public function all(string $year_id = '', string $day_id = ''): void
     {
-        $year = $this->getCurrentYear();
-        /**
-         * @var Year $year
-         */
-
-        $year_id = $year_id ?: $year->id;
-        $day_id = $day_id ?: $this->getCurrentDayId();
+        $year_id = (int)$year_id ?: $this->getCurrentYearId();
+        $day_id = (int)$day_id ?: $this->getCurrentDayId();
 
         $year = array();
         $year['groups'] = $this->Groups->find('all', array(
@@ -33,16 +28,14 @@ class GroupsController extends AppController
         $this->apiReturn($year, $year_id, $day_id);
     }
 
-    public function addAll($countGroups = false)
+    public function addAll(string $countGroups = ''): void
     {
+        $countGroups = (int)$countGroups;
         $groups = array();
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $year = $this->getCurrentYear();
-            /**
-             * @var Year $year
-             */
 
             $existingGroups = $this->Groups->find('all', array(
                 'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
@@ -50,8 +43,7 @@ class GroupsController extends AppController
             ));
 
             if ($existingGroups->count() == 0) {
-                $this->loadModel('TeamYears');
-                $countTeams = $this->TeamYears->find('all', array(
+                $countTeams = $this->fetchTable('TeamYears')->find('all', array(
                     'conditions' => array('year_id' => $year->id),
                     'order' => array('id' => 'ASC')
                 ))->count();
@@ -75,64 +67,11 @@ class GroupsController extends AppController
             }
         }
 
-        //$groups = count($groups) ? $groups : false;
-
         $this->apiReturn(count($groups));
     }
 
-    // not needed???????
-    /*
-    public function getRanking($id = false, $year_id = false, $day_id = false)
-    {
-        $this->loadModel('GroupTeams');
-        $year = $this->getCurrentYear();
-        $year_id = $year_id ?: $year->id;
-        $day_id = $day_id ?: $this->getCurrentDayId();
-
-        $condGtArray = $id ? array('id' => $id) : array();
-
-        $groups = $this->Groups->find('all', array(
-            'conditions' => array_merge($condGtArray, array('year_id' => $year_id, 'day_id' => $day_id)),
-            'order' => array('id' => 'ASC')
-        ));
-
-        $countGroups = $groups->count();
-
-        $countGroupTeams = 0;
-        if ($countGroups > 0) {
-            foreach ($groups as $group) {
-                $options = array('countGroupTeams' => $countGroupTeams, 'day_id' => $day_id);
-
-                $groupTeams = $this->GroupTeams->find('all', array(
-                    'contain' => array(
-                        'Teams' => array('fields' => array('name'))
-                    ),
-                    'conditions' => array('GroupTeams.group_id' => $group->id),
-                    'order' => array('GroupTeams.calcRanking IS NOT' => null, 'GroupTeams.calcRanking' => 'ASC', 'GroupTeams.placeNumber' => 'ASC')
-                ))->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($options) {
-                    return $results->map(function ($row) use ($options) {
-                        //Adding Calculated Fields
-                        if ($options['day_id'] > 1) {
-                            $row['overallRanking'] = $options['countGroupTeams'] + $row['calcRanking'];
-                        }
-                        return $row;
-                    });
-                })->toArray();
-
-                $group['countGroupTeams'] = count($groupTeams);
-                $countGroupTeams += $group['countGroupTeams'];
-
-                $group['groupTeams'] = $groupTeams;
-            }
-        }
-
-        $return = array('countGroups' => $countGroups, 'groups' => $groups);
-        $this->apiReturn($return);
-    }
-*/
-
     // order by points per year (day 1 only)
-    public function sortAfterAddAllGroupTeams($mode = 'standard')
+    public function sortAfterAddAllGroupTeams(string $mode = 'standard'): void
     {
         $return = array();
         $postData = $this->request->getData();
@@ -144,8 +83,6 @@ class GroupsController extends AppController
              */
 
             if ($this->getCurrentDayId() == 1) {
-                $this->loadModel('Matches');
-
                 $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
                 $existingMatches = $this->getMatches($conditionsArray);
 
@@ -171,8 +108,7 @@ class GroupsController extends AppController
                                 break;
                         }
 
-                        $this->loadModel('GroupTeams');
-                        $groupTeams = $this->GroupTeams->find('all', array(
+                        $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
                             'fields' => array(
                                 'GroupTeams.id',
                                 'Teams.calcTotalPointsPerYear',
@@ -196,7 +132,7 @@ class GroupsController extends AppController
                                     $number = random_int(0, $groupsCount - 1); // groups A...D..F
                                 } while ($groupFillArray[$number] >= $newPlacenumber);
 
-                            } else if ($mode == 'standard') { // simply numbered by counter
+                            } else { // $mode == 'standard' -> simply numbered by counter
                                 $newPlacenumber = $c % $teamsCountPerGroup + 1;
                                 $number = floor($c / $teamsCountPerGroup);
                             }
@@ -207,7 +143,7 @@ class GroupsController extends AppController
                             $gt->set('group_id', $newGroupId);
                             $gt->set('calcRanking', null); // because of unique value per group
                             $gt->set('placeNumber', (int)(3000 + $newPlacenumber)); // temp because of unique values
-                            $this->GroupTeams->save($gt);
+                            $this->fetchTable('GroupTeams')->save($gt);
                             $c++;
                         }
 
@@ -217,14 +153,13 @@ class GroupsController extends AppController
                              * @var GroupTeam $gt
                              */
                             $gt->set('placeNumber', (int)($gt->placeNumber - 3000));
-                            $this->GroupTeams->save($gt);
+                            $this->fetchTable('GroupTeams')->save($gt);
                         }
 
                         foreach ($groups as $group) {
                             $avgRankingPointsPerYear[$group->name] = $this->getAvgRankingPointsPerYear($group->id);
                         }
 
-                        //$return = array_merge(array('avgRankingPointsPerYear' => $avgRankingPointsPerYear), $groupTeams->toArray());
                         $return = array('avgRankingPointsPerYear' => $avgRankingPointsPerYear);
                     }
                 }
@@ -235,17 +170,13 @@ class GroupsController extends AppController
     }
 
 
-    public function getRankingPointsPerYear($id = false, $year_id = false, $day_id = false)
+    public function getRankingPointsPerYear(string $id = '', string $year_id = '', string $day_id = ''): void
     {
-        $this->loadModel('GroupTeams');
-        $year = $this->getCurrentYear();
-        /**
-         * @var Year $year
-         */
+        $id = (int)$id;
+        $year_id = (int)$year_id ?: $this->getCurrentYearId();
+        $day_id = (int)$day_id ?: $this->getCurrentDayId();
 
-        $year_id = $year_id ?: $year->id;
-        $day_id = $day_id ?: $this->getCurrentDayId();
-
+        $avgRankingPointsPerYear = array();
         $condGtArray = $id ? array('id' => $id) : array();
 
         $groups = $this->Groups->find('all', array(
@@ -265,9 +196,9 @@ class GroupsController extends AppController
     }
 
 
-    private function getAvgRankingPointsPerYear($id)
+    private function getAvgRankingPointsPerYear(int $id): ?float
     {
-        $groupTeams = $this->GroupTeams->find('all', array(
+        $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
             'contain' => array(
                 'Teams' => array('fields' => array('name', 'calcTotalPointsPerYear'))
             ),

@@ -3,26 +3,35 @@ ini_set('max_execution_time', '300');
 
 use Cake\I18n\FrozenTime;
 
-require_once __DIR__ . './../../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 $mpdf = new \Mpdf\Mpdf();
-$mpdf->showImageErrors = true;
 
-function ellipsis($input, $maxLength = 25)
-{
-    return strlen($input) > $maxLength ? mb_convert_encoding(substr($input, 0, $maxLength), 'UTF-8', 'UTF-8') . "..." : $input;
-}
+try {
+    $mpdf->showImageErrors = true;
 
-$p = 0;
-foreach ($teamYears as $ty) {
-    if (!isset($ty['infos'])) {
-        continue; // not the needed group
+    function ellipsis(string $input, int $maxLength = 25): string
+    {
+        return strlen($input) > $maxLength ? mb_convert_encoding(substr($input, 0, $maxLength), 'UTF-8', 'UTF-8') . "..." : $input;
     }
 
-    $p++;
-    $mpdf->AddPage('L');
-    if ($p == 1) {
-        $mpdf->WriteHTML('<style type="text/css">
+    $p = 0;
+    $teamYears = $teamYears ?? array();
+
+    foreach ($teamYears as $ty) {
+        if (!isset($ty['infos'])) {
+            continue; // not the needed group
+        }
+
+        $p++;
+        $html = '';
+        $mpdf->AddPage('L');
+        $mpdf->SetDefaultBodyCSS('background', "url('img/logo2023.png')");
+        $mpdf->SetDefaultBodyCSS('background-position', "50px 152px");
+        $mpdf->SetDefaultBodyCSS('background-repeat', "no-repeat");
+
+        if ($p == 1) {
+            $html .= '<style type="text/css">
             table{border-collapse: collapse}
             th {border: 0}
             td {border: solid 2px #000}
@@ -35,100 +44,102 @@ foreach ($teamYears as $ty) {
             table.group td.g {text-align:right; font-weight: bold}
             table.group td.sr {font-style: italic}
             span{font-size: 16px}
-            </style>');
-    }
+            </style>';
+        }
 
-    if (isset($ty['infos']['matches'][0])) {
-        $mpdf->WriteHTML('<h2>Mannschaftsspielplan am  ' . $ty['day']->i18nFormat('EEEE, d.MM.Y') . '</h2>');
+        if (isset($ty['infos']['matches'][0])) {
+            $html .= '<h2>Mannschaftsspielplan am  ' . $ty['day']->i18nFormat('EEEE, d.MM.Y') . '</h2>';
 
-        $mpdf->WriteHTML('<img src="img/logo2023.png" style="float:left" width="150">');
-        $mpdf->WriteHTML('<table border="0"  cellspacing="0" cellpadding="6" align="center" width="70%">');
-        $mpdf->WriteHTML('<tr>');
-        $mpdf->WriteHTML('<th>Uhrzeit</th>');
-        $mpdf->WriteHTML('<th>Mannschaft</th>');
-        $mpdf->WriteHTML('<th>Sportart</th>');
-        $mpdf->WriteHTML('<th>Spielfeld</th>');
-        $mpdf->WriteHTML('<th>Team-PIN<br/>für SR</th>');
-        $mpdf->WriteHTML('</tr>');
+            //$html .= '<img src="img/logo2023.png" style="float:left" width="150">';
+            $html .= '<table border="0" cellspacing="0" cellpadding="6" align="center" width="70%">';
+            $html .= '<tr>';
+            $html .= '<th>Uhrzeit</th>';
+            $html .= '<th>Mannschaft</th>';
+            $html .= '<th>Sportart</th>';
+            $html .= '<th>Spielfeld</th>';
+            $html .= '<th>Team-PIN<br/>für SR</th>';
+            $html .= '</tr>';
 
-        foreach ($ty['infos']['matches'] as $match) {
-            $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td>' . FrozenTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime)->i18nFormat('HH:mm') . ' Uhr</td>');
-            $mpdf->WriteHTML('<td>' . $ty->team->name . '</td>');
-            //$mpdf->WriteHTML('<td>' . $match->teams1->name . '</td>');
-            //$mpdf->WriteHTML('<td>' . $match->teams2->name . '</td>');
-            $mpdf->WriteHTML('<td>' . $match->sport->code . ($match->isRefereeJob ? 'SR' : '') . '</td>');
-            $mpdf->WriteHTML('<td>' . $match->group_name . '</td>');
-            if ($match->isRefereeJob) {
-                $mpdf->WriteHTML('<td>' . $ty->refereePIN . '</td>');
+            foreach ($ty['infos']['matches'] as $match) {
+                $html .= '<tr>';
+                $html .= '<td>' . FrozenTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime)->i18nFormat('HH:mm') . ' Uhr</td>';
+                $html .= '<td>' . $ty->team->name . '</td>';
+                //$html .= '<td>' . $match->teams1->name . '</td>';
+                //$html .= '<td>' . $match->teams2->name . '</td>';
+                $html .= '<td>' . $match->sport->code . ($match->isRefereeJob ? 'SR' : '') . '</td>';
+                $html .= '<td>' . $match->group_name . '</td>';
+                if ($match->isRefereeJob) {
+                    $html .= '<td>' . $ty->refereePIN . '</td>';
+                }
+                $html .= '</tr>';
             }
-            $mpdf->WriteHTML('</tr>');
+
+            $html .= '</table>';
+            $html .= '<img src="img/qr-codes.png" style="margin:20px 0 0 150px" width="650">';
+
         }
+        $mpdf->WriteHTML($html);
 
-        $mpdf->WriteHTML('</table>');
-        $mpdf->WriteHTML('<img src="img/qr-codes.png" style="margin:20px 0 0 150px" width="650">');
+        $mpdf->AddPage();
+        $html = '<h2>Spielplan Gruppe ' . $ty['group']->name . ' <span>(' . $ty['day']->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
+        $mpdf->WriteHTML($html);
 
-    }
+        foreach ($ty['group']['rounds'] as $round) {
+            if (($round->id - 1) % 8 == 0) {
+                $html = '<table class="group" border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">';
+                $html .= '<tr>';
+                $html .= '<th>&nbsp;</th>';
+                $html .= '<th><img src="img/bb.png" width="15">Basketball</th>';
+                $html .= '<th><img src="img/fb.png" width="15">Fußball</th>';
+                $html .= '<th><img src="img/hb.png" width="15">Handball</th>';
+                $html .= '<th><img src="img/vb.png" width="15">Volleyball</th>';
+                $html .= '</tr>';
+            }
+            $html .= '<tr>';
+            $html .= '<td width="75">'
+                . '<span class="t">' . FrozenTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') . 'h:</span>'
+                . '<br/>Runde ' . $round->id . '</td>';
 
+            foreach ($round['matches'] as $match) {
+                $html .= '<td class="r" width="200">';
 
-    $mpdf->AddPage();
-    $mpdf->WriteHTML('<h2>Spielplan Gruppe ' . $ty['group']->name . ' <span>(' . $ty['day']->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>');
+                $html .= '<table border="0" cellspacing="0" cellpadding="0" width="100%">';
+                $html .= '<tr>';
+                $html .= '<td class="m">';
 
-    foreach ($ty['group']['rounds'] as $round) {
-        if (($round->id - 1) % 8 == 0) {
-            $mpdf->WriteHTML('<table class="group" border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">');
-            $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<th>&nbsp;</th>');
-            $mpdf->WriteHTML('<th><img src="img/bb.png" width="15">Basketball</th>');
-            $mpdf->WriteHTML('<th><img src="img/fb.png" width="15">Fußball</th>');
-            $mpdf->WriteHTML('<th><img src="img/hb.png" width="15">Handball</th>');
-            $mpdf->WriteHTML('<th><img src="img/vb.png" width="15">Volleyball</th>');
-            $mpdf->WriteHTML('</tr>');
-        }
-        $mpdf->WriteHTML('<tr>');
-        $mpdf->WriteHTML('<td width="75">'
-            . '<span class="t">' . FrozenTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') . 'h:</span>'
-            . '<br/>Runde ' . $round->id . '</td>');
+                $html .= '<table border="0" cellspacing="0" cellpadding="2" width="100%">';
+                $html .= '<tr>';
+                $html .= '<td>' . ellipsis($match->teams1->name) . '</td>';
+                $html .= '<td class="g" width="10">' . $match->resultGoals1 . '&nbsp;</td>';
+                $html .= '</tr>';
+                $html .= '<tr>';
+                $html .= '<td>' . ellipsis($match->teams2->name) . '</td>';
+                $html .= '<td class="g">' . $match->resultGoals2 . '&nbsp;</td>';
+                $html .= '</tr>';
+                $html .= '</table>';
 
-        foreach ($round['matches'] as $match) {
-            $mpdf->WriteHTML('<td class="r" width="200">');
+                $html .= '</td>';
+                $html .= '</tr>';
+                $html .= '<tr>';
+                $html .= '<td class="sr">' . ellipsis('SR: ' . $match->teams3->name, 26) . '</td>';
+                $html .= '</tr>';
+                $html .= '</table>';
 
-            $mpdf->WriteHTML('<table border="0" cellspacing="0" cellpadding="0" width="100%">');
-            $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td class="m">');
+                $html .= '</td>';
+            }
 
-            $mpdf->WriteHTML('<table border="0" cellspacing="0" cellpadding="2" width="100%">');
-            $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td>' . ellipsis($match->teams1->name) . '</td>');
-            $mpdf->WriteHTML('<td class="g" width="10">' . $match->resultGoals1 . '&nbsp;</td>');
-            $mpdf->WriteHTML('</tr>');
-            $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td>' . ellipsis($match->teams2->name) . '</td>');
-            $mpdf->WriteHTML('<td class="g">' . $match->resultGoals2 . '&nbsp;</td>');
-            $mpdf->WriteHTML('</tr>');
-            $mpdf->WriteHTML('</table>');
-
-            $mpdf->WriteHTML('</td>');
-            $mpdf->WriteHTML('</tr>');
-            $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td class="sr">' . ellipsis('SR: ' . $match->teams3->name, 26) . '</td>');
-            $mpdf->WriteHTML('</tr>');
-            $mpdf->WriteHTML('</table>');
-
-            $mpdf->WriteHTML('</td>');
-        }
-
-        $mpdf->WriteHTML('</tr>');
-        if ($round->id % 8 == 0) {
-            $mpdf->WriteHTML('</table>');
-            if ($round->id == 8) {
-                $mpdf->WriteHTML('<br /><br />');
+            $html .= '</tr>';
+            if ($round->id % 8 == 0) {
+                $html .= '</table>';
+                if ($round->id == 8) {
+                    $html .= '<br /><br />';
+                }
+                $mpdf->WriteHTML($html);
             }
         }
     }
+
+    $mpdf->Output();
+} catch (\Mpdf\MpdfException $e) {
+    echo $e->getMessage();
 }
-
-
-$mpdf->Output();
-
-

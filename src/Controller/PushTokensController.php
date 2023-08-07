@@ -10,8 +10,7 @@ namespace App\Controller;
  */
 class PushTokensController extends AppController
 {
-
-    public function add()
+    public function add(): void
     {
         $return = false;
         $postData = $this->request->getData();
@@ -32,11 +31,12 @@ class PushTokensController extends AppController
         $this->apiReturn($return);
     }
 
-    public function byTeam($team_id = false)
+    public function byTeam(string $team_id = ''): void
     {
         $pushTokens = false;
 
-        if ($team_id !== false) {
+        if ($team_id !== '') {
+            $team_id = (int)$team_id;
             $postData = $this->request->getData();
 
             if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {

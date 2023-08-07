@@ -1,49 +1,56 @@
 <?php
-
-require_once __DIR__ . './../../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 $mpdf = new \Mpdf\Mpdf();
 
-$p = 0;
-foreach ($groups as $group) {
-    $p++;
-    $mpdf->AddPage('L');
-    if ($p == 1) {
-        $mpdf->WriteHTML('<style type="text/css">
+try {
+    $p = 0;
+    $groups = $groups ?? array();
+
+    foreach ($groups as $group) {
+        $p++;
+        $html = '';
+        $mpdf->AddPage('L');
+
+        if ($p == 1) {
+            $html .= '<style>
             table{border-collapse: collapse}
             th {border: 0}
             td {border: solid 2px #000}
             span{font-size: 16px}
-            </style>');
+            </style>';
+        }
+
+        $html .= '<h1>Tabelle Gruppe ' . $group->name . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h1>';
+
+        $html .= '<table border="0"  cellspacing="0" cellpadding="8" align="center" width="100%">';
+        $html .= '<tr>';
+        $html .= '<th></th>';
+        $html .= '<th></th>';
+        $html .= '<th>Spiele</th>';
+        $html .= '<th>Torverh.</th>';
+        $html .= '<th>Tordiff.</th>';
+        $html .= '<th>Punkte</th>';
+        $html .= '</tr>';
+
+        foreach ($group['groupTeams'] as $gT) {
+            $html .= '<tr>';
+            $html .= '<td>' . ($gT->calcRanking ?? 0) . '</td>';
+            $html .= '<td>' . $gT->team->name . '</td>';
+            $html .= '<td>' . ($gT->calcCountMatches ?? 0) . '</td>';
+            $html .= '<td>' . ($gT->calcGoalsScored ?? 0) . ':' . ($gT->calcGoalsReceived ?? 0) . '</td>';
+            $html .= '<td>' . ($gT->calcGoalsDiff > 0 ? '+' : '') . ($gT->calcGoalsDiff ?? 0) . '</td>';
+            $html .= '<td>' . ($gT->calcPointsPlus ?? 0) . ':' . ($gT->calcPointsMinus ?? 0) . '</td>';
+            $html .= '</tr>';
+        }
+
+        $html .= '</table>';
+        $mpdf->WriteHTML($html);
     }
 
-    $mpdf->WriteHTML('<h1>Tabelle Gruppe ' . $group->name . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h1>');
-
-    $mpdf->WriteHTML('<table border="0"  cellspacing="0" cellpadding="8" align="center" width="100%">');
-    $mpdf->WriteHTML('<tr>');
-    $mpdf->WriteHTML('<th></th>');
-    $mpdf->WriteHTML('<th></th>');
-    $mpdf->WriteHTML('<th>Spiele</th>');
-    $mpdf->WriteHTML('<th>Torverh.</th>');
-    $mpdf->WriteHTML('<th>Tordiff.</th>');
-    $mpdf->WriteHTML('<th>Punkte</th>');
-    $mpdf->WriteHTML('</tr>');
-
-    foreach ($group['groupTeams'] as $gT) {
-        $mpdf->WriteHTML('<tr>');
-        $mpdf->WriteHTML('<td>' . ($gT->calcRanking ?? 0) . '</td>');
-        $mpdf->WriteHTML('<td>' . $gT->team->name . '</td>');
-        $mpdf->WriteHTML('<td>' . ($gT->calcCountMatches ?? 0) . '</td>');
-        $mpdf->WriteHTML('<td>' . ($gT->calcGoalsScored ?? 0) . ':' . ($gT->calcGoalsReceived ?? 0) . '</td>');
-        $mpdf->WriteHTML('<td>' . ($gT->calcGoalsDiff > 0 ? '+' : '') . ($gT->calcGoalsDiff ?? 0) . '</td>');
-        $mpdf->WriteHTML('<td>' . ($gT->calcPointsPlus ?? 0) . ':' . ($gT->calcPointsMinus ?? 0) . '</td>');
-        $mpdf->WriteHTML('</tr>');
-    }
-
-    $mpdf->WriteHTML('</table>');
-
+    $mpdf->Output();
+} catch (\Mpdf\MpdfException $e) {
+    echo $e->getMessage();
 }
-
-$mpdf->Output();
 
 

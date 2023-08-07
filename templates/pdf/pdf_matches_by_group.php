@@ -2,21 +2,25 @@
 
 use Cake\I18n\FrozenTime;
 
-require_once __DIR__ . './../../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 $mpdf = new \Mpdf\Mpdf();
 
-function ellipsis($input, $maxLength = 25)
-{
-    return strlen($input) > $maxLength ? mb_convert_encoding(substr($input, 0, $maxLength), 'UTF-8', 'UTF-8') . "..." : $input;
-}
+try {
+    function ellipsis(string $input, int $maxLength = 25): string
+    {
+        return strlen($input) > $maxLength ? mb_convert_encoding(substr($input, 0, $maxLength), 'UTF-8', 'UTF-8') . "..." : $input;
+    }
 
-$p = 0;
-foreach ($groups as $group) {
-    $p++;
-    $mpdf->AddPage('L');
-    if ($p == 1) {
-        $mpdf->WriteHTML('<style type="text/css">
+    $p = 0;
+    $groups = $groups ?? array();
+
+    foreach ($groups as $group) {
+        $p++;
+        $html = '';
+        $mpdf->AddPage('L');
+        if ($p == 1) {
+            $html .= '<style>
             table{border-collapse: collapse}
             th {border: 0; font-size: 14px; vertical-align: top; text-align:left}
             td {border: 0; font-size: 14px; vertical-align: top}
@@ -26,64 +30,68 @@ foreach ($groups as $group) {
             td.g {text-align:right; font-weight: bold}
             td.sr {font-style: italic}
             span{font-size: 16px}
-            </style>');
-    }
+            </style>';
+        }
 
-    foreach ($group['rounds'] as $round) {
-        if (($round->id - 1) % 8 == 0) {
-            if ($round->id != 1) {
-                $mpdf->AddPage('L');
+        foreach ($group['rounds'] as $round) {
+            if (($round->id - 1) % 8 == 0) {
+                if ($round->id != 1) {
+                    $mpdf->AddPage('L');
+                    $html = '';
+                }
+                $html .= '<h2>Spielplan Gruppe ' . $group->name . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
+                $html .= '<table border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">';
+                $html .= '<tr>';
+                $html .= '<th>&nbsp;</th>';
+                $html .= '<th><img src="img/bb.png" width="15">Basketball</th>';
+                $html .= '<th><img src="img/fb.png" width="15">Fußball</th>';
+                $html .= '<th><img src="img/hb.png" width="15">Handball</th>';
+                $html .= '<th><img src="img/vb.png" width="15">Volleyball</th>';
+                $html .= '</tr>';
             }
-            $mpdf->WriteHTML('<h2>Spielplan Gruppe ' . $group->name . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>');
-            $mpdf->WriteHTML('<table border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">');
-            $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<th>&nbsp;</th>');
-            $mpdf->WriteHTML('<th><img src="img/bb.png" width="15">Basketball</th>');
-            $mpdf->WriteHTML('<th><img src="img/fb.png" width="15">Fußball</th>');
-            $mpdf->WriteHTML('<th><img src="img/hb.png" width="15">Handball</th>');
-            $mpdf->WriteHTML('<th><img src="img/vb.png" width="15">Volleyball</th>');
-            $mpdf->WriteHTML('</tr>');
-        }
-        $mpdf->WriteHTML('<tr>');
-        $mpdf->WriteHTML('<td width="75">'
-            . '<span class="t">' . FrozenTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') . 'h:</span>'
-            . '<br/>Runde ' . $round->id . '</td>');
+            $html .= '<tr>';
+            $html .= '<td width="75">'
+                . '<span class="t">' . FrozenTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') . 'h:</span>'
+                . '<br/>Runde ' . $round->id . '</td>';
 
-        foreach ($round['matches'] as $match) {
-            $mpdf->WriteHTML('<td class="r" width="200">');
+            foreach ($round['matches'] as $match) {
+                $html .= '<td class="r" width="200">';
 
-            $mpdf->WriteHTML('<table border="0" cellspacing="0" cellpadding="0" width="100%">');
-            $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td class="m">');
+                $html .= '<table border="0" cellspacing="0" cellpadding="0" width="100%">';
+                $html .= '<tr>';
+                $html .= '<td class="m">';
 
-            $mpdf->WriteHTML('<table border="0" cellspacing="0" cellpadding="2" width="100%">');
-            $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td>' . ellipsis(!$match->canceled ? $match->teams1->name : '-') . '</td>');
-            $mpdf->WriteHTML('<td class="g" width="10">' . $match->resultGoals1 . '&nbsp;</td>');
-            $mpdf->WriteHTML('</tr>');
-            $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td>' . ellipsis(!$match->canceled ? $match->teams2->name : '-') . '</td>');
-            $mpdf->WriteHTML('<td class="g">' . $match->resultGoals2 . '&nbsp;</td>');
-            $mpdf->WriteHTML('</tr>');
-            $mpdf->WriteHTML('</table>');
+                $html .= '<table border="0" cellspacing="0" cellpadding="2" width="100%">';
+                $html .= '<tr>';
+                $html .= '<td>' . ellipsis(!$match->canceled ? $match->teams1->name : '-') . '</td>';
+                $html .= '<td class="g" width="10">' . $match->resultGoals1 . '&nbsp;</td>';
+                $html .= '</tr>';
+                $html .= '<tr>';
+                $html .= '<td>' . ellipsis(!$match->canceled ? $match->teams2->name : '-') . '</td>';
+                $html .= '<td class="g">' . $match->resultGoals2 . '&nbsp;</td>';
+                $html .= '</tr>';
+                $html .= '</table>';
 
-            $mpdf->WriteHTML('</td>');
-            $mpdf->WriteHTML('</tr>');
-            $mpdf->WriteHTML('<tr>');
-            $mpdf->WriteHTML('<td class="sr">' . ellipsis('SR: ' . (!$match->canceled ? $match->teams3->name : '-'), 28) . '</td>');
-            $mpdf->WriteHTML('</tr>');
-            $mpdf->WriteHTML('</table>');
+                $html .= '</td>';
+                $html .= '</tr>';
+                $html .= '<tr>';
+                $html .= '<td class="sr">' . ellipsis('SR: ' . (!$match->canceled ? $match->teams3->name : '-'), 28) . '</td>';
+                $html .= '</tr>';
+                $html .= '</table>';
 
-            $mpdf->WriteHTML('</td>');
-        }
+                $html .= '</td>';
+            }
 
-        $mpdf->WriteHTML('</tr>');
-        if ($round->id % 8 == 0) {
-            $mpdf->WriteHTML('</table>');
+            $html .= '</tr>';
+            if ($round->id % 8 == 0) {
+                $html .= '</table>';
+                $mpdf->WriteHTML($html);
+            }
         }
     }
+
+    $mpdf->Output();
+} catch (\Mpdf\MpdfException $e) {
+    echo $e->getMessage();
 }
-
-$mpdf->Output();
-
 

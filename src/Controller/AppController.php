@@ -19,11 +19,15 @@ namespace App\Controller;
 
 use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
+use App\Model\Entity\Login;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Round;
+use App\Model\Entity\TeamYear;
 use App\Model\Entity\Year;
+use Cake\Chronos\ChronosInterface;
 use Cake\Controller\Controller;
 use Cake\Datasource\ConnectionManager;
+use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\I18n\FrozenTime;
 
@@ -45,6 +49,7 @@ class AppController extends Controller
      * e.g. `$this->loadComponent('FormProtection');`
      *
      * @return void
+     * @throws \Exception
      */
     public function initialize(): void
     {
@@ -61,14 +66,12 @@ class AppController extends Controller
         //$this->loadComponent('FormProtection');
     }
 
-    public function apiReturn($object, $year_id = false, $day_id = false)
+    public function apiReturn(mixed $object, int $year_id = 0, int $day_id = 0): void
     {
         $this->RequestHandler->renderAs($this, 'json');
 
         if ($object) {
-            $this->loadModel('Years');
             $year = $this->getCurrentYear()->toArray();
-
             $year['settings'] = $this->getSettings();
 
             // todo: delete after V3.0 complete rollout:
@@ -85,7 +88,7 @@ class AppController extends Controller
 
             // only for archive
             if (($year_id && $year_id != $year['id']) || ($day_id && $day_id != $year['settings']['currentDay_id'])) {
-                $yearSelected = $this->Years->find('all', array(
+                $yearSelected = $this->fetchTable('Years')->find('all', array(
                     'fields' => array('id', 'name', $day_id ? 'day' . $day_id : 'day1'),
                     'conditions' => array('id' => $year_id)
                 ))->first()->toArray();
@@ -94,8 +97,7 @@ class AppController extends Controller
                     $yearSelected['day'] = $yearSelected['day' . $day_id];
                     unset($yearSelected['day' . $day_id]);
                 } else {
-                    $this->loadModel('Groups');
-                    $yearSelected['daysWithGroups'] = $this->Groups->find('all', array(
+                    $yearSelected['daysWithGroups'] = $this->fetchTable('Groups')->find('all', array(
                         'conditions' => array('year_id' => $yearSelected['id']),
                         'group' => 'day_id'
                     ))->count();
@@ -106,96 +108,101 @@ class AppController extends Controller
 
             $this->set($return);
         } else {
-            $this->set($object);
+            $this->set(array());
         }
     }
 
-    public function pdfReturn()
+    public function pdfReturn(): void
     {
-        $this->RequestHandler->renderAs($this, 'pdf');
+        $this->RequestHandler->respondAs('pdf');
     }
 
-    public function beforeRender(EventInterface $event)
+    public function beforeRender(EventInterface $event): void
     {
         $this->viewBuilder()->setOption('serialize', true);
-        //$this->RequestHandler->renderAs($this, 'json');
     }
 
-    protected function getSettings()
+    protected function getSettings(): array
     {
-        $this->loadModel('Settings');
-
-        return $this->Settings->find('list', [
+        return $this->fetchTable('Settings')->find('list', [
             'keyField' => 'name',
             'valueField' => 'value'
         ])->toArray();
     }
 
-    protected function getCurrentYear()
+    protected function getCurrentYear(): Year
     {
         $settings = $this->getSettings();
-        $this->loadModel('Years');
         // todo: put currentYear_id inside return
-
-        return $this->Years->find('all', array(
+        $year = $this->fetchTable('Years')->find('all', array(
             'conditions' => array('id' => $settings['currentYear_id']),
         ))->first();
+        /**
+         * @var Year $year
+         */
+        return $year;
     }
 
-    protected function getCurrentYearId()
+    protected function getCurrentYearId(): int
     {
-        return $this->getCurrentYear()->get('id');
+        $year = $this->getCurrentYear();
+        return $year->get('id');
     }
 
-    protected function getCurrentDayId()
+    protected function getCurrentDayId(): int
     {
         return ($this->getSettings())['currentDay_id'];
     }
 
-    protected function getGroupByMatchId($id)
+    protected function getGroupByMatchId(int $id): Group
     {
-        $this->loadModel('Matches');
-        $this->loadModel('Groups');
-
-        $match = $this->Matches->find()->where(['id' => $id])->first();
-        $group = $match ? $this->Groups->find()->where(['id' => $match->get('group_id')])->first() : false;
-
-        return $group ?: false;
+        $match = $this->fetchTable('Matches')->find()->where(['id' => $id])->first();
+        /**
+         * @var Match4 $match
+         */
+        $group = $this->fetchTable('Groups')->find()->where(['id' => $match->get('group_id')])->first();
+        /**
+         * @var Group $group
+         */
+        return $group;
     }
 
-    protected function getGroupByTeamId($team_id, $year_id, $day_id)
+    protected function getGroupByTeamId(int $team_id, int $year_id, int $day_id): Group
     {
-        $this->loadModel('Groups');
-        $this->loadModel('GroupTeams');
-        $groupteam = $this->GroupTeams->find('all', array(
+        $groupteam = $this->fetchTable('GroupTeams')->find('all', array(
             'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
             'conditions' => array('team_id' => $team_id, 'Groups.year_id' => $year_id, 'Groups.day_id' => $day_id),
         ))->first();
-
-        $group = $groupteam ? $this->Groups->find()->where(['id' => $groupteam->get('group_id')])->first() : false;
-
-        return $group ?: false;
+        /**
+         * @var GroupTeam $groupteam
+         */
+        $group = $this->fetchTable('Groups')->find()->where(['id' => $groupteam->get('group_id')])->first();
+        /**
+         * @var Group $group
+         */
+        return $group;
     }
 
-    protected function getPrevAndNextGroup($group_id)
+    protected function getPrevAndNextGroup(int $group_id): array|EntityInterface
     {
-        $this->loadModel('Groups');
-        $group = $this->Groups->find()->where(['id' => $group_id])->first();
-
+        $group = $this->fetchTable('Groups')->find()->where(['id' => $group_id])->first();
+        /**
+         * @var Group $group
+         */
         if ($group) {
-            $countGroups = $this->Groups->find('all', array(
+            $countGroups = $this->fetchTable('Groups')->find('all', array(
                 'conditions' => array('year_id' => $group->year_id, 'day_id' => $group->day_id)
             ))->count();
 
             $groupPosNumber = $this->getGroupPosNumber($group_id);
             if ($groupPosNumber + 1 > 1) {
-                $group['prevGroup'] = $this->Groups->find('all', array(
+                $group['prevGroup'] = $this->fetchTable('Groups')->find('all', array(
                     'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
                     'conditions' => array('id' => $group_id - 1)
                 ))->first();
             }
             if ($groupPosNumber + 1 < $countGroups) {
-                $group['nextGroup'] = $this->Groups->find('all', array(
+                $group['nextGroup'] = $this->fetchTable('Groups')->find('all', array(
                     'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
                     'conditions' => array('id' => $group_id + 1)
                 ))->first();
@@ -205,10 +212,14 @@ class AppController extends Controller
         return $group;
     }
 
-    protected function getScheduleShowTime($year_id, $day_id, $adminView = 0)
+    protected function getScheduleShowTime(int $year_id, int $day_id, int $adminView = 0): ChronosInterface|int|FrozenTime
     {
         $settings = $this->getSettings();
-        $currentYear = $this->getCurrentYear()->toArray();
+        $currentYear = $this->getCurrentYear();
+        /**
+         * @var Year $currentYear
+         */
+        $currentYear = $currentYear->toArray();
         $stime = FrozenTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
         $showTime = $stime->subHours($settings['showScheduleHoursBefore']);
         $now = FrozenTime::now();
@@ -219,7 +230,7 @@ class AppController extends Controller
         return $showTime; // do not show schedule
     }
 
-    protected function getMatchesByTeam($team_id, $year_id, $day_id, $adminView = 0)
+    protected function getMatchesByTeam(int $team_id, int $year_id, int $day_id, int $adminView = 0): array
     {
         $showTime = $this->getScheduleShowTime($year_id, $day_id, $adminView);
         if ($showTime !== 0) {
@@ -238,15 +249,16 @@ class AppController extends Controller
 
             $return['matches'] = $team_id ? $this->getMatches($conditionsArray) : false;
 
-            $this->loadModel('GroupTeams');
-            $groupteam = $this->GroupTeams->find('all', array(
+            $groupteam = $this->fetchTable('GroupTeams')->find('all', array(
                 'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
                 'conditions' => array('team_id' => $team_id, 'Groups.year_id' => $year_id, 'Groups.day_id' => $day_id),
             ))->first();
 
             if ($groupteam) {
-                $this->loadModel('Groups');
-                $group = $this->Groups->find()->where(['id' => $groupteam['group_id']])->first();
+                $group = $this->fetchTable('Groups')->find()->where(['id' => $groupteam['group_id']])->first();
+                /**
+                 * @var Group $group
+                 */
                 $return['group']['group_id'] = $group->get('id');
                 $return['group']['group_name'] = $group->get('name');
                 $return['referee_group_name'] = $this->getRefereeGroup($group)->get('name');
@@ -256,9 +268,9 @@ class AppController extends Controller
         return $return;
     }
 
-    protected function getMatches($conditionsArray, $includeLogs = 0, $sortBySportId = 1, $adminView = 0)
+    protected function getMatches(array $conditionsArray, int $includeLogs = 0, int $sortBySportId = 1, int $adminView = 0): bool|array
     {
-        $query = $this->Matches->find('all', array(
+        $query = $this->fetchTable('Matches')->find('all', array(
             'contain' => array(
                 'Rounds',
                 'Groups' => array('fields' => array('group_name' => 'Groups.name', 'day_id')),
@@ -317,11 +329,14 @@ class AppController extends Controller
                     unset($row['round']['timeStartDay2']);
 
                     if ($adminView) {
-                        $this->loadModel('TeamYears');
-                        $refereeTy = $this->TeamYears->find('all', array('conditions' => array('team_id' => ($row['refereeTeam_id'] ?? 0), 'year_id' => $row['group']['year']['id'])))->first();
+                        $refereeTy = $this->fetchTable('TeamYears')->find('all', array('conditions' => array('team_id' => ($row['refereeTeam_id'] ?? 0), 'year_id' => $row['group']['year']['id'])))->first();
+                        /**
+                         * @var TeamYear $refereeTy
+                         */
                         $row['isRefereeCanceled'] = $refereeTy ? $refereeTy->get('canceled') : 1;
                     } else {
                         unset($row['refereePIN']); // security issue
+                        unset($row['remarks']);
                     }
 
                     if (!$includeLogs) {
@@ -341,7 +356,7 @@ class AppController extends Controller
                         $row['logsCalc']['isLoggedIn'] = $row['logsCalc']['isLoggedIn'] ?? 0;
 
                         if ($adminView) {
-                            $row['isResultOk'] = $this->isResultOk($row) ? 1 : 0;
+                            $row['isResultOk'] = $this->isResultOk($row->toArray()) ? 1 : 0;
                         }
                     }
 
@@ -359,7 +374,7 @@ class AppController extends Controller
         return $matches;
     }
 
-    private function isResultOk($row): bool
+    private function isResultOk(array $row): bool
     {
         return !!(
             isset($row['logsCalc']['teamWon']) &&
@@ -376,10 +391,9 @@ class AppController extends Controller
             ));
     }
 
-    protected function getLogs($match_id)
+    protected function getLogs(int $match_id): bool|array
     {
-        $this->loadModel('MatcheventLogs');
-        $query = $this->MatcheventLogs->find('all', array(
+        $query = $this->fetchTable('MatcheventLogs')->find('all', array(
             'contain' => array(
                 'Matchevents' => array('fields' => array('code', 'name', 'playerFouledOutAfter', 'playerFoulSuspMinutes', 'showOnSportsOnly'))
             ),
@@ -400,9 +414,8 @@ class AppController extends Controller
     }
 
 
-    protected function getCalcFromLogs($logs)
+    protected function getCalcFromLogs(array $logs): array
     {
-        $this->loadModel('Matchevents');
         $calc = array();
 
         if ($logs && count($logs) > 0) {
@@ -556,7 +569,7 @@ class AppController extends Controller
             if ($lastAliveTime !== null) {
                 $setting = $this->getSettings();
                 $aliveDiff = $lastAliveTime->diffInSeconds(FrozenTime::now());
-                $calc['isLoggedIn'] = (int)($aliveDiff < ($setting['autoLogoutSecsAfter'] ?? 60)) * ($calc['isLoggedIn'] ?? 0);
+                $calc['isLoggedIn'] = (int)($aliveDiff < ($setting['autoLogoutSecsAfter'] ?? 60)) * (int)($calc['isLoggedIn'] ?? 0);
             }
 
             $calc['avgOffset'] = $offsetCount > 0 ? round($allOffset / $offsetCount, 2) : 0;
@@ -565,39 +578,35 @@ class AppController extends Controller
         return $calc;
     }
 
-    public function reCalcRanking($team1_id = false, $team2_id = false)
+    public function reCalcRanking(string $team1_id = '', string $team2_id = ''): void
     {
         $return = array();
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $return = $this->getCalcRanking($team1_id, $team2_id);
+            $return = $this->getCalcRanking((int)$team1_id, (int)$team2_id);
         }
 
         $this->apiReturn($return);
     }
 
 
-    protected function getCalcRanking($team1_id = false, $team2_id = false, $doSetRanking = true)
+    protected function getCalcRanking(int $team1_id = 0, int $team2_id = 0, bool $doSetRanking = true): array
     {
         $year = $this->getCurrentYear();
         /**
          * @var Year $year
          */
-        $this->loadModel('GroupTeams');
-
         $condGtArray = $team1_id ? ($team2_id ? array('GroupTeams.team_id IN' => array($team1_id, $team2_id)) : array('GroupTeams.team_id' => $team1_id)) : array();
-        $groupTeams = $this->GroupTeams->find('all', array(
+        $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
             'contain' => array('Groups' => array('fields' => array('name', 'year_id', 'day_id'))),
             'conditions' => array_merge($condGtArray, array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId())),
             'order' => array('GroupTeams.id' => 'ASC')
         ));
 
         $countMatches = 0;
-        $countGroupTeams = $groupTeams ? $groupTeams->count() : 0;
+        $countGroupTeams = $groupTeams->count();
         if ($countGroupTeams > 0) {
-            $this->loadModel('Matches');
-
             foreach ($groupTeams as $gt) {
                 /**
                  * @var GroupTeam $gt
@@ -620,7 +629,7 @@ class AppController extends Controller
 
                 $matches = $this->getMatches($conditionsArray);
 
-                if ($matches && count($matches) > 0) {
+                if (is_array($matches) && count($matches) > 0) {
                     foreach ($matches as $m) {
                         /**
                          * @var Match4 $m
@@ -649,7 +658,7 @@ class AppController extends Controller
                     $gt->set('calcPointsPlus', (int)$calcPointsPlus);
                     $gt->set('calcPointsMinus', (int)$calcPointsMinus);
 
-                    $this->GroupTeams->save($gt);
+                    $this->fetchTable('GroupTeams')->save($gt);
                 }
             }
         }
@@ -662,9 +671,9 @@ class AppController extends Controller
     }
 
 
-    protected function setRanking($year)
+    protected function setRanking(Year $year): void
     {
-        $groupTeams = $this->GroupTeams->find('all', array(
+        $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
             'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
             'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
             'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcPointsPlus' => 'DESC', 'GroupTeams.calcGoalsDiff' => 'DESC', 'GroupTeams.calcGoalsScored' => 'DESC')
@@ -675,7 +684,7 @@ class AppController extends Controller
         if ($groupTeams->count() > 0) {
             foreach ($groupTeams as $gt) { // set temporarily null because of unique values
                 $gt->set('calcRanking', null);
-                $this->GroupTeams->save($gt);
+                $this->fetchTable('GroupTeams')->save($gt);
             }
 
             foreach ($groupTeams as $gt) { // set correct ranking
@@ -687,49 +696,50 @@ class AppController extends Controller
 
                 $gt->set('calcRanking', $countRanking);
 
-                $this->GroupTeams->save($gt);
+                $this->fetchTable('GroupTeams')->save($gt);
             }
         }
 
-        return;
     }
 
-    protected function getGroupPosNumber($group_id): int
+    protected function getGroupPosNumber(int $group_id): int
     {
-        $this->loadModel('Groups');
-        $group = $this->Groups->get($group_id);
-
+        $group = $this->fetchTable('Groups')->get($group_id);
+        /**
+         * @var Group $group
+         */
         return ord(strtoupper($group->name)) - ord('A');
     }
 
-    protected function getCurrentGroupId($number)
+    protected function getCurrentGroupId(int $number): int
     {
+        $year = $this->getCurrentYear();
         /**
          * @var Year $year
          */
-        $year = $this->getCurrentYear();
         $name = chr(ord('A') + $number);
 
-        $this->loadModel('Groups');
-        $group = $this->Groups->find('all', array(
+        $group = $this->fetchTable('Groups')->find('all', array(
             'conditions' => array('name' => $name, 'year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
             'order' => array('id' => 'ASC')
         ))->first();
+        /**
+         * @var Group $group
+         */
 
         return $group->id;
     }
 
-    protected function getGroupName($number)
+    protected function getGroupName(int $number): string|bool
     {
         $alphabet = range('A', 'Z');
 
         return $alphabet[$number] ?? false;
     }
 
-    protected function getMatchesByGroup($group): array
+    protected function getMatchesByGroup(Group $group): array
     {
-        $this->loadModel('Rounds');
-        $rounds = $this->Rounds->find('all', array(
+        $rounds = $this->fetchTable('Rounds')->find('all', array(
             'fields' => array('id', 'timeStartDay' . $group->day_id, 'autoUpdateResults'),
             'order' => array('id' => 'ASC')
         ))->toArray();
@@ -751,7 +761,7 @@ class AppController extends Controller
         return $rounds;
     }
 
-    public function clearTest()
+    public function clearTest(): void
     {
         $postData = $this->request->getData();
 
@@ -789,7 +799,7 @@ class AppController extends Controller
         }
     }
 
-    protected function updateCalcTotal()
+    protected function updateCalcTotal(): int
     {
         $conn = ConnectionManager::get('default');
         $stmt1 = $conn->execute(file_get_contents(__DIR__ . "/sql/setnull_team_calcTotal.sql"));
@@ -798,10 +808,9 @@ class AppController extends Controller
         return $stmt2->rowCount();
     }
 
-    protected function getFactorsLeastCommonMultiple()
+    protected function getFactorsLeastCommonMultiple(): \GMP|int
     {
-        $this->loadModel('Sports');
-        $sports = $this->Sports->find()->all();
+        $sports = $this->fetchTable('Sports')->find()->all();
 
         $gmp = 1;
         foreach ($sports as $s) {
@@ -811,16 +820,17 @@ class AppController extends Controller
         return $gmp;
     }
 
-    protected function checkUsernamePassword($name, $password)
+    protected function checkUsernamePassword(string $name, string $password): int|bool
     {
         $return = false;
 
         if ($this->request->is('post')) {
-            $this->loadModel('Logins');
-            $login = $this->Logins->find('all', array(
+            $login = $this->fetchTable('Logins')->find('all', array(
                 'conditions' => array('name' => $name, 'password' => md5($password)),
             ))->first();
-
+            /**
+             * @var Login $login
+             */
             if ($login && ($login->id ?? 0) > 0) {
                 $return = $login->id;
             }
@@ -829,9 +839,7 @@ class AppController extends Controller
         return $return;
     }
 
-
-    protected
-    function getRefereeGroup(Group $playGroup)
+    protected function getRefereeGroup(Group $playGroup): Group
     {
         // groupName: A->B, B->A, C->D, D->C, E->F, F->E, ...
         // groupPosNumber: 0->1, 1->0, 2->3, 3->2, 4->5, 5->4, ...
@@ -840,14 +848,16 @@ class AppController extends Controller
 
         $name = $this->getGroupName($refereeGroupPosNumber);
 
-        $refereeGroup = $this->Groups->find('all', array(
+        $refereeGroup = $this->fetchTable('Groups')->find('all', array(
             'conditions' => array('year_id' => $playGroup->year_id, 'day_id' => $playGroup->day_id, 'name' => $name)
         ))->first();
-
-        return $refereeGroup ?: false;
+        /**
+         * @var Group $refereeGroup
+         */
+        return $refereeGroup;
     }
 
-    protected function getCurrentRoundId($offset = 0)
+    protected function getCurrentRoundId(int $offset = 0): float|int
     {
         $time = FrozenTime::now();
         $time = $time->addMinutes($offset);

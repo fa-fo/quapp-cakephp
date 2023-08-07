@@ -13,6 +13,8 @@ use Cake\ORM\Entity;
  * @property \Cake\I18n\FrozenDate $day1
  * @property \Cake\I18n\FrozenDate $day2
  * @property int $teamsCount
+ * @property int $daysCount
+ * @property int $alwaysAutoUpdateResults
  *
  * @property \App\Model\Entity\Day $day
  * @property \App\Model\Entity\Group[] $groups
@@ -34,8 +36,10 @@ class Year extends Entity
         'day1' => true,
         'day2' => true,
         'teamsCount' => true,
+        'daysCount' => true,
         'day' => true,
         'groups' => true,
         'team_years' => true,
+        'alwaysAutoUpdateResults' => true,
     ];
 }

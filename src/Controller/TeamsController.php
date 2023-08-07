@@ -10,17 +10,17 @@ namespace App\Controller;
  */
 class TeamsController extends AppController
 {
-    public function index()
+    public function index(): void
     {
         $teams = false;
 
         $this->apiReturn($teams);
     }
 
-    public function byId($id = false)
+    public function byId(string $id = ''): void
     {
         $settings = $this->getSettings();
-        $conditionsArray = array('Teams.id' => $id);
+        $conditionsArray = array('Teams.id' => (int)$id);
 
         $team = $this->getTeams($conditionsArray, array(
             'TeamYears' => array('fields' => array('id', 'team_id', 'year_id', 'endRanking', 'canceled'), 'sort' => array('year_id' => 'DESC')),
@@ -32,20 +32,18 @@ class TeamsController extends AppController
         $this->apiReturn($team);
     }
 
-    private function getTeams($conditionsArray, $containArray = array())
+    private function getTeams(array $conditionsArray, array $containArray = array()): \Cake\ORM\Query
     {
-        $teams = $this->Teams->find('all', array(
+        return $this->Teams->find('all', array(
             'fields' => array('id', 'team_id' => 'id', 'team_name' => 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalPointsPerYear', 'calcTotalChampionships', 'calcTotalRanking'),
             'contain' => $containArray,
             'conditions' => $conditionsArray,
             'order' => array('calcTotalRanking' => 'ASC')
         ));
-
-        return $teams;
     }
 
     // Ewige Tabelle
-    public function all()
+    public function all(): void
     {
         $conditionsArray = array('calcTotalRankingPoints IS NOT' => null, 'hidden' => 0);
 
@@ -60,8 +58,9 @@ class TeamsController extends AppController
         $this->apiReturn($teams);
     }
 
-    public function balance($id = false)
+    public function balance(string $id = ''): void
     {
+        $id = (int)$id;
         $return = array();
         $settings = $this->getSettings();
 
@@ -75,10 +74,9 @@ class TeamsController extends AppController
             ),
         );
 
-        $this->loadModel('Matches');
         $matches = $id ? $this->getMatches($conditionsArray) : false;
 
-        if ($matches) {
+        if (is_array($matches)) {
             foreach ($matches as $m) {
                 // reverse trend for away team
                 $trend = $m->resultTrend ? abs($m->resultTrend - ($id == $m->team2_id ? 3 : 0)) : 0;
@@ -90,8 +88,7 @@ class TeamsController extends AppController
                 $return[$m->sport->id][$trend]++;
             }
 
-            $this->loadModel('Sports');
-            $return['sports'] = $this->Sports->find('all', array(
+            $return['sports'] = $this->fetchTable('Sports')->find('all', array(
                 'order' => array('name' => 'ASC')
             ))->toArray();
         }
@@ -100,8 +97,10 @@ class TeamsController extends AppController
     }
 
 
-    public function balanceMatches($id = false, $sport_id = false)
+    public function balanceMatches(string $id = '', string $sport_id = ''): void
     {
+        $id = (int)$id;
+        $sport_id = (int)$sport_id;
         $settings = $this->getSettings();
         $conditionsArray = array(
             'Years.id !=' => $settings['alwaysAutoUpdateResults'] && !$settings['isTest'] ? 0 : $settings['currentYear_id'],
@@ -114,43 +113,8 @@ class TeamsController extends AppController
             ),
         );
 
-        $this->loadModel('Matches');
         $matches = $id && $sport_id ? $this->getMatches($conditionsArray) : false;
 
         $this->apiReturn($matches);
     }
-
-
-    /*
-    public function add()
-    {
-        $team = $this->Teams->newEmptyEntity();
-        if ($this->request->is('post')) {
-            $team = $this->Teams->patchEntity($team, $this->request->getData());
-            if (!$this->Teams->save($team)) {
-                $team = false;
-            }
-        } else {
-            $team = false;
-        }
-
-        $this->apiReturn($team);
-    }
-
-    public function edit($id = false)
-    {
-        $team = $id ? $this->Teams->find()->where(['id' => $id])->first() : false;
-
-        if ($team) {
-            if ($this->request->is(['patch', 'post', 'put'])) {
-                $team = $this->Teams->patchEntity($team, $this->request->getData());
-                $this->Teams->save($team);
-            } else {
-                $team = false;
-            }
-        }
-
-        $this->apiReturn($team);
-    }
-*/
 }

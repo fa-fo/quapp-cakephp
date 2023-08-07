@@ -18,12 +18,14 @@ use Cake\I18n\FrozenTime;
 class GroupTeamsController extends AppController
 {
     // getRanking
-    public function all($group_id = false, $adminView = 0)
+    public function all(string $group_id = '', string $adminView = ''): void
     {
+        $group_id = (int)$group_id;
+        $adminView = (int)$adminView;
+        $group = $group_id ? $this->getPrevAndNextGroup($group_id) : false;
         /**
          * @var Group $group
          */
-        $group = $group_id ? $this->getPrevAndNextGroup($group_id) : false;
 
         if ($group) {
             $group['showRanking'] = 1;
@@ -55,13 +57,12 @@ class GroupTeamsController extends AppController
         ))->toArray();
     }
 
-    public function pdfAllRankings()
+    public function pdfAllRankings(): void
     {
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $this->loadModel('Groups');
-            $groups = $this->Groups->find('all', array(
+            $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id'),
                 'conditions' => array('year_id' => $this->getCurrentYearId(), 'day_id' => $this->getCurrentDayId()),
                 'order' => array('name' => 'ASC')
@@ -76,6 +77,7 @@ class GroupTeamsController extends AppController
                 $group['day'] = $day;
             }
 
+            $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('groups', $groups);
 
@@ -85,7 +87,7 @@ class GroupTeamsController extends AppController
         }
     }
 
-    public function addAll()
+    public function addAll(): void
     {
         $groupTeams = array();
         $postData = $this->request->getData();
@@ -100,10 +102,7 @@ class GroupTeamsController extends AppController
             ));
 
             if ($oldGroupTeams->count() == 0) {
-                $this->loadModel('TeamYears');
-                $this->loadModel('Groups');
-
-                $groups = $this->Groups->find('all', array(
+                $groups = $this->fetchTable('Groups')->find('all', array(
                     'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
                     'order' => array('id' => 'ASC')
                 ));
@@ -131,11 +130,11 @@ class GroupTeamsController extends AppController
         $this->apiReturn(count($groupTeams));
     }
 
-    private function addFromTeamYearsOrderById($year, Group $group, $countGroup)
+    private function addFromTeamYearsOrderById($year, Group $group, $countGroup): array
     {
         $groupTeams = array();
 
-        $teamYears = $this->TeamYears->find('all', array(
+        $teamYears = $this->fetchTable('TeamYears')->find('all', array(
             'conditions' => array('year_id' => $year->id),
             'order' => array('id' => 'ASC')
         ))->offset($group->teamsCount * $countGroup)->limit($group->teamsCount);
@@ -163,11 +162,8 @@ class GroupTeamsController extends AppController
     }
 
 
-    private function addFromPrevDayRanking($year, Group $group, $countGroup)
+    private function addFromPrevDayRanking(Year $year, Group $group, int $countGroup): array
     {
-        /**
-         * @var Year $year
-         */
         $groupTeams = array();
         $orderArray = array('GroupTeams.calcRanking' => 'ASC', 'GroupTeams.group_id' => 'ASC'); // standard for 64 teams
 
@@ -203,8 +199,7 @@ class GroupTeamsController extends AppController
         return $groupTeams;
     }
 
-
-    public function sortPlaceNumberAfterAddAll($mode = 'none')
+    public function sortPlaceNumberAfterAddAll(string $mode = 'none'): void
     {
         $countDoubleMatches['countSameMatch'] = 0;
         $countDoubleMatches['countSameMatchSameSport'] = 0;
@@ -214,14 +209,11 @@ class GroupTeamsController extends AppController
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $year = $this->getCurrentYear();
-            $this->loadModel('Matches');
-
             $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
             $existingMatches = $this->getMatches($conditionsArray);
 
             if (!$existingMatches) {
-                $this->loadModel('Groups');
-                $groups = $this->Groups->find('all', array(
+                $groups = $this->fetchTable('Groups')->find('all', array(
                     'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
                     'order' => array('id' => 'ASC')
                 ));
@@ -260,7 +252,9 @@ class GroupTeamsController extends AppController
                                         'contain' => array('Groups' => array('fields' => array('year_id', 'day_id'))),
                                         'conditions' => array('GroupTeams.team_id' => $row['team_id'], 'Groups.year_id' => $options['year_id'], 'Groups.day_id' => ($options['currentDay_id'] - 1)),
                                     ))->first();
-
+                                    /**
+                                     * @var GroupTeam $prevGroupteam
+                                     */
                                     $row['prevPlaceNumber'] = $prevGroupteam->placeNumber;
                                     $row['prevGroupId'] = $prevGroupteam->group_id;
 
@@ -346,7 +340,7 @@ class GroupTeamsController extends AppController
     }
 
 
-    private function getCountCheckings(GroupTeam $groupteam, $currentDay_id)
+    private function getCountCheckings(GroupTeam $groupteam, int $currentDay_id): array
     {
         $year = $this->getCurrentYear();
         $prevOpponentTeamIds = array();
@@ -354,20 +348,20 @@ class GroupTeamsController extends AppController
         $currentOpponentTeamPrevRankings = array();
         $currentOpponentTeamRankingPointsPerYear = array();
 
-        $this->loadModel('MatchschedulingPattern16');
-        $matchschedulings = $this->MatchschedulingPattern16->find('all');
+        $matchschedulings = $this->fetchTable('MatchschedulingPattern16')->find('all');
 
         foreach ($matchschedulings as $msc) {
             /**
              * @var Match4schedulingPattern16 $msc
              */
-
             if ($currentDay_id > 1 && in_array($groupteam->prevPlaceNumber, array($msc->placenumberTeam1, $msc->placenumberTeam2))) {
                 $prevOpponentGroupteam = $this->GroupTeams->find('all', array(
                     'contain' => array('Groups' => array('fields' => array('year_id', 'day_id'))),
                     'conditions' => array('GroupTeams.group_id' => $groupteam->prevGroupId, 'GroupTeams.placeNumber' => $msc->placenumberTeam1 == $groupteam->prevPlaceNumber ? $msc->placenumberTeam2 : $msc->placenumberTeam1, 'Groups.year_id' => $year->id, 'Groups.day_id' => ($this->getCurrentDayId() - 1)),
                 ))->first();
-
+                /**
+                 * @var GroupTeam $prevOpponentGroupteam
+                 */
                 $prevOpponentTeamIds[$msc->sport_id] = $prevOpponentTeamIds[$msc->sport_id] ?? array();
                 $prevOpponentTeamIds[$msc->sport_id][] = $prevOpponentGroupteam->team_id;
             }
@@ -385,7 +379,9 @@ class GroupTeamsController extends AppController
                     ),
                     'conditions' => array('GroupTeams.group_id' => $groupteam->group_id, 'GroupTeams.placeNumber' => $msc->placenumberTeam1 == $groupteam->placeNumber ? $msc->placenumberTeam2 : $msc->placenumberTeam1, 'Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
                 ))->first();
-
+                /**
+                 * @var GroupTeam $currentOpponentGroupteam
+                 */
                 $currentOpponentTeamIds[$msc->sport_id] = $currentOpponentTeamIds[$msc->sport_id] ?? array();
                 $currentOpponentTeamIds[$msc->sport_id][] = $currentOpponentGroupteam->team_id;
 
@@ -398,7 +394,9 @@ class GroupTeamsController extends AppController
                         'contain' => array('Groups' => array('fields' => array('year_id', 'day_id'))),
                         'conditions' => array('GroupTeams.team_id' => $currentOpponentGroupteam->team_id, 'Groups.year_id' => $year->id, 'Groups.day_id' => ($this->getCurrentDayId() - 1)),
                     ))->first();
-
+                    /**
+                     * @var GroupTeam $currentOpponentPrevGroupteam
+                     */
                     $currentOpponentTeamPrevRankings[] = $currentOpponentPrevGroupteam->calcRanking;
                 }
             }
@@ -415,8 +413,7 @@ class GroupTeamsController extends AppController
         );
     }
 
-
-    private function countDuplicates($array1, $array2)
+    private function countDuplicates(array $array1, array $array2): array
     {
         $countSameMatch = 0;
         $countSameMatchSameSport = 0;
@@ -441,7 +438,7 @@ class GroupTeamsController extends AppController
     }
 
 
-    private function getAvgOpponentPrevDayRanking($array)
+    private function getAvgOpponentPrevDayRanking(array $array): float|int
     {
         $c = 0;
         $sum = 0;
@@ -458,7 +455,7 @@ class GroupTeamsController extends AppController
     }
 
 
-    private function getNewPlaceNumberRandom($prevRankingInTeam, $prevGroupPosNumber, $groupPosNumber, $rand_array)
+    private function getNewPlaceNumberRandom(int $prevRankingInTeam, int $prevGroupPosNumber, int $groupPosNumber, array $rand_array): int
     {
         // first 3 parameters range 0..3
         $prevGroupPosNumber = $rand_array[$groupPosNumber][0] ? (3 - $prevGroupPosNumber) : $prevGroupPosNumber;
@@ -476,23 +473,6 @@ class GroupTeamsController extends AppController
         }
 
         return 0; // unreachable
-    }
-
-
-    public function edit($id = false)
-    {
-        $groupteam = $id ? $this->GroupTeams->find()->where(['id' => $id])->first() : false;
-
-        if ($groupteam) {
-            if ($this->request->is(['patch', 'post', 'put'])) {
-                $groupteam = $this->Matches->patchEntity($groupteam, $this->request->getData());
-                $this->GroupTeams->save($groupteam);
-            } else {
-                $groupteam = false;
-            }
-        }
-
-        $this->apiReturn($groupteam);
     }
 
 }

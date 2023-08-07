@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Setting;
 use Cake\Datasource\ConnectionManager;
 
 /**
@@ -12,7 +13,7 @@ use Cake\Datasource\ConnectionManager;
  */
 class YearsController extends AppController
 {
-    public function getCurrent()
+    public function getCurrent(): void
     {
         $year = $this->getCurrentYear()->toArray();
 
@@ -28,7 +29,7 @@ class YearsController extends AppController
         // todo: deprecated: after V2.0.1 complete rollout: function not needed anymore
     }
 
-    public function updateTeamsCount()
+    public function updateTeamsCount(): void
     {
         $conn = ConnectionManager::get('default');
         $stmt = $conn->execute(file_get_contents(__DIR__ . "/sql/update_years_teamsCount.sql"));
@@ -36,7 +37,7 @@ class YearsController extends AppController
         $this->apiReturn($stmt->rowCount());
     }
 
-    public function all()
+    public function all(): void
     {
         $settings = $this->getSettings();
 
@@ -52,80 +53,44 @@ class YearsController extends AppController
         $this->apiReturn($years);
     }
 
-    /*
-    public function add()
-    {
-        $year = $this->Years->newEmptyEntity();
-        if ($this->request->is('post')) {
-            $year = $this->Years->patchEntity($year, $this->request->getData());
-            if (!$this->Years->save($year)) {
-                $year = false;
-            }
-        } else {
-            $year = false;
-        }
-
-        $this->setCurrentYear($year->id);
-        $this->apiReturn($year);
-    }
-
-    public function edit($id = false)
-    {
-        $year = $id ? $this->Years->find()->where(['id' => $id])->first() : false;
-
-        if ($year) {
-            if ($this->request->is(['patch', 'post', 'put'])) {
-                $year = $this->Years->patchEntity($year, $this->request->getData());
-                $this->Years->save($year);
-            } else {
-                $year = false;
-            }
-        }
-
-        $this->setCurrentYear();
-        $this->apiReturn($year);
-    }
-
-    public function setCurrent($id = false)
-    {
-        $year = $this->setCurrentYear($id);
-
-        $this->apiReturn($year);
-    }
-*/
-    public function setCurrentDayIncrement()
+    public function setCurrentDayIncrement(): void
     {
         $year = $this->getCurrentYear();
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            if ($year && $this->getCurrentDayId() < $year->daysCount) {
-                $this->loadModel('Settings');
-
-                $currentDay_id = $this->Settings->find('all')->where(['name' => 'currentDay_id'])->first();
+            if ($this->getCurrentDayId() < $year->daysCount) {
+                $currentDay_id = $this->fetchTable('Settings')->find('all')->where(['name' => 'currentDay_id'])->first();
+                /**
+                 * @var Setting $currentDay_id
+                 */
                 $currentDay_id->set('value', $this->getCurrentDayId() + 1);
-                $this->Settings->save($currentDay_id);
+                $this->fetchTable('Settings')->save($currentDay_id);
 
-                $alwaysAutoUpdateResults = $this->Settings->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();
+                $alwaysAutoUpdateResults = $this->fetchTable('Settings')->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();
+                /**
+                 * @var Setting $alwaysAutoUpdateResults
+                 */
                 $alwaysAutoUpdateResults->set('value', 0);
-                $this->Settings->save($alwaysAutoUpdateResults);
+                $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
             }
         }
 
         $this->apiReturn($year);
     }
 
-    public function setAlwaysAutoUpdateResults()
+    public function setAlwaysAutoUpdateResults(): void
     {
         $postData = $this->request->getData();
         $alwaysAutoUpdateResults = false;
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $this->loadModel('Settings');
-
-            $alwaysAutoUpdateResults = $this->Settings->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();
+            $alwaysAutoUpdateResults = $this->fetchTable('Settings')->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();
+            /**
+             * @var Setting $alwaysAutoUpdateResults
+             */
             $alwaysAutoUpdateResults->set('value', 1);
-            $this->Settings->save($alwaysAutoUpdateResults);
+            $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
 
             $this->getCalcRanking();
         }
@@ -133,16 +98,18 @@ class YearsController extends AppController
         $this->apiReturn($alwaysAutoUpdateResults);
     }
 
-    public function showEndRanking($show = 0)
+    public function showEndRanking(string $show = ''): void
     {
         $postData = $this->request->getData();
         $showEndRanking = false;
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $this->loadModel('Settings');
-            $showEndRanking = $this->Settings->find('all')->where(['name' => 'showEndRanking'])->first();
+            $showEndRanking = $this->fetchTable('Settings')->find('all')->where(['name' => 'showEndRanking'])->first();
+            /**
+             * @var Setting $showEndRanking
+             */
             $showEndRanking->set('value', (int)$show);
-            $this->Settings->save($showEndRanking);
+            $this->fetchTable('Settings')->save($showEndRanking);
 
             $this->getCalcRanking();
         }
@@ -150,30 +117,26 @@ class YearsController extends AppController
         $this->apiReturn($showEndRanking);
     }
 
-
     // get Status of current Day
-    public function getStatus()
+    public function getStatus(): void
     {
         $year = $this->getCurrentYear();
 
-        $this->loadModel('TeamYears');
-        $teamYears = $this->TeamYears->find('all', array(
+        $teamYears = $this->fetchTable('TeamYears')->find('all', array(
             'conditions' => array('year_id' => $year->id),
         ))->toArray();
-        $teamYearsEndRanking = $this->TeamYears->find('all', array(
+        $teamYearsEndRanking = $this->fetchTable('TeamYears')->find('all', array(
             'conditions' => array('year_id' => $year->id, 'endRanking IS NOT' => null),
         ))->toArray();
-        $teamYearsPins = $this->TeamYears->find('all', array(
+        $teamYearsPins = $this->fetchTable('TeamYears')->find('all', array(
             'conditions' => array('year_id' => $year->id, 'refereePIN IS NOT' => null),
         ))->toArray();
 
-        $this->loadModel('Groups');
-        $groups = $this->Groups->find('all', array(
+        $groups = $this->fetchTable('Groups')->find('all', array(
             'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
         ))->toArray();
 
-        $this->loadModel('GroupTeams');
-        $groupTeams = $this->GroupTeams->find('all', array(
+        $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
             'contain' => array(
                 'Groups' => array('fields' => array('year_id', 'day_id')),
             ),
@@ -185,7 +148,6 @@ class YearsController extends AppController
             $sumCalcMatches += $gt->calcCountMatches;
         }
 
-        $this->loadModel('Matches');
         $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
         $matches = $this->getMatches($conditionsArray, 0, 0, 1);
 
@@ -195,7 +157,7 @@ class YearsController extends AppController
         $matchesWith1CanceledCount = 0;
         $matchesPins = 0;
         $matchResultCount = 0;
-        if ($matches) {
+        if (is_array($matches)) {
             foreach ($matches as $m) {
                 // search for minimize missing referees
                 if ($m->isRefereeCanceled && !$m->canceled && $m->resultTrend === null) {
@@ -204,7 +166,7 @@ class YearsController extends AppController
                     // search for available refs from same sport with canceled match
                     $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId(), 'sport_id' => $m->sport_id, 'Matches.canceled >' => 0);
                     $matches1 = $this->getMatches($conditionsArray, 0, 0, 1);
-                    if ($matches1) {
+                    if (is_array($matches1)) {
                         foreach ($matches1 as $m1) {
                             if (!$m1->isRefereeCanceled) {
                                 // check if ref's team is already in play in same round with non-canceled match
@@ -233,7 +195,7 @@ class YearsController extends AppController
                     // search for available teams from same group and same sport with canceled match
                     $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId(), 'group_id' => $m->group_id, 'sport_id' => $m->sport_id, 'Matches.canceled >' => 0, 'Matches.canceled <' => 3, 'Matches.id !=' => $m->id);
                     $matches1 = $this->getMatches($conditionsArray, 0, 0, 1);
-                    if ($matches1) {
+                    if (is_array($matches1)) {
                         foreach ($matches1 as $m1) {
                             // check if other team is already in play in same round with non-canceled match
                             $otherTeam = $m1->canceled == 1 ? $m1->team2_id : $m1->team1_id;
@@ -265,7 +227,7 @@ class YearsController extends AppController
         $status['groupsCount'] = count($groups);
         $status['groupTeamsCount'] = count($groupTeams);
         $status['sumCalcMatchesGroupTeams'] = $sumCalcMatches / 2;
-        $status['matchesCount'] = $matches ? count($matches) : 0;
+        $status['matchesCount'] = is_array($matches) ? count($matches) : 0;
         $status['matchesPins'] = $matchesPins;
         $status['matchResultCount'] = $matchResultCount;
 

@@ -19,6 +19,7 @@ use Cake\ORM\Entity;
  * @property int|null $calcGoalsDiff
  * @property int|null $calcPointsPlus
  * @property int|null $calcPointsMinus
+ * @property int $canceled
  *
  * @property \App\Model\Entity\Group $group
  * @property \App\Model\Entity\Team $team
@@ -47,5 +48,6 @@ class GroupTeam extends Entity
         'calcPointsMinus' => true,
         'group' => true,
         'team' => true,
+        'canceled' => true
     ];
 }

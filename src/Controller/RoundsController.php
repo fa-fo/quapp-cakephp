@@ -12,23 +12,22 @@ use App\Model\Entity\Round;
  */
 class RoundsController extends AppController
 {
-    public function all($includeStats = false, $year_id = false, $day_id = false)
+    public function all(string $includeStats = '', string $year_id = '', string $day_id = ''): void
     {
         // only current day !!!
         $settings = $this->getSettings();
         $currentYear = $this->getCurrentYear()->toArray();
         $day = $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd');
 
-        $year_id = $year_id ?: $settings['currentYear_id'];
-        $day_id = $day_id ?: $settings['currentDay_id'];
+        $includeStats = (int)$includeStats;
+        $year_id = (int)$year_id ?: $settings['currentYear_id'];
+        $day_id = (int)$day_id ?: $settings['currentDay_id'];
 
         $year = array();
         $year['rounds'] = $this->Rounds->find('all', array(
             'fields' => array('id', 'timeStartDay' . $day_id),
             'order' => array('id' => 'ASC')
         ))->toArray();
-
-        $this->loadModel('Matches');
 
         foreach ($year['rounds'] as $r) {
             /**
@@ -40,7 +39,7 @@ class RoundsController extends AppController
                 'round_id' => $r->id
             );
 
-            $query1 = $this->Matches->find('all', array(
+            $query1 = $this->fetchTable('Matches')->find('all', array(
                 'contain' => array('Groups'),
                 'conditions' => $conditionsArray
             ));
@@ -48,7 +47,7 @@ class RoundsController extends AppController
             $r['matchesCount'] = $query1->count();
 
             if ($includeStats) {
-                $query2 = $this->Matches->find('all', array(
+                $query2 = $this->fetchTable('Matches')->find('all', array(
                     'contain' => array('Groups'),
                     'conditions' => array_merge($conditionsArray, array('resultTrend IS NOT' => null))
                 ));

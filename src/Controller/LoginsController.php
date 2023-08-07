@@ -11,7 +11,7 @@ namespace App\Controller;
 class LoginsController extends AppController
 {
 
-    public function check()
+    public function check(): void
     {
         $return = false;
         $postData = $this->request->getData();

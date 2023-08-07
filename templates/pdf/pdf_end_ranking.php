@@ -1,42 +1,51 @@
 <?php
 
-require_once __DIR__ . './../../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 $mpdf = new \Mpdf\Mpdf();
 
-$mpdf->AddPage('P');
-$mpdf->WriteHTML('<style type="text/css">
+try {
+    $html = '';
+    $mpdf->AddPage('P');
+    $html .= '<style>
         table{border-collapse: collapse}
         td {border: solid 1px #000; font-size: 18px; }
-        </style>');
+        </style>';
 
-$c = 0;
+    $c = 0;
+    $teamYears = $teamYears ?? array();
 
-foreach ($teamYears as $ty) {
-    if ($c % 32 == 0) {
-        if ($c > 0) {
-            $mpdf->AddPage('P');
+    foreach ($teamYears as $ty) {
+        if ($c % 32 == 0) {
+            if ($c > 0) {
+                $html = '';
+                $mpdf->AddPage('P');
+            }
+            $html .= '<h1>Endstand QuattFo</span></h1>';
         }
-        $mpdf->WriteHTML('<h1>Endstand QuattFo</span></h1>');
-    }
-    if ($c % 16 == 0) {
-        if ($c != 0 && $c != 32) {
-            $mpdf->WriteHTML('<p>&nbsp;</p>');
+        if ($c % 16 == 0) {
+            if ($c != 0 && $c != 32) {
+                $html .= '<p>&nbsp;</p>';
+            }
+            $html .= '<table border="0"  cellspacing="0" cellpadding="2" align="center" width="100%">';
         }
-        $mpdf->WriteHTML('<table border="0"  cellspacing="0" cellpadding="2" align="center" width="100%">');
-    }
-    $c++;
-    $mpdf->WriteHTML('<tr>');
-    $mpdf->WriteHTML('<td>' . ($ty->endRanking ?? 0) . '</td>');
-    $mpdf->WriteHTML('<td>' . $ty->team_name . '</td>');
-    $mpdf->WriteHTML('</tr>');
-    if ($c % 16 == 0) {
-        $mpdf->WriteHTML('</table>');
+        $c++;
+        $html .= '<tr>';
+        $html .= '<td>' . ($ty->endRanking ?? 0) . '</td>';
+        $html .= '<td>' . ($ty->canceled ? '<s>' : '') . $ty->team_name . ($ty->canceled ? '</s>' : '') . '</td>';
+        $html .= '</tr>';
+        if ($c % 16 == 0) {
+            $html .= '</table>';
+        }
+        if ($c % 32 == 0) {
+            $mpdf->WriteHTML($html);
+        }
     }
 
+    $mpdf->Output();
+} catch (\Mpdf\MpdfException $e) {
+    echo $e->getMessage();
 }
 
-$mpdf->WriteHTML('</table>');
-$mpdf->Output();
 
 

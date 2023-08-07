@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Match4;
+use App\Model\Entity\Match4event;
+use App\Model\Entity\Match4eventLog;
 use Cake\I18n\FrozenTime;
 
 /**
@@ -12,22 +15,26 @@ use Cake\I18n\FrozenTime;
  */
 class MatcheventLogsController extends AppController
 {
-    public function login($match_id = false)
+    public function login(string $match_id = ''): void
     {
+        $match_id = (int)$match_id;
         $matchReturn = false; // initial
         $match = $this->getMatchAndLogs($match_id, 1);
-        if ($match) {
-            $isLoggedIn = $match[0]['logsCalc']['isLoggedIn'] ?? 0;
+
+        if (!is_null($match)) {
+            $isLoggedIn = $match['logsCalc']['isLoggedIn'] ?? 0;
 
             if ($isLoggedIn != 1) {
                 $postData = $this->request->getData();
 
                 if (isset($postData['matchEventCode'])) {
-                    $this->loadModel('Matchevents');
-                    $matchEvent = $this->Matchevents->find()->where(['code' => $postData['matchEventCode']])->first();
-                    $postData['matchEvent_id'] = $matchEvent->get('id');
+                    $matchEvent = $this->fetchTable('Matchevents')->find()->where(['code' => $postData['matchEventCode']])->first();
+                    /**
+                     * @var Match4event $matchEvent
+                     */
+                    $postData['matchEvent_id'] = $matchEvent->id;
 
-                    if ($this->checkPostData($match[0], $postData, $matchEvent)) {
+                    if ($this->checkPostData($match, $postData, $matchEvent)) {
                         $newLog = $this->MatcheventLogs->newEmptyEntity();
                         $newLog = $this->MatcheventLogs->patchEntity($newLog, $postData);
                         $newLog->set('match_id', $match_id);
@@ -36,9 +43,11 @@ class MatcheventLogsController extends AppController
                         if ($this->MatcheventLogs->save($newLog)) {
                             $logs = $this->getLogs($match_id);
 
-                            $match[0]['logsCalc'] = $logs['calc'];
+                            if (is_array($logs)) {
+                                $match['logsCalc'] = $logs['calc'];
+                            }
 
-                            $matchReturn = $match;  // return full match infos
+                            $matchReturn = array($match);  // return full match infos
                         }
                     }
                 }
@@ -48,53 +57,68 @@ class MatcheventLogsController extends AppController
         $this->apiReturn($matchReturn);
     }
 
-    public function add($match_id = false)
+    public function add(string $match_id = ''): void
     {
-        $calc = false; // initial
+        $match_id = (int)$match_id;
+        $calc = array(); // initial
 
         $match = $this->getMatchAndLogs($match_id, 1);
-        if ($match) {
-            $isLoggedIn = $match[0]['logsCalc']['isLoggedIn'] ?? 0;
-            $isTime2login = $match[0]['isTime2login'] ?? 0;
+        if (!is_null($match)) {
+            $isLoggedIn = $match['logsCalc']['isLoggedIn'] ?? 0;
+            $isTime2login = $match['isTime2login'] ?? 0;
 
             if ($isLoggedIn && $isTime2login) {
                 $postData = $this->request->getData();
 
                 if (isset($postData['matchEventCode'])) {
-                    $this->loadModel('Matchevents');
-                    $matchEvent = $this->Matchevents->find()->where(['code' => $postData['matchEventCode']])->first();
-
+                    $matchEvent = $this->fetchTable('Matchevents')->find()->where(['code' => $postData['matchEventCode']])->first();
+                    /**
+                     * @var Match4event $matchEvent
+                     */
                     $postData['matchEvent_id'] = $matchEvent->get('id');
                     $postData['team_id'] = isset($postData['team_id']) ? (int)$postData['team_id'] : null;
                     $postData['playerNumber'] = isset($postData['playerNumber']) ? (int)$postData['playerNumber'] : null;
 
-                    if ($this->checkPostData($match[0], $postData, $matchEvent)) {
+                    if ($this->checkPostData($match, $postData, $matchEvent)) {
                         $newLog = $this->MatcheventLogs->newEmptyEntity();
                         $newLog = $this->MatcheventLogs->patchEntity($newLog, $postData);
                         $newLog->set('match_id', $match_id);
                         $newLog->set('datetime', FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
                         if ($this->MatcheventLogs->save($newLog)) {
-                            $logs = $this->getLogs($match_id);
-                            $calc = $logs['calc'];
+                            $isMatchLive = $match['logsCalc']['isMatchLive'] ?? 0;
 
-                            $isMatchLive = $match[0]['logsCalc']['isMatchLive'] ?? 0;
-                            if ($isMatchLive) {
-                                $lastLog = $this->getLastLogCancelable($match_id);
-                                if ($lastLog) {
-                                    $calc['inserted_id'] = $lastLog->id;
-                                    if (in_array($calc['inserted_id'], ($calc['foulOutLogIds'] ?? array()))) {
-                                        $ll = $this->getLastLog($match_id);
-                                        $calc['showFoulOutModal'] = ($ll->id == $calc['inserted_id'] ? 1 : 0);
-                                    } else if (in_array($calc['inserted_id'], ($calc['doubleYellowLogIds'] ?? array()))) {
-                                        $ll = $this->getLastLog($match_id);
-                                        $calc['showDoubleYellowModal'] = ($ll->id == $calc['inserted_id'] ? 1 : 0);
+                            $logs = $this->getLogs($match_id);
+                            if (is_array($logs)) {
+                                $calc = $logs['calc'];
+
+                                if ($isMatchLive) {
+                                    $lastLog = $this->getLastLogCancelable($match_id);
+                                    if ($lastLog) {
+                                        /**
+                                         * @var Match4eventLog $lastLog
+                                         */
+                                        $calc['inserted_id'] = $lastLog->id;
+                                        if (in_array($calc['inserted_id'], ($calc['foulOutLogIds'] ?? array()))) {
+                                            $ll = $this->getLastLog($match_id);
+                                            /**
+                                             * @var Match4eventLog $ll
+                                             */
+                                            $calc['showFoulOutModal'] = ($ll->id == $calc['inserted_id'] ? 1 : 0);
+
+                                        } else if (in_array($calc['inserted_id'], ($calc['doubleYellowLogIds'] ?? array()))) {
+                                            $ll = $this->getLastLog($match_id);
+                                            /**
+                                             * @var Match4eventLog $ll
+                                             */
+                                            $calc['showDoubleYellowModal'] = ($ll->id == $calc['inserted_id'] ? 1 : 0);
+                                        }
                                     }
                                 }
+                                unset($calc['foulOutLogIds']); // no need
+                                unset($calc['doubleYellowLogIds']); // no need
+                                $calc['isTime2confirm'] = $match['isTime2confirm'] ?? 0;
                             }
-                            unset($calc['foulOutLogIds']); // no need
-                            unset($calc['doubleYellowLogIds']); // no need
-                            $calc['isTime2confirm'] = $match[0]['isTime2confirm'] ?? 0;
                         }
                     }
                 }
@@ -106,20 +130,22 @@ class MatcheventLogsController extends AppController
         $this->apiReturn($calc); // return only small infos to reduce bandwith
     }
 
-    public function cancel($match_id = false, $id = false)
+    public function cancel(string $match_id = '', string $id = ''): void
     {
-        $calc = false; // initial
+        $match_id = (int)$match_id;
+        $id = (int)$id;
+        $calc = array(); // initial
         $match = $this->getMatchAndLogs($match_id, 1);
 
-        if ($match) {
-            $isLoggedIn = $match[0]['logsCalc']['isLoggedIn'] ?? 0;
-            $isTime2login = $match[0]['isTime2login'] ?? 0;
+        if (!is_null($match)) {
+            $isLoggedIn = $match['logsCalc']['isLoggedIn'] ?? 0;
+            $isTime2login = $match['isTime2login'] ?? 0;
 
             if ($isLoggedIn && $isTime2login) {
                 $postData = $this->request->getData();
 
                 if (isset($postData['refereePIN'])) {
-                    if ($this->checkPostData($match[0], $postData, false, true)) {
+                    if ($this->checkPostData($match, $postData, null, true)) {
                         $log = false;
 
                         if ($id) {
@@ -137,18 +163,27 @@ class MatcheventLogsController extends AppController
                         }
 
                         if ($log) {
+                            /**
+                             * @var Match4eventLog $log
+                             */
                             $log->set('canceled', 1);
                             $log->set('cancelTime', FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
                             if ($this->MatcheventLogs->save($log)) {
+                                $isMatchLive = $match['logsCalc']['isMatchLive'] ?? 0;
                                 $logs = $this->getLogs($match_id);
-                                $calc = $logs['calc'];
 
-                                $isMatchLive = $match[0]['logsCalc']['isMatchLive'] ?? 0;
-                                if ($isMatchLive) {
-                                    $lastLog = $this->getLastLogCancelable($match_id);
-                                    if ($lastLog) {
-                                        $calc['inserted_id'] = $lastLog->id;
+                                if (is_array($logs)) {
+                                    $calc = $logs['calc'];
+
+                                    if ($isMatchLive) {
+                                        $lastLog = $this->getLastLogCancelable($match_id);
+                                        if ($lastLog) {
+                                            /**
+                                             * @var Match4eventLog $lastLog
+                                             */
+                                            $calc['inserted_id'] = $lastLog->id;
+                                        }
                                     }
                                 }
                             }
@@ -162,7 +197,7 @@ class MatcheventLogsController extends AppController
         $this->apiReturn($calc);
     }
 
-    private function getLastLog($match_id = false)
+    private function getLastLog(int $match_id): array|\Cake\Datasource\EntityInterface|null
     {
         return $this->MatcheventLogs->find('all', array(
             'conditions' => array('match_id' => $match_id, 'canceled' => 0),
@@ -171,7 +206,7 @@ class MatcheventLogsController extends AppController
         ))->first();
     }
 
-    private function getLastLogCancelable($match_id = false)
+    private function getLastLogCancelable(int $match_id): array|\Cake\Datasource\EntityInterface|null
     {
         return $this->MatcheventLogs->find('all', array(
             'conditions' => array('match_id' => $match_id, 'canceled' => 0, 'Matchevents.isCancelable' => 1),
@@ -180,24 +215,28 @@ class MatcheventLogsController extends AppController
         ))->first();
     }
 
-    public
-    function saveRemarks($match_id = false)
+    public function saveRemarks(string $match_id = ''): void
     {
-        $this->loadModel('Matches');
+        $match_id = (int)$match_id;
         $match = $this->getMatchAndLogs($match_id, 0);
 
-        if ($match) {
+        if (!is_null($match)) {
             $postData = $this->request->getData();
 
-            if (isset($postData['matchEventCode'])) {
-                $this->loadModel('Matchevents');
-                $matchEvent = $this->Matchevents->find()->where(['code' => $postData['matchEventCode']])->first();
+            if (isset($postData['matchEventCode']) && trim($postData['matchEventCode']) != '') {
+                $matchEvent = $this->fetchTable('Matchevents')->find()->where(['code' => $postData['matchEventCode']])->first();
+                /**
+                 * @var Match4event $matchEvent
+                 */
                 $postData['matchEvent_id'] = $matchEvent->get('id');
 
-                if ($this->checkPostData($match[0], $postData, $matchEvent)) {
-                    $m = $match[0];
+                if ($this->checkPostData($match, $postData, $matchEvent)) {
+                    $m = $this->fetchTable('Matches')->find()->where(['id' => $match_id])->first();
+                    /**
+                     * @var Match4 $m
+                     */
                     $m->set('remarks', (string)$postData['remarks']);
-                    $this->Matches->save($m);
+                    $this->fetchTable('Matches')->save($m);
                 }
             }
         }
@@ -205,27 +244,25 @@ class MatcheventLogsController extends AppController
         $this->apiReturn($match);
     }
 
-    private function getMatchAndLogs($match_id = false, $includeLogs = false)
+    private function getMatchAndLogs(int $match_id, int $includeLogs): array|null
     {
+        $match = null;
         $conditionsArray = array('Matches.id' => $match_id);
-        $this->loadModel('Matches');
+        $match_array = $this->getMatches($conditionsArray, $includeLogs);
 
-        return $this->getMatches($conditionsArray, $includeLogs);
+        if (is_array($match_array)) {
+            $match = $match_array[0]->toArray();
+        }
+        return $match;
     }
 
-    private function checkPostData($match, $postData, $matchEvent, $cancel = false): bool
+    private function checkPostData(array $match, array $postData, \Cake\ORM\Entity|null $matchEvent, bool $cancel = false): bool
     {
-        if (!$match) {
-            return false;
-        }
-
         if (!$this->request->is('post')) {
             return false;
         }
 
-        $this->loadModel('TeamYears');
-        $refereePIN = $this->TeamYears->find()->where(['team_id' => $match['refereeTeam_id'], 'year_id' => $this->getCurrentYearId()])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
-
+        $refereePIN = $this->fetchTable('TeamYears')->find()->where(['team_id' => $match['refereeTeam_id'], 'year_id' => $this->getCurrentYearId()])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
         $settings = $this->getSettings();
 
         if ($settings['isTest'] ?? 0) {
@@ -237,8 +274,7 @@ class MatcheventLogsController extends AppController
                 return false;
             }
             if ((int)$postData['refereePIN'] != $refereePIN) { // check 2nd PIN (match pin)
-                $this->loadModel('Matches');
-                $refereePIN = $this->Matches->find()->where(['id' => $match['id']])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
+                $refereePIN = $this->fetchTable('Matches')->find()->where(['id' => $match['id']])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
                 if ($refereePIN === null || $refereePIN < 1) {
                     return false;
                 }
@@ -248,7 +284,7 @@ class MatcheventLogsController extends AppController
                         return false;
                     }
 
-                    $refereePIN = $this->TeamYears->find()->where(['team_id' => $match['refereeTeamSubst_id'], 'year_id' => $this->getCurrentYearId()])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
+                    $refereePIN = $this->fetchTable('TeamYears')->find()->where(['team_id' => $match['refereeTeamSubst_id'], 'year_id' => $this->getCurrentYearId()])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
                     if ($refereePIN === null || $refereePIN < 1) {
                         return false;
                     }
@@ -259,10 +295,13 @@ class MatcheventLogsController extends AppController
                 }
             }
         }
-        if (!isset($postData['matchEvent_id']) || !$matchEvent) {
+        if (!isset($postData['matchEvent_id']) || is_null($matchEvent)) {
             return (bool)$cancel; // allow cancellation without knowing event
         }
 
+        /**
+         * @var Match4event $matchEvent
+         */
         if ($matchEvent->needsTeamAssoc == 1 && (!isset($postData['team_id']) || ($match['team1_id'] != (int)$postData['team_id'] && $match['team2_id'] != (int)$postData['team_id']))) {
             return false;
         }

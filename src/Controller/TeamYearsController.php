@@ -5,8 +5,8 @@ namespace App\Controller;
 
 use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4;
+use App\Model\Entity\Setting;
 use App\Model\Entity\TeamYear;
-use App\Model\Entity\Year;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\FrozenTime;
 
@@ -19,12 +19,9 @@ class TeamYearsController extends AppController
 {
 
     // getCurrentTeams
-    public function all()
+    public function all(): void
     {
         $year = $this->getCurrentYear();
-        /**
-         * @var Year $year
-         */
 
         $teamYears = $this->TeamYears->find('all', array(
             'fields' => array('id', 'team_id', 'canceled'),
@@ -33,33 +30,12 @@ class TeamYearsController extends AppController
             'order' => array('Teams.name' => 'ASC')
         ))->toArray();
 
-        /*
-        $this->loadModel('GroupTeams');
-
-        foreach ($teamYears as $ty) {
-            /**
-             * @var TeamYear $ty
-             */
-        /*
-            $groupteam = $this->GroupTeams->find('all', array(
-                'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id', 'name'))),
-                'conditions' => array('GroupTeams.team_id' => $ty->team_id, 'Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
-            ))->first();
-
-            $ty['group_id'] = $groupteam->group->id;
-            $ty['group_name'] = $groupteam->group->name;
-        }
-        */
-
         $this->apiReturn($teamYears);
     }
 
-    public function allWithPushTokenCount()
+    public function allWithPushTokenCount(): void
     {
         $year = $this->getCurrentYear();
-        /**
-         * @var Year $year
-         */
 
         $teamYears = $this->TeamYears->find('all', array(
             'fields' => array('id', 'team_id', 'canceled'),
@@ -68,24 +44,20 @@ class TeamYearsController extends AppController
             'order' => array('Teams.name' => 'ASC')
         ))->toArray();
 
-        $this->loadModel('PushTokens');
         foreach ($teamYears as $ty) {
-            $ty['countPushTokens'] = $this->PushTokens->find()->where(['my_team_id' => $ty['team_id']])->count();
+            $ty['countPushTokens'] = $this->fetchTable('PushTokens')->find()->where(['my_team_id' => $ty['team_id']])->count();
         }
 
         $this->apiReturn($teamYears);
     }
 
-    public function pdfAllTeamsMatches()
+    public function pdfAllTeamsMatches(): void
     {
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
 
             $year = $this->getCurrentYear();
-            /**
-             * @var Year $year
-             */
 
             $teamYears = $this->TeamYears->find('all', array(
                 'fields' => array('id', 'team_id', 'year_id', 'refereePIN', 'canceled'),
@@ -94,12 +66,11 @@ class TeamYearsController extends AppController
                 'order' => array('Teams.name' => 'ASC')
             ))->toArray();
 
-            $this->loadModel('Matches');
-
             foreach ($teamYears as $ty) {
                 $ty['infos'] = $this->getMatchesByTeam($ty['team_id'], $year->id, $this->getCurrentDayId(), 1);
             }
 
+            $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('teamYears', $teamYears);
 
@@ -109,17 +80,15 @@ class TeamYearsController extends AppController
         }
     }
 
-    public function pdfAllTeamsMatchesWithGroupMatches($offset)
+    public function pdfAllTeamsMatchesWithGroupMatches(string $offset = ''): void
     {
+        $offset = (int)$offset;
         $postData = $this->request->getData();
 
-        //if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-        if (1) {
+        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $year = $this->getCurrentYear()->toArray();
-            $this->loadModel('Groups');
-            $this->loadModel('Matches');
 
-            $groups = $this->Groups->find('all', array(
+            $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id'),
                 'conditions' => array('year_id' => $this->getCurrentYearId(), 'day_id' => $this->getCurrentDayId()),
                 'order' => array('name' => 'ASC')
@@ -145,6 +114,7 @@ class TeamYearsController extends AppController
                 $ty['group'] = $groups[$gN];
             }
 
+            $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('teamYears', $teamYears);
 
@@ -154,43 +124,10 @@ class TeamYearsController extends AppController
         }
     }
 
-    /*
-    public function add()
+    public function cancel(string $id = '', string $undo = ''): void
     {
-        $teamyear = $this->TeamYears->newEmptyEntity();
-        if ($this->request->is('post')) {
-            $teamyear = $this->TeamYears->patchEntity($teamyear, $this->request->getData());
-            $teamyear->set('year_id', $this->getCurrentYearId());
-
-            if (!$this->TeamYears->save($teamyear)) {
-                $teamyear = false;
-            }
-        } else {
-            $teamyear = false;
-        }
-
-        $this->apiReturn($teamyear);
-    }
-
-    public function edit($id = false)
-    {
-        $teamyear = $id ? $this->TeamYears->find()->where(['id' => $id])->first() : false;
-
-        if ($teamyear) {
-            if ($this->request->is(['patch', 'post', 'put'])) {
-                $teamyear = $this->TeamYears->patchEntity($teamyear, $this->request->getData());
-                $this->TeamYears->save($teamyear);
-            } else {
-                $teamyear = false;
-            }
-        }
-
-        $this->apiReturn($teamyear);
-    }
-*/
-
-    public function cancel($id = false, $undo = 0)
-    {
+        $id = (int)$id;
+        $undo = (int)$undo;
         $teamYear = false;
         $postData = $this->request->getData();
 
@@ -199,15 +136,16 @@ class TeamYearsController extends AppController
             $teamYear = $this->TeamYears->find('all', array(
                 'conditions' => array('id' => $id, 'year_id' => $year_id)
             ))->first();
-
             if ($teamYear) {
+                /**
+                 * @var TeamYear $teamYear
+                 */
                 $teamYear->set('canceled', $undo ? 0 : 1);
                 $this->TeamYears->save($teamYear);
 
                 $day_id = $this->getCurrentDayId();
 
-                $this->loadModel('GroupTeams');
-                $groupTeam = $this->GroupTeams->find('all', array(
+                $groupTeam = $this->fetchTable('GroupTeams')->find('all', array(
                     'contain' => array('Groups' => array('fields' => array('year_id', 'day_id'))),
                     'conditions' => array('team_id' => $teamYear->get('team_id'), 'Groups.year_id' => $year_id, 'Groups.day_id' => $day_id),
                 ))->first();
@@ -217,7 +155,7 @@ class TeamYearsController extends AppController
                      * @var GroupTeam $groupTeam
                      */
                     $groupTeam->set('canceled', $undo ? 0 : 1);
-                    $this->GroupTeams->save($groupTeam);
+                    $this->fetchTable('GroupTeams')->save($groupTeam);
 
                     $this->getCalcRanking($teamYear->get('team_id'));
                 }
@@ -233,16 +171,15 @@ class TeamYearsController extends AppController
                     )
                 );
 
-                $this->loadModel('Matches');
                 $matches = $this->getMatches($conditionsArray);
-                if ($matches) {
+                if (is_array($matches)) {
                     foreach ($matches as $m) {
                         /**
                          * @var Match4 $m
                          */
                         $a = $m->team1_id == $teamYear->get('team_id') ? 1 : 2;
                         $m->set('canceled', $undo ? $m->canceled - $a : $a + $m->canceled);
-                        $this->Matches->save($m);
+                        $this->fetchTable('Matches')->save($m);
                     }
                 }
             }
@@ -252,7 +189,7 @@ class TeamYearsController extends AppController
     }
 
     // deprecated! use instead:  matches/refereeCanceledMatches
-    public function refereeCanceledTeamsMatches()
+    public function refereeCanceledTeamsMatches(): void
     {
         $return['matches'] = array();
 
@@ -275,10 +212,9 @@ class TeamYearsController extends AppController
                     )
                 );
 
-                $this->loadModel('Matches');
                 $matches = $this->getMatches($conditionsArray, 0, 1, 1);
 
-                if ($matches) {
+                if (is_array($matches)) {
                     $return['matches'] = array_merge($return['matches'], $matches);
                 }
             }
@@ -291,9 +227,11 @@ class TeamYearsController extends AppController
         $this->apiReturn($return);
     }
 
-    public function getEndRanking($year_id = false, $adminView = 0)
+    public function getEndRanking(string $year_id = '', string $adminView = ''): void
     {
-        $year_id = $year_id ?: $this->getCurrentYearId();
+        $year_id = (int)$year_id ?: $this->getCurrentYearId();
+        $adminView = (int)$adminView;
+
         $teamYears = $this->TeamYears->find('all', array(
             'fields' => array('id', 'endRanking', 'team_id'),
             'conditions' => array('year_id' => $year_id, 'canceled' => 0),
@@ -302,8 +240,10 @@ class TeamYearsController extends AppController
         ))->toArray();
 
         if (!$adminView && $year_id == $this->getCurrentYearId()) {
-            $this->loadModel('Settings');
-            $showEndRanking = $this->Settings->find('all')->where(['name' => 'showEndRanking'])->first();
+            $showEndRanking = $this->fetchTable('Settings')->find('all')->where(['name' => 'showEndRanking'])->first();
+            /**
+             * @var Setting $showEndRanking
+             */
             if ($showEndRanking->value == 0) {
                 $teamYears = null;
                 $teamYears['showRanking'] = 0;
@@ -313,18 +253,19 @@ class TeamYearsController extends AppController
         $this->apiReturn($teamYears, $year_id);
     }
 
-    public function pdfEndRanking()
+    public function pdfEndRanking(): void
     {
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $teamYears = $this->TeamYears->find('all', array(
                 'fields' => array('id', 'endRanking', 'team_id'),
-                'conditions' => array('year_id' => $this->getCurrentYearId(), 'canceled' => 0),
+                'conditions' => array('year_id' => $this->getCurrentYearId()),
                 'contain' => array('Teams' => array('fields' => array('team_name' => 'name'))),
                 'order' => array('endRanking' => 'ASC', 'team_name' => 'ASC')
             ))->toArray();
 
+            $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('teamYears', $teamYears);
 
@@ -334,16 +275,12 @@ class TeamYearsController extends AppController
         }
     }
 
-    public function setEndRanking()
+    public function setEndRanking(): void
     {
         $postData = $this->request->getData();
+        $rowsCount = 0;
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            /**
-             * @var GroupTeam $groupteam
-             * @var TeamYear $ty
-             * @var Year $year
-             */
             $year = $this->getCurrentYear();
 
             if ($this->getCurrentDayId() === $year->daysCount) {
@@ -352,24 +289,33 @@ class TeamYearsController extends AppController
                 ));
 
                 if ($teamYears->count() > 0) {
-                    $this->loadModel('GroupTeams');
-
                     foreach ($teamYears as $ty) { // set null because of unique values
+                        /**
+                         * @var TeamYear $ty
+                         */
                         $ty->set('endRanking', null);
                         $this->TeamYears->save($ty);
                     }
 
                     foreach ($teamYears as $ty) {
-                        $groupteam = $this->GroupTeams->find('all', array(
+                        /**
+                         * @var TeamYear $ty
+                         */
+                        $groupteam = $this->fetchTable('GroupTeams')->find('all', array(
                             'contain' => array('Groups' => array('fields' => array('year_id', 'day_id', 'teamsCount'))),
                             'conditions' => array('GroupTeams.team_id' => $ty->team_id, 'Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
                         ))->first();
 
-                        if ($groupteam !== null && $groupteam->group) {
-                            $groupCountTeams = ($groupteam->group)->teamsCount;
+                        if ($groupteam) {
+                            /**
+                             * @var GroupTeam $groupteam
+                             */
+                            if ($groupteam->group) {
+                                $groupCountTeams = ($groupteam->group)->teamsCount;
 
-                            $ty->set('endRanking', $this->getGroupPosNumber($groupteam->group_id) * $groupCountTeams + $groupteam->calcRanking);
-                            $this->TeamYears->save($ty);
+                                $ty->set('endRanking', $this->getGroupPosNumber($groupteam->group_id) * $groupCountTeams + $groupteam->calcRanking);
+                                $this->TeamYears->save($ty);
+                            }
                         }
                     }
                 }
@@ -383,14 +329,17 @@ class TeamYearsController extends AppController
     }
 
 
-    public function insertTestValues()
+    /**
+     * @throws \Exception
+     */
+    public function insertTestValues(): void
     {
         $postData = $this->request->getData();
         $settings = $this->getSettings();
 
         if (($settings['isTest'] ?? 0) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $conn = ConnectionManager::get('default');
-            $rc = $conn->execute(file_get_contents(__DIR__ . "/sql/insert_team_years2023.sql"))->rowCount();
+            $rc = $conn->execute(file_get_contents(__DIR__ . "/sql/insert_team_years2024.sql"))->rowCount();
 
             $teamYears = $this->TeamYears->find('all', array(
                 'conditions' => array('year_id' => $this->getCurrentYearId()),
@@ -408,8 +357,10 @@ class TeamYearsController extends AppController
     }
 
 
-    private
-    function createUniquePIN($yearId, $teamId)
+    /**
+     * @throws \Exception
+     */
+    private function createUniquePIN(int $yearId, int $teamId): int
     {
         $str123 = str_pad((string)(($teamId + 107) % 1000), 3, "0", STR_PAD_LEFT);
         $str45 = $yearId * random_int(1, 3) % 100;

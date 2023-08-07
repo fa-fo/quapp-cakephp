@@ -10,7 +10,7 @@ namespace App\Controller;
  */
 class MatcheventsController extends AppController
 {
-    public function all()
+    public function all(): void
     {
         $matchevents = $this->Matchevents->find('all', array(
             'conditions' => array('logsAddableOnLoggedIn' => 1)
