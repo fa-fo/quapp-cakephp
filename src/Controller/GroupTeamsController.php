@@ -52,7 +52,7 @@ class GroupTeamsController extends AppController
                 'Groups' => array('fields' => array('group_id' => 'Groups.id', 'group_name' => 'Groups.name', 'year_id', 'day_id')),
                 'Teams' => array('fields' => array('name'))
             ),
-            'conditions' => array('GroupTeams.group_id' => $group->id, 'Groups.year_id' => $group->year_id, 'Groups.day_id' => $group->day_id),
+            'conditions' => array('GroupTeams.group_id' => $group->id, 'GroupTeams.canceled' => 0, 'Groups.year_id' => $group->year_id, 'Groups.day_id' => $group->day_id),
             'order' => array('Groups.id' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcRanking' => 'ASC')
         ))->toArray();
     }
