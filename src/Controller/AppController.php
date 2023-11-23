@@ -296,7 +296,8 @@ class AppController extends Controller
                         $row['teams3'] = array('name' => '-'); // needed!
                     }
 
-                    if (isset($conditionsArray['OR']['refereeTeam_id']) && $conditionsArray['OR']['refereeTeam_id'] == $row['refereeTeam_id']) {
+                    if ((($conditionsArray['OR']['refereeTeam_id'] ?? 0) == $row['refereeTeam_id'])
+                        || (($conditionsArray['OR']['refereeTeamSubst_id'] ?? 0) == $row['refereeTeamSubst_id'])) {
                         $row['isRefereeJob'] = 1;
                     }
 
@@ -498,6 +499,7 @@ class AppController extends Controller
                     switch ($code) {
                         case 'LOGIN':
                             $calc['isLoggedIn'] = 1;
+                            $calc['wasLoggedIn'] = 1;
                             break;
                         case 'ON_PLACE_REF':
                             $calc['isRefereeOnPlace'] = 1;
