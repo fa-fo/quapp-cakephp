@@ -14,13 +14,19 @@ class SportsController extends AppController
 {
     public function getRules(): void
     {
+        $this->getResourceContent(16);
+        // todo: deprecated: after V3.0.0 complete rollout: function not needed anymore
+    }
+
+    public function getResourceContent(int $id): void
+    {
         $http = new Client([
             'ssl_verify_host' => false,
             'ssl_verify_peer' => false,
             'ssl_verify_peer_name' => false,
         ]);
 
-        $response = $http->get('https://www.quattfo.de/api/getResource.php?id=16');
+        $response = $http->get('https://www.quattfo.de/api/getResource.php?id=' . $id);
         $json = $response->getJson();
 
         $this->apiReturn($json);
