@@ -26,7 +26,7 @@ try {
         $p++;
         $html = '';
         $mpdf->AddPage('L');
-        $mpdf->SetDefaultBodyCSS('background', "url('img/logo2023.png')");
+        $mpdf->SetDefaultBodyCSS('background', "url('img/logo2024.png')");
         $mpdf->SetDefaultBodyCSS('background-position', "50px 152px");
         $mpdf->SetDefaultBodyCSS('background-repeat', "no-repeat");
 
@@ -50,7 +50,7 @@ try {
         if (isset($ty['infos']['matches'][0])) {
             $html .= '<h2>Mannschaftsspielplan am  ' . $ty['day']->i18nFormat('EEEE, d.MM.Y') . '</h2>';
 
-            //$html .= '<img src="img/logo2023.png" style="float:left" width="150">';
+            //$html .= '<img src="img/logo2024.png" style="float:left" width="150">';
             $html .= '<table border="0" cellspacing="0" cellpadding="6" align="center" width="70%">';
             $html .= '<tr>';
             $html .= '<th>Uhrzeit</th>';
