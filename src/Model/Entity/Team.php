@@ -10,11 +10,6 @@ use Cake\ORM\Entity;
  *
  * @property int $id
  * @property string $name
- * @property string|null $teamLeaderFirstname
- * @property string|null $teamLeaderLastname
- * @property string|null $teamLeaderEmail
- * @property string|null $teamLeaderPhone
- * @property string|null $teamLeaderCity
  * @property int|null $calcTotalYears
  * @property int|null $calcTotalRankingPoints
  * @property string|null $calcTotalPointsPerYear
@@ -38,11 +33,6 @@ class Team extends Entity
      */
     protected $_accessible = [
         'name' => true,
-        'teamLeaderFirstname' => true,
-        'teamLeaderLastname' => true,
-        'teamLeaderEmail' => true,
-        'teamLeaderPhone' => true,
-        'teamLeaderCity' => true,
         'calcTotalYears' => true,
         'calcTotalRankingPoints' => true,
         'calcTotalPointsPerYear' => true,

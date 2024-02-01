@@ -88,31 +88,6 @@ class TeamsTable extends Table
             ->add('name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('teamLeaderFirstname')
-            ->maxLength('teamLeaderFirstname', 64)
-            ->allowEmptyString('teamLeaderFirstname');
-
-        $validator
-            ->scalar('teamLeaderLastname')
-            ->maxLength('teamLeaderLastname', 64)
-            ->allowEmptyString('teamLeaderLastname');
-
-        $validator
-            ->scalar('teamLeaderEmail')
-            ->maxLength('teamLeaderEmail', 64)
-            ->allowEmptyString('teamLeaderEmail');
-
-        $validator
-            ->scalar('teamLeaderPhone')
-            ->maxLength('teamLeaderPhone', 64)
-            ->allowEmptyString('teamLeaderPhone');
-
-        $validator
-            ->scalar('teamLeaderCity')
-            ->maxLength('teamLeaderCity', 64)
-            ->allowEmptyString('teamLeaderCity');
-
-        $validator
             ->integer('calcTotalYears')
             ->allowEmptyString('calcTotalYears');
 
