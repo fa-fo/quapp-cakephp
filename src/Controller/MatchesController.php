@@ -116,7 +116,7 @@ class MatchesController extends AppController
                     );
 
                     // use parameter for same sort as Excel: $sortBySportId=!$includeLogs
-                    $group['matches'] = $this->getMatches($conditionsArray, $includeLogs, 1, $includeLogs);
+                    $group['matches'] = $this->getMatches($conditionsArray, $includeLogs, 1, $adminView);
                 }
 
                 $return['round'] = $this->fetchTable('Rounds')->find()->where(['id' => $round_id])->first();
@@ -443,20 +443,23 @@ class MatchesController extends AppController
     public function refereeCanceledMatches(): void
     {
         $return['matches'] = array();
+        $postData = $this->request->getData();
 
-        $conditionsArray = array(
-            'resultTrend IS' => null,
-            'canceled' => 0,
-            'Groups.year_id' => $this->getCurrentYearId(),
-            'Groups.day_id' => $this->getCurrentDayId(),
-        );
+        if (isset($postData['password']) && $this->checkUsernamePassword('supervisor', $postData['password'])) {
+            $conditionsArray = array(
+                'resultTrend IS' => null,
+                'canceled' => 0,
+                'Groups.year_id' => $this->getCurrentYearId(),
+                'Groups.day_id' => $this->getCurrentDayId(),
+            );
 
-        $matches = $this->getMatches($conditionsArray, 0, 0, 1);
+            $matches = $this->getMatches($conditionsArray, 0, 0, 1);
 
-        if (is_array($matches)) {
-            foreach ($matches as $m) {
-                if ($m->isRefereeCanceled) {
-                    $return['matches'][] = $m;
+            if (is_array($matches)) {
+                foreach ($matches as $m) {
+                    if ($m->isRefereeCanceled) {
+                        $return['matches'][] = $m;
+                    }
                 }
             }
         }

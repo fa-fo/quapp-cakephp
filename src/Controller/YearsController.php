@@ -150,12 +150,12 @@ class YearsController extends AppController
 
         $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
         $matches = $this->getMatches($conditionsArray, 0, 0, 1);
+        $matchesPins = $this->getMatches(array_merge($conditionsArray, array('refereePIN IS NOT' => null)), 0, 0, 0);
 
         $matchesRefChangeable = array();
         $matchesTeamsChangeable = array();
         $missingRefereesCount = 0;
         $matchesWith1CanceledCount = 0;
-        $matchesPins = 0;
         $matchResultCount = 0;
         if (is_array($matches)) {
             foreach ($matches as $m) {
@@ -216,7 +216,6 @@ class YearsController extends AppController
                     }
                 }
 
-                $matchesPins += ($m->refereePIN !== null ? 1 : 0);
                 $matchResultCount += ($m->resultTrend !== null ? 1 : 0);
             }
         }
@@ -228,7 +227,7 @@ class YearsController extends AppController
         $status['groupTeamsCount'] = count($groupTeams);
         $status['sumCalcMatchesGroupTeams'] = $sumCalcMatches / 2;
         $status['matchesCount'] = is_array($matches) ? count($matches) : 0;
-        $status['matchesPins'] = $matchesPins;
+        $status['matchesPins'] = is_array($matchesPins) ? count($matchesPins) : 0;
         $status['matchResultCount'] = $matchResultCount;
 
         $status['missingRefereesCount'] = $missingRefereesCount;

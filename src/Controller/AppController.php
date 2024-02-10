@@ -329,6 +329,8 @@ class AppController extends Controller
                     unset($row['round']['timeStartDay1']);
                     unset($row['round']['timeStartDay2']);
 
+                    unset($row['refereePIN']); // security issue
+
                     if ($adminView) {
                         $refereeTy = $this->fetchTable('TeamYears')->find('all', array('conditions' => array('team_id' => ($row['refereeTeam_id'] ?? 0), 'year_id' => $row['group']['year']['id'])))->first();
                         /**
@@ -336,7 +338,6 @@ class AppController extends Controller
                          */
                         $row['isRefereeCanceled'] = $refereeTy ? $refereeTy->get('canceled') : 1;
                     } else {
-                        unset($row['refereePIN']); // security issue
                         unset($row['remarks']);
                     }
 
