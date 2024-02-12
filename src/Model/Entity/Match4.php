@@ -23,10 +23,10 @@ use Cake\ORM\Entity;
  * @property int|null $resultGoals2
  * @property string|null $remarks
  * @property int $canceled
- * @property int|null isRefereeCanceled
- * @property int|null isTime2confirm
- * @property int|null isTime2login
- * @property array|null logsCalc
+ * @property int|null $isRefereeCanceled
+ * @property int|null $isTime2confirm
+ * @property int|null $isTime2login
+ * @property array|null $logsCalc
  *
  * @property \App\Model\Entity\Group $group
  * @property \App\Model\Entity\Round $round

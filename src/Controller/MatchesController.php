@@ -473,21 +473,25 @@ class MatchesController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $match1 = $this->Matches->find()->where(['id' => $id1])->first();
-            $match2 = $this->Matches->find()->where(['id' => $id2])->first();
+            $conditionsArray = array('Matches.id' => $id1);
+            $m = $this->getMatches($conditionsArray, 0, 0, 1); // needed to access adminView field 'isRefereeCanceled'
+            if (is_array($m)) {
+                $match1 = $m[0];
+                $match2 = $this->Matches->find()->where(['id' => $id2])->first();
 
-            /**
-             * @var Match4 $match1
-             * @var Match4 $match2
-             */
-            if ($match1->isRefereeCanceled) {
-                $ref2 = $match2->refereeTeam_id;
-                $match1->set('refereeTeam_id', $ref2);
-                $match2->set('refereeTeam_id', null); // referee is from canceled team -> better not to set (unique key)
-                $this->Matches->save($match1);
-                $this->Matches->save($match2);
+                /**
+                 * @var Match4 $match1
+                 * @var Match4 $match2
+                 */
+                if ($match1->isRefereeCanceled) {
+                    $ref2 = $match2->refereeTeam_id;
+                    $match1->set('refereeTeam_id', $ref2);
+                    $match2->set('refereeTeam_id', null); // referee is from canceled team -> better not to set (unique key)
+                    $this->Matches->save($match1);
+                    $this->Matches->save($match2);
+                }
+                $this->apiReturn($match1);
             }
-            $this->apiReturn($match1);
         }
     }
 
@@ -505,10 +509,10 @@ class MatchesController extends AppController
              * @var Match4 $match2
              */
             if ($match1 && $match2 && in_array($match1->canceled, array(1, 2)) && in_array($match2->canceled, array(1, 2))) {
-                $t1 = $match1->canceled == 1 ? $match1->team1_id : $match1->team2_id;
-                $t2 = $match2->canceled == 1 ? $match2->team2_id : $match2->team1_id;
-                $match1->set($match1->canceled == 1 ? 'team1_id' : 'team2_id', $t2);
-                $match2->set($match2->canceled == 1 ? 'team2_id' : 'team1_id', $t1);
+                $t1 = $match1->canceled == 1 ? $match1->team1_id : $match1->team2_id; // canceled team
+                $t2 = $match2->canceled == 1 ? $match2->team2_id : $match2->team1_id; // non-canceled team
+                $match1->set(($match1->canceled == 1 ? 'team1_id' : 'team2_id'), $t2); // set to non-canceled team
+                $match2->set(($match2->canceled == 1 ? 'team2_id' : 'team1_id'), $t1); // set to canceled team
                 $match1->set('canceled', 0);
                 $match2->set('canceled', 3);
                 $match2->set('refereeTeam_id', null); // referee not needed anymore: open round for this ref for another match

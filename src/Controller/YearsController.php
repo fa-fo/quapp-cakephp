@@ -149,7 +149,7 @@ class YearsController extends AppController
         }
 
         $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
-        $matches = $this->getMatches($conditionsArray, 0, 0, 1);
+        $matches = $this->getMatches($conditionsArray, 0, 2, 1); // sortBy 2: get non-midday matches first
         $matchesPins = $this->getMatches(array_merge($conditionsArray, array('refereePIN IS NOT' => null)), 0, 0, 0);
 
         $matchesRefChangeable = array();
@@ -165,7 +165,7 @@ class YearsController extends AppController
 
                     // search for available refs from same sport with canceled match
                     $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId(), 'sport_id' => $m->sport_id, 'Matches.canceled >' => 0);
-                    $matches1 = $this->getMatches($conditionsArray, 0, 0, 1);
+                    $matches1 = $this->getMatches($conditionsArray, 0, 3, 1); // sortBy 3: get midday matches first
                     if (is_array($matches1)) {
                         foreach ($matches1 as $m1) {
                             if (!$m1->isRefereeCanceled) {

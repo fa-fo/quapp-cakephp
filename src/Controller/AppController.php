@@ -268,7 +268,7 @@ class AppController extends Controller
         return $return;
     }
 
-    protected function getMatches(array $conditionsArray, int $includeLogs = 0, int $sortBySportId = 1, int $adminView = 0): bool|array
+    protected function getMatches(array $conditionsArray, int $includeLogs = 0, int $sortBy = 1, int $adminView = 0): bool|array
     {
         $query = $this->fetchTable('Matches')->find('all', array(
             'contain' => array(
@@ -282,7 +282,7 @@ class AppController extends Controller
                 'Teams4' => array('fields' => array('name')),
             ),
             'conditions' => $conditionsArray,
-            'order' => array('Rounds.id' => 'ASC', ($sortBySportId ? 'Sports.id' : 'Matches.id') => 'ASC', 'Matches.id' => 'ASC')
+            'order' => array('Rounds.id' => 'ASC', ($sortBy ? 'Sports.id' : 'Matches.id') => 'ASC', 'Matches.id' => 'ASC')
         ));
 
         $count = $query->count();
@@ -366,9 +366,19 @@ class AppController extends Controller
                 });
             })->toArray();
 
-            usort($matches, function ($a, $b) {
-                return $a['matchStartTime'] <=> $b['matchStartTime'];
-            });
+            if ($sortBy == 2) { // non-midday rounds first: for changeTeams function
+                usort($matches, function ($a, $b) {
+                    return abs($b['round']['id'] - 8.5) <=> abs($a['round']['id'] - 8.5);
+                });
+            } else if ($sortBy == 3) { // midday rounds first: for changeTeams function
+                usort($matches, function ($a, $b) {
+                    return abs($a['round']['id'] - 8.5) <=> abs($b['round']['id'] - 8.5);
+                });
+            } else { // regular sort: matchStartTime
+                usort($matches, function ($a, $b) {
+                    return $a['matchStartTime'] <=> $b['matchStartTime'];
+                });
+            }
         } else {
             $matches = false;
         }
