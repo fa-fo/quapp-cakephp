@@ -812,6 +812,23 @@ class AppController extends Controller
         }
     }
 
+    public function clearMatchesAndLogs(): void
+    {
+        $postData = $this->request->getData();
+
+        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
+
+            if ($settings['isTest'] ?? 0) {
+                $rc = 0;
+                $conn = ConnectionManager::get('default');
+                $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN matches m ON ml.match_id=m.id LEFT JOIN groups g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE m FROM matches m LEFT JOIN groups g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $this->apiReturn(array('rows affected' => $rc));
+            }
+        }
+    }
+
     protected function updateCalcTotal(): int
     {
         $conn = ConnectionManager::get('default');
