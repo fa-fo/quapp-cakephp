@@ -143,14 +143,27 @@ class YearsController extends AppController
             'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
         ))->toArray();
 
-        $sumCalcMatches = 0;
-        foreach ($groupTeams as $gt) {
-            $sumCalcMatches += $gt->calcCountMatches;
-        }
-
         $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
         $matches = $this->getMatches($conditionsArray, 0, 2, 1); // sortBy 2: get non-midday matches first
         $matchesPins = $this->getMatches(array_merge($conditionsArray, array('refereePIN IS NOT' => null)), 0, 0, 0);
+
+        $sumCalcMatches = 0;
+        $sumMatchesByTeam = array();
+
+        if (is_array($matches)) {
+            foreach ($groupTeams as $gt) {
+                if ($gt->canceled == 0) {
+                    $sumCalcMatches += $gt->calcCountMatches;
+                    $sumMatchesByTeam[$gt->team_id] = 0;
+
+                    foreach ($matches as $m) {
+                        if (in_array($gt->team_id, array($m->team1_id, $m->team2_id))) {
+                            $sumMatchesByTeam[$gt->team_id]++;
+                        }
+                    }
+                }
+            }
+        }
 
         $matchesRefChangeable = array();
         $matchesTeamsChangeable = array();
@@ -229,6 +242,8 @@ class YearsController extends AppController
         $status['matchesCount'] = is_array($matches) ? count($matches) : 0;
         $status['matchesPins'] = is_array($matchesPins) ? count($matchesPins) : 0;
         $status['matchResultCount'] = $matchResultCount;
+        $status['minMatchesByTeam'] = !empty($sumMatchesByTeam) ? min($sumMatchesByTeam) : 0;
+        $status['maxMatchesByTeam'] = !empty($sumMatchesByTeam) ? max($sumMatchesByTeam) : 0;
 
         $status['missingRefereesCount'] = $missingRefereesCount;
         $status['matchesRefChangeable'] = $matchesRefChangeable;
