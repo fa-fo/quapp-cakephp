@@ -3,6 +3,7 @@
 use Cake\I18n\FrozenTime;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/pdf_functions.php';
 
 $mpdf = new \Mpdf\Mpdf();
 
@@ -30,33 +31,7 @@ try {
 
         if (isset($ty['infos']['matches'][0])) {
             $html .= '<h2>Mannschaftsspielplan am  ' . FrozenTime::createFromFormat('Y-m-d H:i:s', $ty['infos']['matches'][0]->matchStartTime)->i18nFormat('d.MM.Y') . '</h2>';
-
-            //$html .= '<img src="img/logo2024.png" style="float:left" width="150">';
-            $html .= '<table border="0" cellspacing="0" cellpadding="6" align="center" width="70%">';
-            $html .= '<tr>';
-            $html .= '<th>Uhrzeit</th>';
-            $html .= '<th>Mannschaft</th>';
-            $html .= '<th>Sportart</th>';
-            $html .= '<th>Spielfeld</th>';
-            $html .= '<th>Team-PIN<br/>für SR</th>';
-            $html .= '</tr>';
-
-            foreach ($ty['infos']['matches'] as $match) {
-                $html .= '<tr>';
-                $html .= '<td>' . FrozenTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime)->i18nFormat('HH:mm') . ' Uhr</td>';
-                $html .= '<td>' . $ty->team->name . '</td>';
-                //$html .= '<td>' . $match->teams1->name . '</td>';
-                //$html .= '<td>' . $match->teams2->name . '</td>';
-                $html .= '<td>' . $match->sport->code . ($match->isRefereeJob ? 'SR' : '') . '</td>';
-                $html .= '<td>' . $match->group_name . '</td>';
-                if ($match->isRefereeJob) {
-                    $html .= '<td>' . $ty->refereePIN . '</td>';
-                }
-                $html .= '</tr>';
-            }
-
-            $html .= '</table>';
-            $html .= '<img src="img/qr-codes.png" style="margin:20px 0 0 150px" width="650">';
+            $html .= getMatchHtml($html, $ty);
 
             $mpdf->WriteHTML($html);
         }

@@ -259,7 +259,7 @@ class TeamYearsController extends AppController
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $teamYears = $this->TeamYears->find('all', array(
-                'fields' => array('id', 'endRanking', 'team_id'),
+                'fields' => array('id', 'endRanking', 'team_id', 'canceled'),
                 'conditions' => array('year_id' => $this->getCurrentYearId()),
                 'contain' => array('Teams' => array('fields' => array('team_name' => 'name'))),
                 'order' => array('endRanking' => 'ASC', 'team_name' => 'ASC')

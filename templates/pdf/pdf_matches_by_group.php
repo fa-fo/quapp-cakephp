@@ -3,15 +3,11 @@
 use Cake\I18n\FrozenTime;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/pdf_functions.php';
 
 $mpdf = new \Mpdf\Mpdf();
 
 try {
-    function ellipsis(string $input, int $maxLength = 25): string
-    {
-        return strlen($input) > $maxLength ? mb_convert_encoding(substr($input, 0, $maxLength), 'UTF-8', 'UTF-8') . "..." : $input;
-    }
-
     $p = 0;
     $groups = $groups ?? array();
 
