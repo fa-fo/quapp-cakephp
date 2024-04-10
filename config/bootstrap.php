@@ -231,3 +231,10 @@ Configure::write('CakePdf', [
     'orientation' => 'portrait',
     'download' => true
 ]);
+if (!defined('THUMBER_DRIVER')) {
+    define('THUMBER_DRIVER', Configure::read('Thumber.driver', extension_loaded('imagick') ? 'imagick' : 'gd'));
+}
+//Default thumbnails directory
+if (!defined('THUMBER_TARGET')) {
+    define('THUMBER_TARGET', Configure::read('Thumber.target', TMP . 'thumbs'));
+}

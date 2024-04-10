@@ -435,6 +435,7 @@ class AppController extends Controller
             $allOffset = 0;
             $calc['maxOffset'] = 0;
             $calc['minOffset'] = 9999;
+            $calc['photos'] = array();
             $lastAliveTime = null;
             $matcheventFoulPersonal = false;
 
@@ -549,6 +550,9 @@ class AppController extends Controller
                             $calc['isMatchLive'] = 0;
                             $calc['isMatchEnded'] = 1;
                             break;
+                        case 'PHOTO_UPLOAD':
+                            $calc['photos'][] = array('id' => $l['id'], 'checked' => $l['playerNumber']);
+                            break;
                         case 'LOGOUT':
                             $calc['isLoggedIn'] = 0; // sic!
                             break;
@@ -574,7 +578,7 @@ class AppController extends Controller
                             $calc['minOffset'] = $calc['minOffset'] < $offset ? $calc['minOffset'] : $offset;
                             $allOffset += $offset;
                         }
-                        $lastAliveTime = $l['datetimeSent'];
+                        $lastAliveTime = $l['datetime'];
                     }
                 }
             }

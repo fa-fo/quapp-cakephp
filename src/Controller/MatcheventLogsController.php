@@ -7,6 +7,7 @@ use App\Model\Entity\Match4;
 use App\Model\Entity\Match4event;
 use App\Model\Entity\Match4eventLog;
 use Cake\I18n\FrozenTime;
+use Thumber\Cake\Utility\ThumbCreator;
 
 /**
  * MatcheventLogs Controller
@@ -15,6 +16,7 @@ use Cake\I18n\FrozenTime;
  */
 class MatcheventLogsController extends AppController
 {
+
     public function login(string $match_id = ''): void
     {
         $match_id = (int)$match_id;
@@ -86,6 +88,10 @@ class MatcheventLogsController extends AppController
                         $newLog->set('datetime', FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
                         if ($this->MatcheventLogs->save($newLog)) {
+                            if ($postData['matchEventCode'] == 'PHOTO_UPLOAD') {
+                                $this->savePhoto($postData['photo'], $match_id, $newLog->id);
+                            }
+
                             $isMatchLive = $match['logsCalc']['isMatchLive'] ?? 0;
 
                             $logs = $this->getLogs($match_id);
@@ -310,5 +316,92 @@ class MatcheventLogsController extends AppController
         }
 
         return true;
+    }
+
+    /**
+     * @throws \ErrorException
+     */
+    private function savePhoto(string $photoDataBase64, int $match_id, int $id): void
+    {
+        $data = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $photoDataBase64));
+
+        $dir = $this->getPhotoDir();
+        $filename0 = $this->getPhotoFilename($dir . '/original', $match_id, $id);
+        if (!file_exists($dir . '/original')) {
+            mkdir($dir . '/original', 0755, true);
+        }
+        file_put_contents($filename0, $data);
+
+        // create thumbnails
+        $filename1 = $this->getPhotoFilename($dir . '/web', $match_id, $id);
+        $filename2 = $this->getPhotoFilename($dir . '/thumbs', $match_id, $id);
+
+        $thumber = new ThumbCreator($filename0);
+
+        $thumber->resize(1200, 900);
+        $thumber->save(array('target' => $filename1));
+
+        $thumber->resize(120, 90);
+        $thumber->save(array('target' => $filename2));
+
+    }
+
+    public function getPhotosToCheck(): void
+    {
+        $photos = array(); // initial
+        $postData = $this->request->getData();
+
+        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $photos = $this->MatcheventLogs->find('all', array(
+                'conditions' => array('Matchevents.code' => 'PHOTO_UPLOAD', 'playerNumber IS' => null),
+                'fields' => array('id', 'match_id'),
+                'contain' => array('Matchevents'),
+                'order' => array('MatcheventLogs.id' => 'ASC')
+            ));
+        }
+
+        $this->apiReturn($photos);
+    }
+
+    /**
+     * @throws \ErrorException
+     */
+    public function setPhotoCheck(string $id = '', string $isOk = ''): void
+    {
+        $return = array(); // initial
+        $postData = $this->request->getData();
+
+        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $id = (int)$id;
+            if ($id) {
+                $isOk = (int)$isOk;
+                $log = $this->MatcheventLogs->find()->where(['id' => $id])->first();
+
+                if ($log) {
+                    /**
+                     * @var Match4eventLog $log
+                     */
+                    $log->set('playerNumber', $isOk); // sic! playerNumber as isOk-Field
+                    //$log->set('canceled', $isOk ? 0 : 1);
+                    //$log->set('cancelTime', $isOk ? null : FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+
+                    if ($this->MatcheventLogs->save($log)) {
+                        $return = $log;
+                    }
+                }
+            }
+        }
+        $this->apiReturn($return);
+    }
+
+    private function getPhotoDir(): string
+    {
+        $year = $this->getCurrentYear();
+        return __DIR__ . '/../../webroot/img/' . $year->name;
+    }
+
+    private function getPhotoFilename(string $dir, int $match_id, int $id): string
+    {
+        return $dir . '/' . $match_id . '_' . $id . '.jpg';
     }
 }

@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
-use App\Model\Table\MatchschedulingPattern16Table;
 use Cake\TestSuite\TestCase;
+use App\Model\Table\MatchschedulingPattern16Table;
 
 /**
  * App\Model\Table\MatchschedulingPattern16Table Test Case

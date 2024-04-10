@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Test\TestCase\Model\Table;
 
 use App\Model\Table\DaysTable;
+use Cake\TestSuite\Fixture\FixtureStrategyInterface;
+use Cake\TestSuite\Fixture\TransactionStrategy;
 use Cake\TestSuite\TestCase;
 
 /**
@@ -11,6 +13,16 @@ use Cake\TestSuite\TestCase;
  */
 class DaysTableTest extends TestCase
 {
+    /**
+     * Create the fixtures strategy used for this test case.
+     * You can use a base class/trait to change multiple classes.
+     */
+    protected function getFixtureStrategy(): FixtureStrategyInterface
+    {
+        echo 'test';
+        return new TransactionStrategy();
+    }
+
     /**
      * Test subject
      *

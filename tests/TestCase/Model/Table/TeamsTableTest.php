@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
-use App\Model\Table\TeamsTable;
 use Cake\TestSuite\TestCase;
+use App\Model\Table\TeamsTable;
 
 /**
  * App\Model\Table\TeamsTable Test Case

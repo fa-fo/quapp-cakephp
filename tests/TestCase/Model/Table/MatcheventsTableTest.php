@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
-use App\Model\Table\MatcheventsTable;
 use Cake\TestSuite\TestCase;
+use App\Model\Table\MatcheventsTable;
 
 /**
  * App\Model\Table\MatcheventsTable Test Case
