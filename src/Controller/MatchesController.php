@@ -209,16 +209,16 @@ class MatchesController extends AppController
         $matches = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['matchIds']) && isset($postData['mode']) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $mode = (int)$postData['mode'];
-            $matchIds = explode(',', $postData['matchIds']);
-            $count = count($matchIds);
+        if (isset($postData['matches']) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $matches = json_decode($postData['matches'], true);
+            $count = count($matches);
 
             if ($count > 0) {
                 $c = 0;
-                foreach ($matchIds as $id) {
+                foreach ($matches as $m) {
                     $c++;
-                    $id = (int)$id;
+                    $id = (int)$m['id'];
+                    $mode = (int)$m['mode'];
                     $a = $id ? $this->getMatches(array('Matches.id' => $id), 1) : false;
                     $a = is_array($a) ? $a : false;
                     $match = $a ? $a[0] : false;
