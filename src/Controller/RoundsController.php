@@ -59,6 +59,7 @@ class RoundsController extends AppController
             unset($r['timeStartDay' . $day_id]); // no need
         }
 
+        $year['currentRoundId'] = $this->getCurrentRoundId();
         $this->apiReturn($year);
     }
 }

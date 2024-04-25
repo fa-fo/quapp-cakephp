@@ -349,7 +349,15 @@ class AppController extends Controller
                         $stime = FrozenTime::createFromFormat('Y-m-d H:i:s', $row['matchStartTime']);
                         $now = FrozenTime::now();
                         $row['isTime2login'] = $settings['isTest'] || ($now > $stime->subMinutes($settings['time2LoginMinsBeforeFrom']) && $now < $stime->addMinutes($settings['time2LoginMinsAfterUntil'])) ? 1 : 0;
-                        $row['isTime2confirm'] = $settings['isTest'] || ($now > $stime->addMinutes($settings['time2ConfirmMinsAfterFrom']) && $now < $stime->addMinutes($settings['time2ConfirmMinsAfterUntil'])) ? 1 : 0;
+
+                        if ($settings['isTest']) { // set test time for isTime2matchEnd and isTime2confirm
+                            $s3 = FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:');
+                            $s4 = FrozenTime::now()->i18nFormat('mm');
+                            $mt = $s3 . ((int)$s4 > 29 ? '30' : '00') . ':00'; // set to full half hour
+                            $stime = FrozenTime::createFromFormat('Y-m-d H:i:s', $mt);
+                        }
+                        $row['isTime2matchEnd'] = ($now > $stime->addMinutes($settings['time2MatchEndMinAfterFrom'])) ? 1 : 0;
+                        $row['isTime2confirm'] = ($now > $stime->addMinutes($settings['time2ConfirmMinsAfterFrom']) && $now < $stime->addMinutes($settings['time2ConfirmMinsAfterUntil'])) ? 1 : 0;
                     }
 
                     if ($includeLogs) {
@@ -899,7 +907,10 @@ class AppController extends Controller
         $cycle = (int)floor($time->hour / 8);
 
         if ($cycle != 1) {
-            return 1;
+            $settings = $this->getSettings();
+            if ($settings['isTest'] == 0) {
+                return 1;
+            }
         }
 
         return ($time->hour % 8 * 2 + 1) + (int)floor($time->minute / 30);

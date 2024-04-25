@@ -82,7 +82,7 @@ class MatchesController extends AppController
         }
     }
 
-    public function byRound(string $round_id = '', string $includeLogs = '', string $year_id = '', string $day_id = ''): void
+    public function byRound(string $round_id = '', string $includeLogs = '', string $year_id = '', string $day_id = '', string $offset = ''): void
     {
         $round_id = (int)$round_id;
         $includeLogs = (int)$includeLogs;
@@ -101,7 +101,7 @@ class MatchesController extends AppController
                 'order' => array('Groups.name' => 'ASC')
             ))->toArray();
 
-            $round_id = $round_id > 0 ? $round_id : $this->getCurrentRoundId(10);
+            $round_id = $round_id > 0 ? $round_id : $this->getCurrentRoundId((int)$offset);
 
             if ($round_id && count($return['groups']) > 0) {
                 foreach ($return['groups'] as $group) {

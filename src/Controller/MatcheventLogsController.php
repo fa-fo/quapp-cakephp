@@ -123,6 +123,7 @@ class MatcheventLogsController extends AppController
                                 }
                                 unset($calc['foulOutLogIds']); // no need
                                 unset($calc['doubleYellowLogIds']); // no need
+                                $calc['isTime2matchEnd'] = $match['isTime2matchEnd'] ?? 0;
                                 $calc['isTime2confirm'] = $match['isTime2confirm'] ?? 0;
                             }
                         }

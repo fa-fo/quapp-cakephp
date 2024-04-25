@@ -24,8 +24,9 @@ use Cake\ORM\Entity;
  * @property string|null $remarks
  * @property int $canceled
  * @property int|null $isRefereeCanceled
- * @property int|null $isTime2confirm
  * @property int|null $isTime2login
+ * @property int|null isTime2matchEnd
+ * @property int|null $isTime2confirm
  * @property array|null $logsCalc
  *
  * @property \App\Model\Entity\Group $group
