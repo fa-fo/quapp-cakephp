@@ -145,8 +145,7 @@ class AppController extends Controller
 
     protected function getCurrentYearId(): int
     {
-        $year = $this->getCurrentYear();
-        return $year->get('id');
+        return ($this->getSettings())['currentYear_id'];
     }
 
     protected function getCurrentDayId(): int
@@ -899,20 +898,26 @@ class AppController extends Controller
         return $refereeGroup;
     }
 
-    protected function getCurrentRoundId(int $offset = 0): float|int
+    protected function getCurrentRoundId(int $yearId = 0, int $dayId = 0, int $offset = 0): float|int
     {
-        $time = FrozenTime::now();
-        $time = $time->addMinutes($offset);
-        $time = $time->subHours($this->getCurrentDayId() == 2 ? 1 : 2);
-        $cycle = (int)floor($time->hour / 8);
+        $settings = $this->getSettings();
 
-        if ($cycle != 1) {
-            $settings = $this->getSettings();
-            if ($settings['isTest'] == 0) {
-                return 1;
+        if (($yearId == 0 || $yearId == $settings['currentYear_id'])
+            && ($dayId == 0 || $dayId == $settings['currentDay_id'])) {
+            $time = FrozenTime::now();
+            $time = $time->addMinutes($offset);
+            $time = $time->subHours($dayId == 2 ? 1 : 2);
+            $cycle = (int)floor($time->hour / 8);
+
+            if ($cycle != 1) {
+                if ($settings['isTest'] == 0) {
+                    return $settings['alwaysAutoUpdateResults'] ? 16 : 1; // as an index
+                }
             }
+
+            return ($time->hour % 8 * 2 + 1) + (int)floor($time->minute / 30);
         }
 
-        return ($time->hour % 8 * 2 + 1) + (int)floor($time->minute / 30);
+        return 0;
     }
 }

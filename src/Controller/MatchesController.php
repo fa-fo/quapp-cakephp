@@ -26,10 +26,13 @@ class MatchesController extends AppController
 
     public function byTeam(string $team_id = '', string $year_id = '', string $day_id = '', string $adminView = ''): void
     {
-        $year_id = (int)$year_id ?: $this->getCurrentYearId();
-        $day_id = (int)$day_id ?: $this->getCurrentDayId();
+        $settings = $this->getSettings();
+        $year_id = (int)$year_id ?: $settings['currentYear_id'];
+        $day_id = (int)$day_id ?: $settings['currentDay_id'];
 
         $return = $this->getMatchesByTeam((int)$team_id, $year_id, $day_id, (int)$adminView);
+
+        $return['currentRoundId'] = $this->getCurrentRoundId($year_id, $day_id);
 
         $this->apiReturn($return, $year_id, $day_id);
     }
@@ -46,6 +49,7 @@ class MatchesController extends AppController
                 $group['showTime'] = $showTime;
             } else {
                 $group['rounds'] = $this->getMatchesByGroup($group);
+                $group['currentRoundId'] = $this->getCurrentRoundId($group->year_id, $group->day_id);
             }
             $this->apiReturn($group, $group->year_id, $group->day_id);
         }
@@ -86,8 +90,10 @@ class MatchesController extends AppController
     {
         $round_id = (int)$round_id;
         $includeLogs = (int)$includeLogs;
-        $year_id = (int)$year_id ?: $this->getCurrentYearId();
-        $day_id = (int)$day_id ?: $this->getCurrentDayId();
+
+        $settings = $this->getSettings();
+        $year_id = (int)$year_id ?: $settings['currentYear_id'];
+        $day_id = (int)$day_id ?: $settings['currentDay_id'];
 
         $adminView = $includeLogs; // sic! for admin and supervisor
 
@@ -101,7 +107,8 @@ class MatchesController extends AppController
                 'order' => array('Groups.name' => 'ASC')
             ))->toArray();
 
-            $round_id = $round_id > 0 ? $round_id : $this->getCurrentRoundId((int)$offset);
+            $return['currentRoundId'] = $this->getCurrentRoundId($year_id, $day_id, (int)$offset);
+            $round_id = $round_id > 0 ? $round_id : $return['currentRoundId'];
 
             if ($round_id && count($return['groups']) > 0) {
                 foreach ($return['groups'] as $group) {
@@ -294,11 +301,11 @@ class MatchesController extends AppController
 
     private function isConfirmable(\Cake\ORM\Entity $match, array $logsCalc, int $mode): bool
     {
-        $year = $this->getCurrentYear();
+        $settings = $this->getSettings();
         $group = $this->getGroupByMatchId($match->id);
 
-        // only current Year
-        if ($year->id == $group->year_id) {
+        // only current Day
+        if ($settings['currentYear_id'] == $group->year_id && $settings['currentDay_id'] == $group->day_id) {
             if ($mode == 0 && isset($logsCalc['teamWon'])) {
                 /**
                  * @var Match4 $match

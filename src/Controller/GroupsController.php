@@ -15,8 +15,9 @@ class GroupsController extends AppController
 {
     public function all(string $year_id = '', string $day_id = ''): void
     {
-        $year_id = (int)$year_id ?: $this->getCurrentYearId();
-        $day_id = (int)$day_id ?: $this->getCurrentDayId();
+        $settings = $this->getSettings();
+        $year_id = (int)$year_id ?: $settings['currentYear_id'];
+        $day_id = (int)$day_id ?: $settings['currentDay_id'];
 
         $year = array();
         $year['groups'] = $this->Groups->find('all', array(
@@ -170,11 +171,13 @@ class GroupsController extends AppController
     }
 
 
+    /* not used?
     public function getRankingPointsPerYear(string $id = '', string $year_id = '', string $day_id = ''): void
     {
         $id = (int)$id;
-        $year_id = (int)$year_id ?: $this->getCurrentYearId();
-        $day_id = (int)$day_id ?: $this->getCurrentDayId();
+        $settings = $this->getSettings();
+        $year_id = (int)$year_id ?: $settings['currentYear_id'];
+        $day_id = (int)$day_id ?: $settings['currentDay_id'];
 
         $avgRankingPointsPerYear = array();
         $condGtArray = $id ? array('id' => $id) : array();
@@ -194,7 +197,7 @@ class GroupsController extends AppController
 
         $this->apiReturn(array('avgRankingPointsPerYear' => $avgRankingPointsPerYear));
     }
-
+*/
 
     private function getAvgRankingPointsPerYear(int $id): ?float
     {

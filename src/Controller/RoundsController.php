@@ -12,16 +12,16 @@ use App\Model\Entity\Round;
  */
 class RoundsController extends AppController
 {
-    public function all(string $includeStats = '', string $year_id = '', string $day_id = ''): void
+    public function all(string $adminView = ''): void
     {
         // only current day !!!
         $settings = $this->getSettings();
-        $currentYear = $this->getCurrentYear()->toArray();
-        $day = $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd');
+        $year_id = $settings['currentYear_id'];
+        $day_id = $settings['currentDay_id'];
 
-        $includeStats = (int)$includeStats;
-        $year_id = (int)$year_id ?: $settings['currentYear_id'];
-        $day_id = (int)$day_id ?: $settings['currentDay_id'];
+        $currentYear = $this->getCurrentYear()->toArray();
+        $day = $currentYear['day' . $day_id]->i18nFormat('yyyy-MM-dd');
+        $adminView = (int)$adminView;
 
         $year = array();
         $year['rounds'] = $this->Rounds->find('all', array(
@@ -39,20 +39,20 @@ class RoundsController extends AppController
                 'round_id' => $r->id
             );
 
-            $query1 = $this->fetchTable('Matches')->find('all', array(
-                'contain' => array('Groups'),
-                'conditions' => $conditionsArray
-            ));
+            if ($adminView) {
+                $query1 = $this->fetchTable('Matches')->find('all', array(
+                    'contain' => array('Groups'),
+                    'conditions' => $conditionsArray
+                ));
 
-            $r['matchesCount'] = $query1->count();
+                $r['matchesCount'] = $query1->count();
 
-            if ($includeStats) {
                 $query2 = $this->fetchTable('Matches')->find('all', array(
                     'contain' => array('Groups'),
                     'conditions' => array_merge($conditionsArray, array('resultTrend IS NOT' => null))
                 ));
 
-                $r['matchesWithResult'] = $query2->count();
+                $r['matchesConfirmed'] = $query2->count();
             }
 
             $r['timeStart'] = $day . ' ' . $r['timeStartDay' . $day_id]->i18nFormat('HH:mm:ss');
