@@ -32,10 +32,14 @@ class GroupTeamsController extends AppController
             $group['groupTeams'] = $this->getRanking($group);
             $settings = $this->getSettings();
 
-            if (!$adminView && $group->year_id == $this->getCurrentYearId() && $group->day_id == 2 && $settings['alwaysAutoUpdateResults'] == 1) {
-                if ($settings['showEndRanking'] == 0) {
-                    $group['groupTeams'] = null;
-                    $group['showRanking'] = 0;
+            if (!$adminView && $group->year_id == $settings['currentYear_id']) {
+                $group['isTest'] = $settings['isTest'];
+
+                if ($group->day_id == 2 && $settings['alwaysAutoUpdateResults'] == 1) {
+                    if ($settings['showEndRanking'] == 0) {
+                        $group['groupTeams'] = null;
+                        $group['showRanking'] = 0;
+                    }
                 }
             }
 

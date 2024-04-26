@@ -320,6 +320,10 @@ class AppController extends Controller
                         $row['round']['autoUpdateResults'] = 1;
                     }
 
+                    if ($row['group']['year']['id'] == $settings['currentYear_id']) {
+                        $row['isTest'] = $settings['isTest'];
+                    }
+
                     // no need
                     unset($row['group']['year']['teamsCount']);
                     unset($row['group']['year']['daysCount']);
@@ -347,9 +351,12 @@ class AppController extends Controller
                     if ($row['matchStartTime']) {
                         $stime = FrozenTime::createFromFormat('Y-m-d H:i:s', $row['matchStartTime']);
                         $now = FrozenTime::now();
-                        $row['isTime2login'] = $settings['isTest'] || ($now > $stime->subMinutes($settings['time2LoginMinsBeforeFrom']) && $now < $stime->addMinutes($settings['time2LoginMinsAfterUntil'])) ? 1 : 0;
+                        $row['isTime2login'] = $now > $stime->subMinutes($settings['time2LoginMinsBeforeFrom']) && $now < $stime->addMinutes($settings['time2LoginMinsAfterUntil']) ? 1 : 0;
 
-                        if ($settings['isTest']) { // set test time for isTime2matchEnd and isTime2confirm
+                        if ($row['isTest']) {
+                            $row['isTime2login'] = 1;
+
+                            // set test time for isTime2matchEnd and isTime2confirm
                             $s3 = FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:');
                             $s4 = FrozenTime::now()->i18nFormat('mm');
                             $mt = $s3 . ((int)$s4 > 29 ? '30' : '00') . ':00'; // set to full half hour
