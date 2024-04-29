@@ -364,9 +364,6 @@ class MatcheventLogsController extends AppController
         $this->apiReturn($photos);
     }
 
-    /**
-     * @throws \ErrorException
-     */
     public function setPhotoCheck(string $id = '', string $isOk = ''): void
     {
         $return = array(); // initial

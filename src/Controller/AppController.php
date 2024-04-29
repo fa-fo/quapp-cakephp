@@ -295,11 +295,6 @@ class AppController extends Controller
                         $row['teams3'] = array('name' => '-'); // needed!
                     }
 
-                    if ((($conditionsArray['OR']['refereeTeam_id'] ?? 0) == $row['refereeTeam_id'])
-                        || (($conditionsArray['OR']['refereeTeamSubst_id'] ?? 0) == $row['refereeTeamSubst_id'])) {
-                        $row['isRefereeJob'] = 1;
-                    }
-
                     // Start time
                     if ($row['group']['year']['day' . $row['group']['day_id']]) {
                         $s1 = ($row['group']['year']['day' . $row['group']['day_id']])->i18nFormat('yyyy-MM-dd');
@@ -362,8 +357,21 @@ class AppController extends Controller
                             $mt = $s3 . ((int)$s4 > 29 ? '30' : '00') . ':00'; // set to full half hour
                             $stime = FrozenTime::createFromFormat('Y-m-d H:i:s', $mt);
                         }
-                        $row['isTime2matchEnd'] = ($now > $stime->addMinutes($settings['time2MatchEndMinAfterFrom'])) ? 1 : 0;
-                        $row['isTime2confirm'] = ($now > $stime->addMinutes($settings['time2ConfirmMinsAfterFrom']) && $now < $stime->addMinutes($settings['time2ConfirmMinsAfterUntil'])) ? 1 : 0;
+                        if ($includeLogs) {
+                            $row['isTime2matchEnd'] = ($now > $stime->addMinutes($settings['time2MatchEndMinAfterFrom'])) ? 1 : 0;
+                            $row['isTime2confirm'] = ($now > $stime->addMinutes($settings['time2ConfirmMinsAfterFrom']) && $now < $stime->addMinutes($settings['time2ConfirmMinsAfterUntil'])) ? 1 : 0;
+                        }
+                    }
+
+                    if ((($conditionsArray['OR']['refereeTeam_id'] ?? 0) > 0
+                            && $conditionsArray['OR']['refereeTeam_id'] == $row['refereeTeam_id'])
+                        || (($conditionsArray['OR']['refereeTeamSubst_id'] ?? 0) > 0
+                            && $conditionsArray['OR']['refereeTeamSubst_id'] == $row['refereeTeamSubst_id'])) {
+                        $row['isRefereeJob'] = 1;
+
+                        if ($row['isTime2login'] && !$includeLogs) {
+                            $row['isRefereeJobLoginRequired'] = $this->wasLoggedIn($row['id']) ? 0 : 1;
+                        }
                     }
 
                     if ($includeLogs) {
@@ -415,6 +423,14 @@ class AppController extends Controller
                     (int)($row['logsCalc']['score'][$row['team1_id']] ?? 0) < (int)($row['logsCalc']['score'][$row['team2_id']] ?? 0)
                 )
             ));
+    }
+
+    private function wasLoggedIn(int $match_id): int
+    {
+        return $this->fetchTable('MatcheventLogs')->find('all', array(
+            'conditions' => array('Matchevents.code' => 'LOGIN', 'match_id' => $match_id),
+            'contain' => array('Matchevents')
+        ))->count();
     }
 
     protected function getLogs(int $match_id): bool|array
