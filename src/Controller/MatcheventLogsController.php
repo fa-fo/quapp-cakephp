@@ -380,8 +380,6 @@ class MatcheventLogsController extends AppController
                      * @var Match4eventLog $log
                      */
                     $log->set('playerNumber', $isOk); // sic! playerNumber as isOk-Field
-                    //$log->set('canceled', $isOk ? 0 : 1);
-                    //$log->set('cancelTime', $isOk ? null : FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
                     if ($this->MatcheventLogs->save($log)) {
                         $return = $log;
@@ -401,5 +399,59 @@ class MatcheventLogsController extends AppController
     private function getPhotoFilename(string $dir, int $match_id, int $id): string
     {
         return $dir . '/' . $match_id . '_' . $id . '.jpg';
+    }
+
+    public function insertTestLogs(): void
+    {
+        $matches = array();
+        $postData = $this->request->getData();
+
+        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
+
+            if ($settings['isTest'] ?? 0) {
+                $conditionsArray = array(
+                    'Groups.year_id' => $settings['currentYear_id'],
+                    'Groups.day_id' => $settings['currentDay_id'],
+                );
+
+                $matches = $this->getMatches($conditionsArray, 1);
+                if (is_array($matches) && count($matches) > 0) {
+                    foreach ($matches as $m) {
+                        /**
+                         * @var Match4 $m
+                         */
+                        if ($m->resultTrend === null) {
+                            // MATCH_START
+                            $newLog = $this->MatcheventLogs->newEmptyEntity();
+                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'MATCH_START'])->first();
+                            $newLog->set('matchEvent_id', $event->get('id'));
+                            $newLog->set('match_id', $m->id);
+                            $this->MatcheventLogs->save($newLog);
+
+                            for ($i = 0; $i < 2; $i++) {
+                                // GOAL_1POINT
+                                $newLog = $this->MatcheventLogs->newEmptyEntity();
+                                $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'GOAL_1POINT'])->first();
+                                $newLog->set('matchEvent_id', $event->get('id'));
+                                $newLog->set('match_id', $m->id);
+                                $newLog->set('team_id', $m->team1_id); // random_int(0, 1) ? $m->team1_id : $m->team2_id);
+                                $this->MatcheventLogs->save($newLog);
+                            }
+
+                            // RESULT_WIN_?
+                            $newLog = $this->MatcheventLogs->newEmptyEntity();
+                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'RESULT_WIN_TEAM1'])->first();
+                            $newLog->set('matchEvent_id', $event->get('id'));
+                            $newLog->set('match_id', $m->id);
+                            $this->MatcheventLogs->save($newLog);
+                        }
+                    }
+                }
+            }
+        }
+
+        $matchesCount = is_array($matches) ? count($matches) : false;
+        $this->apiReturn($matchesCount);
     }
 }
