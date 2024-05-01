@@ -577,6 +577,7 @@ class AppController extends Controller
                         case 'RESULT_CONFIRM':
                             $calc['isResultConfirmed'] = 1;
                             $calc['isMatchConcluded'] = 1;
+                            $calc['isMatchStarted'] = 1; // ! needed
                             $calc['isMatchLive'] = 0;
                             $calc['isMatchEnded'] = 1;
                             break;
