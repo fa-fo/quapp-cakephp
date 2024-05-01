@@ -213,7 +213,7 @@ class MatchesController extends AppController
 
     public function confirmMulti(): void
     {
-        $matches = array();
+        $return = array();
         $postData = $this->request->getData();
 
         if (isset($postData['matches']) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
@@ -272,13 +272,11 @@ class MatchesController extends AppController
                         }
 
                         $match->set('resultTrend', $rTrend);
-
                         $match->set('resultGoals1', (int)($score1 * $factor));
                         $match->set('resultGoals2', (int)($score2 * $factor));
-
                         $this->Matches->save($match);
 
-                        // create event_log 'result confirmed'
+                        // create event_log 'RESULT_CONFIRM'
                         $newLog = $this->fetchTable('MatcheventLogs')->newEmptyEntity();
                         $newLog->set('match_id', $match->id);
                         $newLog->set('datetime', FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
@@ -287,15 +285,15 @@ class MatchesController extends AppController
 
                         if ($match->round->autoUpdateResults) {
                             $calcRanking = $this->getCalcRanking($match->team1_id, $match->team2_id, $c == $count);
-                            $matches[$c] = $match->toArray();
-                            $matches['calcRanking'][$c] = $calcRanking;
+                            $return[$c] = $match->toArray();
+                            $return['calcRanking'][$c] = $calcRanking;
                         }
                     }
                 }
             }
         }
 
-        $this->apiReturn($matches);
+        $this->apiReturn($return);
     }
 
 
