@@ -390,6 +390,33 @@ class MatcheventLogsController extends AppController
         $this->apiReturn($return);
     }
 
+    public function getPhotosAll(): void
+    {
+        $settings = $this->getSettings();
+
+        $photos = $this->MatcheventLogs->find('all', array(
+            'conditions' => array(
+                'Matchevents.code' => 'PHOTO_UPLOAD',
+                'playerNumber' => '1',
+                'year_id' => $settings['currentYear_id'],
+            ),
+            'fields' => array('id', 'match_id'),
+            'contain' => array(
+                'Matchevents',
+                'Matches' => array('fields' => array('resultGoals1' => 'resultGoals1', 'resultGoals2' => 'resultGoals2')),
+                'Matches.Rounds' => array('fields' => array('round_id' => 'Rounds.id')),
+                'Matches.Groups' => array('fields' => array('group_name' => 'Groups.name')),
+                'Matches.Sports' => array('fields' => array('sport_name' => 'Sports.name')),
+                'Matches.Teams1' => array('fields' => array('team1_name' => 'Teams1.name')),
+                'Matches.Teams2' => array('fields' => array('team2_name' => 'Teams2.name')),
+            ),
+            'order' => array('MatcheventLogs.id' => 'DESC')
+        ));
+
+        $this->apiReturn($photos);
+    }
+
+
     private function getPhotoDir(): string
     {
         $year = $this->getCurrentYear();
