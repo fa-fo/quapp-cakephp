@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Team;
+
 /**
  * Teams Controller
  *
@@ -15,6 +17,36 @@ class TeamsController extends AppController
         $teams = false;
 
         $this->apiReturn($teams);
+    }
+
+    public function add(): void
+    {
+        $return = array();
+        $postData = $this->request->getData();
+
+        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $team_id = 0;
+            $name = trim($postData['name']);
+            $team = $this->Teams->find('all', array(
+                'conditions' => array('name' => $name),
+            ))->first();
+            /**
+             * @var Team $team
+             */
+            if ($team) {
+                $team_id = $team->id;
+            } else {
+                $newTeam = $this->Teams->newEmptyEntity();
+                $newTeam->set('name', $name);
+                if ($this->Teams->save($newTeam)) {
+                    $team_id = $newTeam->id;
+                }
+            }
+
+            $return = array('name' => $name, 'team_id' => $team_id);
+        }
+
+        $this->apiReturn($return);
     }
 
     public function byId(string $id = ''): void
@@ -116,5 +148,29 @@ class TeamsController extends AppController
         $matches = $id && $sport_id ? $this->getMatches($conditionsArray) : false;
 
         $this->apiReturn($matches);
+    }
+
+    public function checkTeamNames(): void
+    {
+        $return = array();
+        $postData = $this->request->getData();
+        $teamNames = preg_split('/\r\n|\r|\n/', $postData['teamNames']);
+
+        if (is_array($teamNames)) {
+            foreach ($teamNames as $name) {
+                $name = trim($name);
+                $team = $this->Teams->find('all', array(
+                    'conditions' => array('name' => $name),
+                ))->first();
+                /**
+                 * @var Team $team
+                 */
+                $team_id = $team ? $team->id : 0;
+
+                $return[] = array('name' => $name, 'team_id' => $team_id);
+            }
+        }
+
+        $this->apiReturn($return);
     }
 }
