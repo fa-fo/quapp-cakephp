@@ -328,11 +328,35 @@ class TeamYearsController extends AppController
         $this->apiReturn($rowsCount);
     }
 
+    /**
+     * @throws \Exception
+     */
+    public function insert(): void
+    {
+        $return = array();
+        $postData = $this->request->getData();
+        $settings = $this->getSettings();
+
+        if (($settings['isTest'] ?? 0) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $teamNamesSplit = json_decode($postData['teamNamesSplit'], true);
+            foreach ($teamNamesSplit as $team) {
+                $newTy = $this->TeamYears->newEmptyEntity();
+                $newTy->set('team_id', $team['team_id']);
+                $newTy->set('year_id', $settings['currentYear_id']);
+                $newTy->set('refereePIN', $this->createUniquePIN($settings['currentYear_id'], $team['team_id']));
+                $this->TeamYears->save($newTy);
+
+                $return[] = $newTy;
+            }
+        }
+
+        $this->apiReturn($return);
+    }
 
     /**
      * @throws \Exception
      */
-    public function insertTestValues(): void
+    public function insertTestValues(): void  // not used anymore
     {
         $postData = $this->request->getData();
         $settings = $this->getSettings();
