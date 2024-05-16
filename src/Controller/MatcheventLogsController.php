@@ -390,8 +390,11 @@ class MatcheventLogsController extends AppController
         $this->apiReturn($return);
     }
 
-    public function getPhotosAll(): void
+    public function getPhotosAll(string $myTeamId): void
     {
+        $return = array();
+        $myPhotos = array();
+        $myTeamId = (int)$myTeamId;
         $settings = $this->getSettings();
 
         $photos = $this->MatcheventLogs->find('all', array(
@@ -407,13 +410,25 @@ class MatcheventLogsController extends AppController
                 'Matches.Rounds' => array('fields' => array('round_id' => 'Rounds.id')),
                 'Matches.Groups' => array('fields' => array('group_name' => 'Groups.name')),
                 'Matches.Sports' => array('fields' => array('sport_name' => 'Sports.name')),
-                'Matches.Teams1' => array('fields' => array('team1_name' => 'Teams1.name')),
-                'Matches.Teams2' => array('fields' => array('team2_name' => 'Teams2.name')),
+                'Matches.Teams1' => array('fields' => array('team1_name' => 'Teams1.name', 'team1_id' => 'Teams1.id')),
+                'Matches.Teams2' => array('fields' => array('team2_name' => 'Teams2.name', 'team2_id' => 'Teams2.id')),
+                'Matches.Teams3' => array('fields' => array('team3_name' => 'Teams3.name')),
             ),
             'order' => array('MatcheventLogs.id' => 'DESC')
         ));
 
-        $this->apiReturn($photos);
+        $c = -1;
+        foreach ($photos as $ph) {
+            $c++;
+            if ($myTeamId == $ph->team1_id || $myTeamId == $ph->team2_id) {
+                $myPhotos[] = $c;
+            }
+        }
+
+        $return['photos'] = $photos;
+        $return['myPhotos'] = $myPhotos;
+
+        $this->apiReturn($return);
     }
 
 
