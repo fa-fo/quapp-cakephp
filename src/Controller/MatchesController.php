@@ -335,8 +335,6 @@ class MatchesController extends AppController
     public function addAllFromSchedulingPattern(): void
     {
         $matches = array();
-        $countPrevYearsMatches = 0;
-        $countPrevYearsMatchesSameSport = 0;
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
@@ -410,23 +408,6 @@ class MatchesController extends AppController
                             if ($this->Matches->save($match)) {
                                 $matches[] = $match;
                             }
-
-                            // check previous years for doublets
-                            $conditionsArray = array('Groups.year_id !=' => $year->id,
-                                'OR' => array(
-                                    'team1_id' => $groupteam1->team_id,
-                                    'team2_id' => $groupteam1->team_id
-                                ),
-                                'AND' => array(
-                                    'OR' => array(
-                                        'team1_id' => $groupteam2->team_id,
-                                        'team2_id' => $groupteam2->team_id
-                                    )));
-                            $prevMatches = $this->getMatches($conditionsArray);
-                            $countPrevYearsMatches += is_array($prevMatches) ? count($prevMatches) : 0;
-
-                            $prevMatchesSameSport = $this->getMatches(array_merge($conditionsArray, array('sport_id' => $matchscheduling->sport_id)));
-                            $countPrevYearsMatchesSameSport += is_array($prevMatchesSameSport) ? count($prevMatchesSameSport) : 0;
                         }
                     }
                 }
@@ -434,9 +415,7 @@ class MatchesController extends AppController
         }
 
         $checkings = array(
-            'matchesCount' => count($matches) ?: 0,
-            'countPrevYearsMatches' => $countPrevYearsMatches / 2,
-            'countPrevYearsMatchesSameSport' => $countPrevYearsMatchesSameSport / 2,
+            'matchesCount' => count($matches) ?: 0
         );
 
         $this->apiReturn($checkings);

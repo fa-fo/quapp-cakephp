@@ -205,8 +205,10 @@ class GroupTeamsController extends AppController
 
     public function sortPlaceNumberAfterAddAll(string $mode = 'none'): void
     {
-        $countDoubleMatches['countSameMatch'] = 0;
-        $countDoubleMatches['countSameMatchSameSport'] = 0;
+        $countDoubleMatches['countPrevYearsSameMatch'] = 0;
+        $countDoubleMatches['countPrevYearsSameMatchSameSport'] = 0;
+        $countDoubleMatches['countPrevDaySameMatch'] = 0;
+        $countDoubleMatches['countPrevDaySameMatchSameSport'] = 0;
         $avgOpponentPrevDayRanking = array();
         $avgOpponentRankingPointsPerYear = array();
         $postData = $this->request->getData();
@@ -314,8 +316,10 @@ class GroupTeamsController extends AppController
                         foreach ($groupTeams as $gt) {
                             $checks = $this->getCountCheckings($gt, $options['currentDay_id']);
 
-                            $countDoubleMatches['countSameMatch'] += $checks['countDuplicates']['countSameMatch'];
-                            $countDoubleMatches['countSameMatchSameSport'] += $checks['countDuplicates']['countSameMatchSameSport'];
+                            $countDoubleMatches['countPrevYearsSameMatch'] += $checks['countPrevYearsDuplicates']['countSameMatch'];
+                            $countDoubleMatches['countPrevYearsSameMatchSameSport'] += $checks['countPrevYearsDuplicates']['countSameMatchSameSport'];
+                            $countDoubleMatches['countPrevDaySameMatch'] += $checks['countPrevDayDuplicates']['countSameMatch'];
+                            $countDoubleMatches['countPrevDaySameMatchSameSport'] += $checks['countPrevDayDuplicates']['countSameMatchSameSport'];
                             $avgOpponentPrevDayRanking[$gt->groupPosNumber][$gt->team_id] = $checks['avgOpponentPrevDayRanking'];
                             $avgOpponentRankingPointsPerYear[$gt->groupPosNumber][$gt->team_id] = $checks['avgOpponentRankingPointsPerYear'];
                         }
@@ -347,7 +351,9 @@ class GroupTeamsController extends AppController
     private function getCountCheckings(GroupTeam $groupteam, int $currentDay_id): array
     {
         $year = $this->getCurrentYear();
-        $prevOpponentTeamIds = array();
+        $countPrevYearsMatches = 0;
+        $countPrevYearsMatchesSameSport = 0;
+        $prevDayOpponentTeamIds = array();
         $currentOpponentTeamIds = array();
         $currentOpponentTeamPrevRankings = array();
         $currentOpponentTeamRankingPointsPerYear = array();
@@ -358,16 +364,45 @@ class GroupTeamsController extends AppController
             /**
              * @var Match4schedulingPattern16 $msc
              */
+            if (in_array($groupteam->placeNumber, array($msc->placenumberTeam1, $msc->placenumberTeam2))) {
+                // check previous years for doublets
+                $opponentGroupteam = $this->GroupTeams->find('all', array(
+                    'conditions' => array('GroupTeams.group_id' => $groupteam->group_id, 'GroupTeams.placeNumber' => $msc->placenumberTeam1 == $groupteam->placeNumber ? $msc->placenumberTeam2 : $msc->placenumberTeam1),
+                ))->first();
+                /**
+                 * @var GroupTeam $opponentGroupteam
+                 */
+
+                if($opponentGroupteam) {
+                    $conditionsArray = array('Groups.year_id !=' => $year->id,
+                        'OR' => array(
+                            'team1_id' => $groupteam->team_id,
+                            'team2_id' => $groupteam->team_id
+                        ),
+                        'AND' => array(
+                            'OR' => array(
+                                'team1_id' => $opponentGroupteam->team_id,
+                                'team2_id' => $opponentGroupteam->team_id
+                            )));
+                    $prevYearsMatches = $this->getMatches($conditionsArray);
+                    $countPrevYearsMatches += (is_array($prevYearsMatches) ? count($prevYearsMatches) : 0);
+
+                    $prevYearsMatchesSameSport = $this->getMatches(array_merge($conditionsArray, array('sport_id' => $msc->sport_id)));
+                    $countPrevYearsMatchesSameSport += (is_array($prevYearsMatchesSameSport) ? count($prevYearsMatchesSameSport) : 0);
+                }
+            }
+
             if ($currentDay_id > 1 && in_array($groupteam->prevPlaceNumber, array($msc->placenumberTeam1, $msc->placenumberTeam2))) {
-                $prevOpponentGroupteam = $this->GroupTeams->find('all', array(
+                // check Day 1 from same year for doublets
+                $prevDayOpponentGroupteam = $this->GroupTeams->find('all', array(
                     'contain' => array('Groups' => array('fields' => array('year_id', 'day_id'))),
                     'conditions' => array('GroupTeams.group_id' => $groupteam->prevGroupId, 'GroupTeams.placeNumber' => $msc->placenumberTeam1 == $groupteam->prevPlaceNumber ? $msc->placenumberTeam2 : $msc->placenumberTeam1, 'Groups.year_id' => $year->id, 'Groups.day_id' => ($this->getCurrentDayId() - 1)),
                 ))->first();
                 /**
-                 * @var GroupTeam $prevOpponentGroupteam
+                 * @var GroupTeam $prevDayOpponentGroupteam
                  */
-                $prevOpponentTeamIds[$msc->sport_id] = $prevOpponentTeamIds[$msc->sport_id] ?? array();
-                $prevOpponentTeamIds[$msc->sport_id][] = $prevOpponentGroupteam->team_id;
+                $prevDayOpponentTeamIds[$msc->sport_id] ??= array();
+                $prevDayOpponentTeamIds[$msc->sport_id][] = $prevDayOpponentGroupteam->team_id;
             }
 
             if (in_array($groupteam->placeNumber, array($msc->placenumberTeam1, $msc->placenumberTeam2))) {
@@ -406,12 +441,14 @@ class GroupTeamsController extends AppController
             }
         }
 
-        $countDuplicates = $this->countDuplicates($prevOpponentTeamIds, $currentOpponentTeamIds);
+        $countPrevYearsDuplicates = array('countSameMatch' => $countPrevYearsMatches / 2, 'countSameMatchSameSport' => $countPrevYearsMatchesSameSport / 2);
+        $countPrevDayDuplicates = $this->countDuplicates($prevDayOpponentTeamIds, $currentOpponentTeamIds);
         $avgOpponentPrevDayRanking = count($currentOpponentTeamPrevRankings) ? $this->getAvgOpponentPrevDayRanking($currentOpponentTeamPrevRankings) : null;
         $avgOpponentRankingPointsPerYear = count($currentOpponentTeamRankingPointsPerYear) ? round(array_sum($currentOpponentTeamRankingPointsPerYear) / count($currentOpponentTeamRankingPointsPerYear), 2) : null;
 
         return array(
-            'countDuplicates' => $countDuplicates,
+            'countPrevYearsDuplicates' => $countPrevYearsDuplicates,
+            'countPrevDayDuplicates' => $countPrevDayDuplicates,
             'avgOpponentPrevDayRanking' => $avgOpponentPrevDayRanking,
             'avgOpponentRankingPointsPerYear' => $avgOpponentRankingPointsPerYear,
         );
