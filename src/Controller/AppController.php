@@ -396,6 +396,10 @@ class AppController extends Controller
                 usort($matches, function ($a, $b) {
                     return abs($a['round']['id'] - 8.5) <=> abs($b['round']['id'] - 8.5);
                 });
+            } else if ($sortBy == 4) { // last rounds first: for admin remarks view
+                usort($matches, function ($a, $b) {
+                    return $b['matchStartTime'] <=> $a['matchStartTime'];
+                });
             } else { // regular sort: matchStartTime
                 usort($matches, function ($a, $b) {
                     return $a['matchStartTime'] <=> $b['matchStartTime'];

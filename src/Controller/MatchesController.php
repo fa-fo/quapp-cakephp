@@ -128,6 +128,17 @@ class MatchesController extends AppController
 
                 $return['round'] = $this->fetchTable('Rounds')->find()->where(['id' => $round_id])->first();
             }
+
+            if ($adminView) { // get last remarks
+                $conditionsArray = array(
+                    'Groups.year_id' => $year_id,
+                    'Groups.day_id' => $day_id,
+                    'round_id >' => $round_id - 2,
+                    'remarks IS NOT' => null,
+                );
+
+                $return['remarks'] = $this->getMatches($conditionsArray, 0, 4, 1); // sortBy 4: get last matches first
+            }
         }
 
         $this->apiReturn($return);
