@@ -149,6 +149,8 @@ INSERT INTO `matchevents` (`id`, `code`, `name`, `needsTeamAssoc`, `needsPlayerA
 (72, 'RESULT_WIN_TEAM2', 'Sieger: Team 2', 0, 0, NULL, NULL, 1, 1, NULL, NULL, NULL, 0),
 (90, 'MATCH_CONCLUDE', 'Spiel abschließen', 0, 0, NULL, NULL, 0, 1, NULL, 'Wirklich abschließen? Danach kann am Spielprotokoll nichts mehr geändert werden!', 'Bitte von beiden Teams kurz prüfen lassen. Passt alles? Falls ja, hier drücken:', 0),
 (95, 'RESULT_CONFIRM', 'Ergebnis bestätigt', 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0),
+(97, 'PHOTO_ADD', 'Fotografieren und hochladen', 0, 0, NULL, NULL, 1, 1, NULL, '', 'Optional: Team-Fotos jetzt hier hochladen:', 0),
+(98, 'PHOTO_UPLOAD', 'Foto hochladen', 0, 0, NULL, NULL, 1, 0, NULL, '', '', 0),
 (99, 'LOGOUT', 'vom Spiel ausloggen', 0, 0, NULL, NULL, 1, 1, NULL, 'Wirklich vom Spiel ausloggen?', 'Das Spiel ist nun abgeschlossen und wird in Kürze von der spielleitenden Stelle mit entsprechendem Faktor gewertet.', 0);
 
 --
@@ -394,15 +396,17 @@ INSERT INTO `settings` (`id`, `name`, `value`) VALUES
 (1, 'isTest', 1),
 (2, 'currentYear_id', 27),
 (3, 'currentDay_id', 1),
-(4, 'alwaysAutoUpdateResults', 1),
+(4, 'alwaysAutoUpdateResults', 0),
 (5, 'showScheduleHoursBefore', 3),
 (6, 'time2LoginMinsBeforeFrom', 120),
-(7, 'time2LoginMinsAfterUntil', 30),
-(8, 'autoLogoutSecsAfter', 60),
-(9, 'time2ConfirmMinsAfterFrom', 20),
-(10, 'time2ConfirmMinsAfterUntil', 60),
-(11, 'showEndRanking', 1),
-(12, 'showLocalStorageScore', 0);
+(7, 'time2LoginMinsAfterUntil', 29),
+(8, 'time2MatchEndMinAfterFrom', 20),
+(9, 'time2ConfirmMinsAfterFrom', 23),
+(10, 'time2ConfirmMinsAfterUntil', 120),
+(11, 'showEndRanking', 0),
+(12, 'showLocalStorageScore', 0),
+(13, 'maxPhotos', 5),
+(14, 'autoLogoutSecsAfter', 60);
 
 --
 -- Tabellenstruktur für Tabelle `sports`
