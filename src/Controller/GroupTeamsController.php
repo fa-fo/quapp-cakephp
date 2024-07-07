@@ -35,7 +35,8 @@ class GroupTeamsController extends AppController
             if (!$adminView && $group->year_id == $settings['currentYear_id']) {
                 $group['isTest'] = $settings['isTest'];
 
-                if ($group->day_id == 2 && $settings['alwaysAutoUpdateResults'] == 1) {
+                if ($group->day_id == 2 // was: && $settings['alwaysAutoUpdateResults'] == 1
+                    && $this->getCurrentRoundId($settings['currentYear_id'], $settings['currentDay_id'], 10) > 12) {
                     if ($settings['showEndRanking'] == 0) {
                         $group['groupTeams'] = null;
                         $group['showRanking'] = 0;
@@ -373,7 +374,7 @@ class GroupTeamsController extends AppController
                  * @var GroupTeam $opponentGroupteam
                  */
 
-                if($opponentGroupteam) {
+                if ($opponentGroupteam) {
                     $conditionsArray = array('Groups.year_id !=' => $year->id,
                         'OR' => array(
                             'team1_id' => $groupteam->team_id,
