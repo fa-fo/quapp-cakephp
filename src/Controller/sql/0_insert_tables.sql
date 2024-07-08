@@ -443,6 +443,7 @@ CREATE TABLE `teams` (
   `calcTotalPointsPerYear` decimal(4,2) DEFAULT NULL,
   `calcTotalChampionships` int(11) DEFAULT NULL,
   `calcTotalRanking` int(11) DEFAULT NULL,
+  `prevTeam_id` INT NULL DEFAULT NULL,
   `hidden` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
@@ -619,7 +620,8 @@ ALTER TABLE `sports`
 --
 ALTER TABLE `teams`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name_unique` (`name`);
+  ADD UNIQUE KEY `name_unique` (`name`),
+  ADD KEY `fk_prevTeam_id` (`prevTeam_id`);
 
 --
 -- Indizes für die Tabelle `team_years`
@@ -788,6 +790,12 @@ ALTER TABLE `matchscheduling_pattern16`
 --
 ALTER TABLE `push_tokens`
   ADD CONSTRAINT `fk_my_team_id` FOREIGN KEY (`my_team_id`) REFERENCES `teams` (`id`);
+
+--
+-- Constraints der Tabelle `teams`
+--
+ALTER TABLE `teams`
+    ADD CONSTRAINT `fk_prevTeam_id` FOREIGN KEY (`prevTeam_id`) REFERENCES `teams` (`id`);
 
 --
 -- Constraints der Tabelle `team_years`

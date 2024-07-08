@@ -64,27 +64,21 @@ class TeamsController extends AppController
         $this->apiReturn($team);
     }
 
-    private function getTeams(array $conditionsArray, array $containArray = array()): \Cake\ORM\Query
-    {
-        return $this->Teams->find('all', array(
-            'fields' => array('id', 'team_id' => 'id', 'team_name' => 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalPointsPerYear', 'calcTotalChampionships', 'calcTotalRanking'),
-            'contain' => $containArray,
-            'conditions' => $conditionsArray,
-            'order' => array('calcTotalRanking' => 'ASC')
-        ));
-    }
-
     // Ewige Tabelle
     public function all(): void
     {
-        $conditionsArray = array('calcTotalRankingPoints IS NOT' => null, 'hidden' => 0);
-
-        $teams = $this->getTeams($conditionsArray);
         $settings = $this->getSettings();
 
         if ($settings['currentDay_id'] == 2 && $settings['alwaysAutoUpdateResults'] == 1 && $settings['showEndRanking'] == 0) {
             $teams = null;
             $teams['showRanking'] = 0;
+        } else {
+            $conditionsArray = array('Teams.calcTotalRanking IS NOT' => null, 'Teams.calcTotalRankingPoints IS NOT' => null, 'Teams.hidden' => 0);
+
+            $teams = $this->getTeams($conditionsArray, array(
+                'PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships', 'prevTeam_id')),
+                'PrevTeams.PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships')),
+            ));
         }
 
         $this->apiReturn($teams);
@@ -173,4 +167,5 @@ class TeamsController extends AppController
 
         $this->apiReturn($return);
     }
+
 }

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -14,6 +13,8 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\MatchesTable&\Cake\ORM\Association\HasMany $Matches
  * @property \App\Model\Table\GroupTeamsTable&\Cake\ORM\Association\HasMany $GroupTeams
  * @property \App\Model\Table\TeamYearsTable&\Cake\ORM\Association\HasMany $TeamYears
+ * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\HasOne $NewTeams
+ * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\BelongsTo $PrevTeams
  *
  * @method \App\Model\Entity\Team newEmptyEntity()
  * @method \App\Model\Entity\Team newEntity(array $data, array $options = [])
@@ -66,6 +67,14 @@ class TeamsTable extends Table
         $this->hasMany('TeamYears', [
             'foreignKey' => 'team_id',
         ]);
+        $this->hasOne('NewTeams', [
+            'foreignKey' => 'prevTeam_id',
+        ]);
+        $this->belongsTo('PrevTeams', [
+            'className' => 'Teams',
+            'foreignKey' => 'prevTeam_id',
+            'joinType' => 'LEFT',
+        ]);
     }
 
     /**
@@ -116,6 +125,7 @@ class TeamsTable extends Table
     public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->isUnique(['name']), ['errorField' => 'name']);
+        $rules->add($rules->existsIn(['prevTeam_id'], 'PrevTeams'), ['errorField' => 'prevTeam_id']);
 
         return $rules;
     }

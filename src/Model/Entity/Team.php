@@ -13,12 +13,15 @@ use Cake\ORM\Entity;
  * @property int|null $calcTotalYears
  * @property int|null $calcTotalRankingPoints
  * @property string|null $calcTotalPointsPerYear
+ * @property int|null $calcTotalChampionships
  * @property int|null $calcTotalRanking
+ * @property int|null $prevTeam_id
  *
  * @property \App\Model\Entity\GroupTeam[] $group_teams
  * @property \App\Model\Entity\Match4[] $matches
  * @property \App\Model\Entity\Match4eventLog[] $match_event_logs
  * @property \App\Model\Entity\TeamYear[] $team_years
+ * @property \App\Model\Entity\Team|null $prevTeam
  */
 class Team extends Entity
 {
@@ -36,10 +39,13 @@ class Team extends Entity
         'calcTotalYears' => true,
         'calcTotalRankingPoints' => true,
         'calcTotalPointsPerYear' => true,
+        'calcTotalChampionships' => true,
         'calcTotalRanking' => true,
         'group_teams' => true,
         'matches' => true,
         'match_event_logs' => true,
         'team_years' => true,
+        'prevTeam_id' => true,
+        'prevTeam' => true,
     ];
 }
