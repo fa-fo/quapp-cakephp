@@ -183,7 +183,7 @@ class AppController extends Controller
         return $group;
     }
 
-    protected function getPrevAndNextGroup(int $group_id): array|EntityInterface
+    protected function getPrevAndNextGroup(int $group_id): array|EntityInterface|null
     {
         $group = $this->fetchTable('Groups')->find()->where(['id' => $group_id])->first();
         /**
