@@ -353,12 +353,38 @@ class MatcheventLogsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $photos = $this->MatcheventLogs->find('all', array(
+            $photos['toCheck'] = $this->MatcheventLogs->find('all', array(
                 'conditions' => array('Matchevents.code' => 'PHOTO_UPLOAD', 'playerNumber IS' => null),
                 'fields' => array('id', 'match_id'),
                 'contain' => array('Matchevents'),
                 'order' => array('MatcheventLogs.id' => 'ASC')
             ));
+
+            $photos['okCount'] = $this->MatcheventLogs->find('all', array(
+                'conditions' => array('Matchevents.code' => 'PHOTO_UPLOAD', 'playerNumber IS' => '1'),
+                'contain' => array('Matchevents'),
+            ))->count();
+
+            $photos['notOkCount'] = $this->MatcheventLogs->find('all', array(
+                'conditions' => array('Matchevents.code' => 'PHOTO_UPLOAD', 'playerNumber IS' => '0'),
+                'contain' => array('Matchevents'),
+            ))->count();
+
+            $photos['lastChecked'] = $this->MatcheventLogs->find('all', array(
+                'conditions' => array('Matchevents.code' => 'PHOTO_UPLOAD', 'playerNumber IS NOT' => null),
+                'fields' => array('id', 'match_id', 'playerNumber'),
+                'contain' => array('Matchevents'),
+                'order' => array('MatcheventLogs.id' => 'DESC')
+            ))->limit(32);
+
+            foreach ($photos['lastChecked'] as $log) {
+                $conditionsArray = array(
+                    'Matches.id' => $log->match_id,
+                );
+
+                $a = $this->getMatches($conditionsArray);
+                $log['match'] = is_array($a) ? $a[0] : null;
+            }
         }
 
         $this->apiReturn($photos);
