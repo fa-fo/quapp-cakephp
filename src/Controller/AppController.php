@@ -994,9 +994,14 @@ class AppController extends Controller
     protected function getCurrentRoundId(int $yearId = 0, int $dayId = 0, int $offset = 0): float|int
     {
         $settings = $this->getSettings();
+        $currentYear = $this->getCurrentYear()->toArray();
+        $day = $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd');
+        $now = FrozenTime::now()->i18nFormat('yyyy-MM-dd');
 
         if (($yearId == 0 || $yearId == $settings['currentYear_id'])
-            && ($dayId == 0 || $dayId == $settings['currentDay_id'])) {
+            && ($dayId == 0 || $dayId == $settings['currentDay_id'])
+            && ($settings['isTest'] == 1 || $now == $day)
+        ) {
             $time = FrozenTime::now();
             $time = $time->addMinutes($offset);
             $time = $time->subHours($dayId == 2 ? 1 : 2);
