@@ -204,6 +204,7 @@ class GroupTeamsController extends AppController
         return $groupTeams;
     }
 
+
     public function sortPlaceNumberAfterAddAll(string $mode = 'none'): void
     {
         $countDoubleMatches['countPrevYearsSameMatch'] = 0;
@@ -236,12 +237,36 @@ class GroupTeamsController extends AppController
                             $ra = range(0, 3);
                             for ($a = 0; $a < $groupsCount; $a++) { // each group seperate random
                                 shuffle($ra);
+
+                                $c = 0;
+                                foreach ($ra as $v) { // need! because shuffle keeps combi key => value
+                                    $ra[$c] = $v;
+                                    $c++;
+                                }
+
                                 $rand_array[$a] = array(random_int(0, 1), random_int(0, 1), $ra); // for random placenumber sort
                             }
                         }
 
-                        $options = array('sortmode' => $mode, 'year_id' => $year->id, 'currentDay_id' => $this->getCurrentDayId(), 'rand_array' => $rand_array,
-                            'groupsCount' => $groupsCount);
+                        $rand2_array = array();
+
+                        if ($mode == 'random2') {
+                            $ra = range(0, 15);
+                            for ($a = 0; $a < $groupsCount; $a++) { // each group seperate random
+                                shuffle($ra);
+
+                                $c = 0;
+                                foreach ($ra as $v) { // need! because shuffle keeps combi key => value
+                                    $ra[$c] = $v;
+                                    $c++;
+                                }
+
+                                $rand2_array[$a] = $ra; // for random placenumber sort
+                            }
+                        }
+
+                        $options = array('sortmode' => $mode, 'year_id' => $year->id, 'currentDay_id' => $this->getCurrentDayId(),
+                            'rand_array' => $rand_array, 'rand2_array' => $rand2_array, 'groupsCount' => $groupsCount);
 
                         $groupTeams = $this->GroupTeams->find('all', array(
                             'contain' => array('Groups' => array('fields' => array('name', 'year_id', 'day_id'))),
@@ -290,6 +315,9 @@ class GroupTeamsController extends AppController
                                         break;
                                     case 'random':
                                         $row['newPlaceNumber'] = (int)($this->getNewPlaceNumberRandom($prevRankingInTeam, $prevGroupPosNumber, $groupPosNumber, $options['rand_array']));
+                                        break;
+                                    case 'random2':
+                                        $row['newPlaceNumber'] = (int)($this->getNewPlaceNumberRandom2($row['placeNumber'], $groupPosNumber, $options['rand2_array']));
                                         break;
                                 }
 
@@ -515,6 +543,11 @@ class GroupTeamsController extends AppController
         }
 
         return 0; // unreachable
+    }
+
+    private function getNewPlaceNumberRandom2(int $placeNumber, int $groupPosNumber, array $rand2_array): int
+    {
+        return $rand2_array[$groupPosNumber][$placeNumber] + 1;
     }
 
 }
