@@ -59,6 +59,16 @@ class TeamsController extends AppController
             'TeamYears.Years' => array('fields' => array('year_name' => 'name'),
                 'conditions' => array('TeamYears.canceled' => 0, 'year_id !=' => $settings['showEndRanking'] ? '' : $settings['currentYear_id'])
             ),
+            'PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships', 'prevTeam_id')),
+            'PrevTeams.TeamYears' => array('fields' => array('id', 'team_id', 'year_id', 'endRanking', 'canceled'), 'sort' => array('year_id' => 'DESC')),
+            'PrevTeams.TeamYears.Years' => array('fields' => array('year_name' => 'name'),
+                'conditions' => array('TeamYears.canceled' => 0)
+            ),
+            'PrevTeams.PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships')),
+            'PrevTeams.PrevTeams.TeamYears' => array('fields' => array('id', 'team_id', 'year_id', 'endRanking', 'canceled'), 'sort' => array('year_id' => 'DESC')),
+            'PrevTeams.PrevTeams.TeamYears.Years' => array('fields' => array('year_name' => 'name'),
+                'conditions' => array('TeamYears.canceled' => 0)
+            ),
         ));
 
         $this->apiReturn($team);
@@ -75,10 +85,7 @@ class TeamsController extends AppController
         } else {
             $conditionsArray = array('Teams.calcTotalRanking IS NOT' => null, 'Teams.calcTotalRankingPoints IS NOT' => null, 'Teams.hidden' => 0);
 
-            $teams = $this->getTeams($conditionsArray, array(
-                'PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships', 'prevTeam_id')),
-                'PrevTeams.PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships')),
-            ));
+            $teams = $this->getTeams($conditionsArray);
         }
 
         $this->apiReturn($teams);
