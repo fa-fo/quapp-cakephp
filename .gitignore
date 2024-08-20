@@ -1,4 +1,5 @@
 *.zip
+/webroot/img
 
 # CakePHP specific files #
 ##########################
