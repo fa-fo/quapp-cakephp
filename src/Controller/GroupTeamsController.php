@@ -231,20 +231,22 @@ class GroupTeamsController extends AppController
                     $teamsCountPerGroup = ($groups->toArray())[0]->teamsCount;
 
                     if ($teamsCountPerGroup == 16) {
-                        $rand_array = array();
+                        $rand4_array = array();
 
-                        if ($mode == 'random') {
+                        if ($mode == 'random4') {
                             $ra = range(0, 3);
-                            for ($a = 0; $a < $groupsCount; $a++) { // each group seperate random
-                                shuffle($ra);
+                            for ($a = 0; $a < $groupsCount; $a++) { // each group separate random
+                                for ($b = 0; $b < 4; $b++) { // each quartet separate random
+                                    shuffle($ra);
 
-                                $c = 0;
-                                foreach ($ra as $v) { // need! because shuffle keeps combi key => value
-                                    $ra[$c] = $v;
-                                    $c++;
+                                    $c = 0;
+                                    foreach ($ra as $v) { // need! because shuffle keeps combi key => value
+                                        $ra[$c] = $v;
+                                        $c++;
+                                    }
+
+                                    $rand4_array[$a][$b] = $ra; // for random placenumber sort
                                 }
-
-                                $rand_array[$a] = array(random_int(0, 1), random_int(0, 1), $ra); // for random placenumber sort
                             }
                         }
 
@@ -252,7 +254,7 @@ class GroupTeamsController extends AppController
 
                         if ($mode == 'random2') {
                             $ra = range(0, 15);
-                            for ($a = 0; $a < $groupsCount; $a++) { // each group seperate random
+                            for ($a = 0; $a < $groupsCount; $a++) { // each group separate random
                                 shuffle($ra);
 
                                 $c = 0;
@@ -266,7 +268,7 @@ class GroupTeamsController extends AppController
                         }
 
                         $options = array('sortmode' => $mode, 'year_id' => $year->id, 'currentDay_id' => $this->getCurrentDayId(),
-                            'rand_array' => $rand_array, 'rand2_array' => $rand2_array, 'groupsCount' => $groupsCount);
+                            'rand4_array' => $rand4_array, 'rand2_array' => $rand2_array, 'groupsCount' => $groupsCount);
 
                         $groupTeams = $this->GroupTeams->find('all', array(
                             'contain' => array('Groups' => array('fields' => array('name', 'year_id', 'day_id'))),
@@ -313,11 +315,11 @@ class GroupTeamsController extends AppController
                                     case 'ranking': // ranking before group
                                         $row['newPlaceNumber'] = (int)(($prevRankingInTeam) * 4 + 1 + $prevGroupPosNumber);
                                         break;
-                                    case 'random':
-                                        $row['newPlaceNumber'] = (int)($this->getNewPlaceNumberRandom($prevRankingInTeam, $prevGroupPosNumber, $groupPosNumber, $options['rand_array']));
+                                    case 'random4':
+                                        $row['newPlaceNumber'] = $this->getNewPlaceNumberRandom4($row['placeNumber'], $groupPosNumber, $options['rand4_array']);
                                         break;
                                     case 'random2':
-                                        $row['newPlaceNumber'] = (int)($this->getNewPlaceNumberRandom2($row['placeNumber'], $groupPosNumber, $options['rand2_array']));
+                                        $row['newPlaceNumber'] = $this->getNewPlaceNumberRandom2($row['placeNumber'], $groupPosNumber, $options['rand2_array']);
                                         break;
                                 }
 
@@ -524,30 +526,18 @@ class GroupTeamsController extends AppController
         return $sum / $c;
     }
 
-
-    private function getNewPlaceNumberRandom(int $prevRankingInTeam, int $prevGroupPosNumber, int $groupPosNumber, array $rand_array): int
+    private function getNewPlaceNumberRandom4(int $placeNumber, int $groupPosNumber, array $rand4_array): int
     {
-        // first 3 parameters range 0..3
-        $prevGroupPosNumber = $rand_array[$groupPosNumber][0] ? (3 - $prevGroupPosNumber) : $prevGroupPosNumber;
-        $prevRankingInTeam = $rand_array[$groupPosNumber][1] ? (3 - $prevRankingInTeam) : $prevRankingInTeam;
+        // change only within a quartet
+        $quNumber = (int)floor(($placeNumber - 1) / 4);
+        $quPosNumber = ($placeNumber - 1) % 4;
 
-        switch ($prevRankingInTeam) {
-            case $rand_array[$groupPosNumber][2][0]:
-                return 4 - $prevGroupPosNumber;
-            case $rand_array[$groupPosNumber][2][1]:
-                return 8 - $prevGroupPosNumber;
-            case $rand_array[$groupPosNumber][2][2]:
-                return 12 - $prevGroupPosNumber;
-            case $rand_array[$groupPosNumber][2][3]:
-                return 16 - $prevGroupPosNumber;
-        }
-
-        return 0; // unreachable
+        return $quNumber * 4 + $rand4_array[$groupPosNumber][$quNumber][$quPosNumber] + 1;
     }
 
     private function getNewPlaceNumberRandom2(int $placeNumber, int $groupPosNumber, array $rand2_array): int
     {
-        return $rand2_array[$groupPosNumber][$placeNumber] + 1;
+        return $rand2_array[$groupPosNumber][$placeNumber - 1] + 1;
     }
 
 }
