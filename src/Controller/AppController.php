@@ -25,12 +25,13 @@ use App\Model\Entity\Round;
 use App\Model\Entity\Team;
 use App\Model\Entity\TeamYear;
 use App\Model\Entity\Year;
-use Cake\Chronos\ChronosInterface;
 use Cake\Controller\Controller;
 use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\I18n\FrozenTime;
+use Cake\View\JsonView;
+use App\View\PdfView;
 
 /**
  * Application Controller
@@ -47,30 +48,21 @@ class AppController extends Controller
      *
      * Use this method to add common initialization code like loading components.
      *
-     * e.g. `$this->loadComponent('FormProtection');`
-     *
      * @return void
      * @throws \Exception
      */
     public function initialize(): void
     {
         parent::initialize();
-
-        $this->loadComponent('RequestHandler');
-        //$this->loadComponent('Flash');
-
-
-        /*
-         * Enable the following component for recommended CakePHP form protection settings.
-         * see https://book.cakephp.org/4/en/controllers/components/form-protection.html
-         */
-        //$this->loadComponent('FormProtection');
     }
 
-    public function apiReturn(mixed $object, int $year_id = 0, int $day_id = 0): void
+    public function viewClasses(): array
     {
-        $this->RequestHandler->renderAs($this, 'json');
+        return [JsonView::class, PdfView::class];
+    }
 
+    public function apiReturn(mixed $object, int $year_id = 0, int $day_id = 0): \Cake\Http\Response
+    {
         if ($object) {
             $year = $this->getCurrentYear()->toArray();
             $year['settings'] = $this->getSettings();
@@ -111,11 +103,18 @@ class AppController extends Controller
         } else {
             $this->set(array());
         }
+
+        $this->viewBuilder()->setClassName('Json');
+        $this->viewBuilder()->setOption('serialize', 'return');
+
+        return $this->response->withType('json');
     }
 
-    public function pdfReturn(): void
+    public function pdfReturn(): \Cake\Http\Response
     {
-        $this->RequestHandler->respondAs('pdf');
+        $this->viewBuilder()->setClassName('Pdf');
+
+        return $this->response;
     }
 
     public function beforeRender(EventInterface $event): void
@@ -212,7 +211,7 @@ class AppController extends Controller
         return $group;
     }
 
-    protected function getScheduleShowTime(int $year_id, int $day_id, int $adminView = 0): ChronosInterface|int|FrozenTime
+    protected function getScheduleShowTime(int $year_id, int $day_id, int $adminView = 0): int|FrozenTime
     {
         $settings = $this->getSettings();
         $currentYear = $this->getCurrentYear();

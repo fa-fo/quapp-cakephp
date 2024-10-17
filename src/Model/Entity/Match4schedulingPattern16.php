@@ -29,7 +29,7 @@ class Match4schedulingPattern16 extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'round_id' => true,
         'placenumberTeam1' => true,
         'placenumberTeam2' => true,

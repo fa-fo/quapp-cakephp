@@ -34,7 +34,7 @@ class Team extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'name' => true,
         'calcTotalYears' => true,
         'calcTotalRankingPoints' => true,

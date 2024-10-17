@@ -49,7 +49,7 @@ class Match4 extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'group_id' => true,
         'round_id' => true,
         'sport_id' => true,
@@ -72,6 +72,6 @@ class Match4 extends Entity
         'team3' => true,
         'team4' => true,
         'match_event_logs' => true,
-        'isRefereeCanceled' => true
+        'isRefereeCanceled' => true,
     ];
 }

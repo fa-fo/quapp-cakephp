@@ -28,7 +28,7 @@ class TeamYear extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'year_id' => true,
         'team_id' => true,
         'endRanking' => true,

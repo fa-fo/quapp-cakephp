@@ -30,7 +30,7 @@ class Group extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'year_id' => true,
         'day_id' => true,
         'name' => true,

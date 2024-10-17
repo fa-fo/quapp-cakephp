@@ -27,7 +27,7 @@ class Round extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'timeStartDay1' => true,
         'timeStartDay2' => true,
         'matches' => true,

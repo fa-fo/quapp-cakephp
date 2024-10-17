@@ -26,7 +26,7 @@ class LoginRight extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'login_id' => true,
         'right_id' => true,
         'login' => true,

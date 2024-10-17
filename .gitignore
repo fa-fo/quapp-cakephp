@@ -46,3 +46,7 @@ nbproject/*
 .sass-cache/
 composer.lock
 /.phpunit.cache
+*.sh
+src/Model/Entity/.gitkeep
+tests/Fixture/.gitkeep
+src/Model/Table/.gitkeep

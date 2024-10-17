@@ -34,7 +34,7 @@ class Match4eventLog extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'match_id' => true,
         'matchEvent_id' => true,
         'team_id' => true,

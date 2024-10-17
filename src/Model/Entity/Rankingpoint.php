@@ -23,7 +23,7 @@ class Rankingpoint extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'endRanking' => true,
         'points' => true,
     ];

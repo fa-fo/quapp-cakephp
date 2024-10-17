@@ -18,13 +18,9 @@ namespace App\View;
 use Cake\View\View;
 
 /**
- * Application View
- *
- * Your application's default view class
- *
- * @link https://book.cakephp.org/5/en/views.html#the-app-view
+ * Pdf View
  */
-class AppView extends View
+class PdfView extends View
 {
     /**
      * Initialization hook method.
@@ -37,5 +33,13 @@ class AppView extends View
      */
     public function initialize(): void
     {
+        parent::initialize();
+
+        $this->response = $this->response->withType('pdf');
+    }
+
+    public static function contentType(): string
+    {
+        return 'application/pdf';
     }
 }

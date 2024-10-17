@@ -25,7 +25,7 @@ class Login extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'name' => true,
         'password' => true,
         'login_rights' => true,

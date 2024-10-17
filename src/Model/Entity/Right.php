@@ -24,7 +24,7 @@ class Right extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'name' => true,
         'login_rights' => true,
     ];

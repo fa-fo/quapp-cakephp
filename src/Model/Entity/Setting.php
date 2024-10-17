@@ -23,7 +23,7 @@ class Setting extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'name' => true,
         'value' => true,
     ];

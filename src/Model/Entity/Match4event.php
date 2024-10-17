@@ -25,7 +25,7 @@ class Match4event extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'code' => true,
         'name' => true,
         'needsTeamAssoc' => true,

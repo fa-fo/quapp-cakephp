@@ -25,7 +25,7 @@ class PushToken extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'expoPushToken' => true,
         'my_team_id' => true,
         'team' => true,

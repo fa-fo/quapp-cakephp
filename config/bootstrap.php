@@ -18,7 +18,7 @@ declare(strict_types=1);
 /*
  * Configure paths required to find CakePHP + general filepath constants
  */
-require __DIR__ . '/paths.php';
+require __DIR__ . DIRECTORY_SEPARATOR . 'paths.php';
 
 /*
  * Bootstrap CakePHP.
@@ -43,6 +43,11 @@ use Cake\Mailer\Mailer;
 use Cake\Mailer\TransportFactory;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
+
+/**
+ * Load global functions.
+ */
+require CAKE . 'functions.php';
 
 /*
  * See https://github.com/josegonzalez/php-dotenv for API details.
@@ -95,14 +100,14 @@ if (file_exists(CONFIG . 'app_local.php')) {
  */
 if (Configure::read('debug')) {
     Configure::write('Cache._cake_model_.duration', '+2 minutes');
-    Configure::write('Cache._cake_core_.duration', '+2 minutes');
+    Configure::write('Cache._cake_translations_.duration', '+2 minutes');
     // disable router cache during development
     Configure::write('Cache._cake_routes_.duration', '+2 seconds');
 }
 
 /*
  * Set the default server timezone. Using UTC makes time calculations / conversions easier.
- * Check http://php.net/manual/en/timezones.php for list of valid timezone strings.
+ * Check https://php.net/manual/en/timezones.php for list of valid timezone strings.
  */
 date_default_timezone_set(Configure::read('App.defaultTimezone'));
 
@@ -120,20 +125,14 @@ ini_set('intl.default_locale', Configure::read('App.defaultLocale'));
 /*
  * Register application error and exception handlers.
  */
-$isCli = PHP_SAPI === 'cli';
-if ($isCli) {
-    //(new ConsoleErrorHandler(Configure::read('Error')))->register();
-    (new ErrorTrap(Configure::read('Error')))->register();
-} else {
-    //(new ErrorHandler(Configure::read('Error')))->register();
-    (new ExceptionTrap(Configure::read('Error')))->register();
-}
+(new ErrorTrap(Configure::read('Error')))->register();
+(new ExceptionTrap(Configure::read('Error')))->register();
 
 /*
  * Include the CLI bootstrap overrides.
  */
-if ($isCli) {
-    require __DIR__ . '/bootstrap_cli.php';
+if (PHP_SAPI === 'cli') {
+    require CONFIG . 'bootstrap_cli.php';
 }
 
 /*
@@ -142,13 +141,23 @@ if ($isCli) {
  */
 $fullBaseUrl = Configure::read('App.fullBaseUrl');
 if (!$fullBaseUrl) {
+    /*
+     * When using proxies or load balancers, SSL/TLS connections might
+     * get terminated before reaching the server. If you trust the proxy,
+     * you can enable `$trustProxy` to rely on the `X-Forwarded-Proto`
+     * header to determine whether to generate URLs using `https`.
+     *
+     * See also https://book.cakephp.org/5/en/controllers/request-response.html#trusting-proxy-headers
+     */
+    $trustProxy = false;
+
     $s = null;
-    if (env('HTTPS')) {
+    if (env('HTTPS') || ($trustProxy && env('HTTP_X_FORWARDED_PROTO') === 'https')) {
         $s = 's';
     }
 
     $httpHost = env('HTTP_HOST');
-    if (isset($httpHost)) {
+    if ($httpHost) {
         $fullBaseUrl = 'http' . $s . '://' . $httpHost;
     }
     unset($httpHost, $s);
@@ -167,6 +176,8 @@ Security::setSalt(Configure::consume('Security.salt'));
 
 /*
  * Setup detectors for mobile and tablet.
+ * If you don't use these checks you can safely remove this code
+ * and the mobiledetect package from composer.json.
  */
 ServerRequest::addDetector('mobile', function ($request) {
     $detector = new \Detection\MobileDetect();
@@ -180,31 +191,27 @@ ServerRequest::addDetector('tablet', function ($request) {
 });
 
 /*
- * You can set whether the ORM uses immutable or mutable Time types.
- * The default changed in 4.0 to immutable types. You can uncomment
- * below to switch back to mutable types.
- *
  * You can enable default locale format parsing by adding calls
  * to `useLocaleParser()`. This enables the automatic conversion of
  * locale specific date formats. For details see
- * @link https://book.cakephp.org/4/en/core-libraries/internationalization-and-localization.html#parsing-localized-datetime-data
+ * @link https://book.cakephp.org/5/en/core-libraries/internationalization-and-localization.html#parsing-localized-datetime-data
  */
-// TypeFactory::build('time')
-//    ->useMutable();
-// TypeFactory::build('date')
-//    ->useMutable();
-// TypeFactory::build('datetime')
-//    ->useMutable();
-// TypeFactory::build('timestamp')
-//    ->useMutable();
-// TypeFactory::build('datetimefractional')
-//    ->useMutable();
-// TypeFactory::build('timestampfractional')
-//    ->useMutable();
-// TypeFactory::build('datetimetimezone')
-//    ->useMutable();
-// TypeFactory::build('timestamptimezone')
-//    ->useMutable();
+// \Cake\Database\TypeFactory::build('time')
+//    ->useLocaleParser();
+// \Cake\Database\TypeFactory::build('date')
+//    ->useLocaleParser();
+// \Cake\Database\TypeFactory::build('datetime')
+//    ->useLocaleParser();
+// \Cake\Database\TypeFactory::build('timestamp')
+//    ->useLocaleParser();
+// \Cake\Database\TypeFactory::build('datetimefractional')
+//    ->useLocaleParser();
+// \Cake\Database\TypeFactory::build('timestampfractional')
+//    ->useLocaleParser();
+// \Cake\Database\TypeFactory::build('datetimetimezone')
+//    ->useLocaleParser();
+// \Cake\Database\TypeFactory::build('timestamptimezone')
+//    ->useLocaleParser();
 
 /*
  * Custom Inflector rules, can be set to correctly pluralize or singularize
@@ -215,26 +222,8 @@ ServerRequest::addDetector('tablet', function ($request) {
 //Inflector::rules('irregular', ['red' => 'redlings']);
 //Inflector::rules('uninflected', ['dontinflectme']);
 
-Configure::write('CakePdf', [
-    'engine' => [
-        'className' => 'CakePdf.Mpdf',
-        'options' => [
-            'isRemoteEnabled' => true
-        ]
-    ],
-    'margin' => [
-        'bottom' => 10,
-        'left' => 10,
-        'right' => 10,
-        'top' => 10
-    ],
-    'orientation' => 'portrait',
-    'download' => true
-]);
-if (!defined('THUMBER_DRIVER')) {
-    define('THUMBER_DRIVER', Configure::read('Thumber.driver', extension_loaded('imagick') ? 'imagick' : 'gd'));
-}
-//Default thumbnails directory
-if (!defined('THUMBER_TARGET')) {
-    define('THUMBER_TARGET', Configure::read('Thumber.target', TMP . 'thumbs'));
-}
+// set a custom date and time format
+// see https://book.cakephp.org/5/en/core-libraries/time.html#setting-the-default-locale-and-format-string
+// and https://unicode-org.github.io/icu/userguide/format_parse/datetime/#datetime-format-syntax
+//\Cake\I18n\Date::setToStringFormat('dd.MM.yyyy');
+//\Cake\I18n\Time::setToStringFormat('dd.MM.yyyy HH:mm');

@@ -37,7 +37,7 @@ class GroupTeam extends Entity
      *
      * @var array
      */
-    protected $_accessible = [
+    protected array $_accessible = [
         'group_id' => true,
         'placeNumber' => true,
         'team_id' => true,
