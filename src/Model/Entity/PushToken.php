@@ -30,11 +30,4 @@ class PushToken extends Entity
         'my_team_id' => true,
         'team' => true,
     ];
-
-    /**
-     * Fields that are excluded from JSON versions of the entity.
-     *
-     * @var array
-     */
-    protected $_hidden = [];
 }
