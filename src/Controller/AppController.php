@@ -105,9 +105,8 @@ class AppController extends Controller
         }
 
         $this->viewBuilder()->setClassName('Json');
-        $this->viewBuilder()->setOption('serialize', 'return');
 
-        return $this->response->withType('json');
+        return $this->response;
     }
 
     public function pdfReturn(): \Cake\Http\Response
