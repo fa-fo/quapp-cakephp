@@ -1,6 +1,6 @@
 <?php
 
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/pdf_functions.php';
@@ -30,7 +30,7 @@ try {
         }
 
         if (isset($ty['infos']['matches'][0])) {
-            $html .= '<h2>Mannschaftsspielplan am  ' . FrozenTime::createFromFormat('Y-m-d H:i:s', $ty['infos']['matches'][0]->matchStartTime)->i18nFormat('d.MM.Y') . '</h2>';
+            $html .= '<h2>Mannschaftsspielplan am  ' . DateTime::createFromFormat('Y-m-d H:i:s', $ty['infos']['matches'][0]->matchStartTime)->i18nFormat('d.MM.Y') . '</h2>';
             $html .= getMatchHtml($html, $ty);
 
             $mpdf->WriteHTML($html);

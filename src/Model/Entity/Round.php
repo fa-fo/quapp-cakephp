@@ -9,8 +9,8 @@ use Cake\ORM\Entity;
  * Round Entity
  *
  * @property int $id
- * @property \Cake\I18n\FrozenTime $timeStartDay1
- * @property \Cake\I18n\FrozenTime $timeStartDay2
+ * @property \Cake\I18n\DateTime $timeStartDay1
+ * @property \Cake\I18n\DateTime $timeStartDay2
  *
  * @property \App\Model\Entity\Match4[] $matches
  * @property \App\Model\Entity\Match4schedulingPattern16[] $matchscheduling_pattern16

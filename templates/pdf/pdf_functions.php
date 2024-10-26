@@ -1,6 +1,6 @@
 <?php
 
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 
 function ellipsis(string $input, int $maxLength = 25): string
 {
@@ -27,7 +27,7 @@ function getMatchHtml(string $html, mixed $teamYears): string
         $refNote = ($match->isRefereeJob && $teamYears['infos']['referee_group_name'] != $match->group_name) ? '   !!' : '';
 
         $html .= '<tr>';
-        $html .= $tag1 . FrozenTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime)->i18nFormat('HH:mm') . ' Uhr' . $tag2;
+        $html .= $tag1 . DateTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime)->i18nFormat('HH:mm') . ' Uhr' . $tag2;
         $html .= $tag1 . $teamYears->team->name . $tag2;
         //$html .= $tag1 . $match->teams1->name . $tag2;
         //$html .= $tag1 . $match->teams2->name . $tag2;

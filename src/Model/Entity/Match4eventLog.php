@@ -14,10 +14,10 @@ use Cake\ORM\Entity;
  * @property int|null $team_id
  * @property int|null $playerNumber
  * @property string|null $playerName
- * @property \Cake\I18n\FrozenTime $datetimeSent
- * @property \Cake\I18n\FrozenTime $datetime
+ * @property \Cake\I18n\DateTime $datetimeSent
+ * @property \Cake\I18n\DateTime $datetime
  * @property int $canceled
- * @property \Cake\I18n\FrozenTime|null $cancelTime
+ * @property \Cake\I18n\DateTime|null $cancelTime
  *
  * @property \App\Model\Entity\Match4 $match
  * @property \App\Model\Entity\Match4event $matchevent

@@ -8,7 +8,7 @@ use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4schedulingPattern16;
 use App\Model\Entity\TeamYear;
 use App\Model\Entity\Year;
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 
 /**
  * GroupTeams Controller
@@ -75,7 +75,7 @@ class GroupTeamsController extends AppController
 
             $settings = $this->getSettings();
             $currentYear = $this->getCurrentYear()->toArray();
-            $day = FrozenTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+            $day = DateTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
             foreach ($groups as $group) {
                 $group['groupTeams'] = $this->getRanking($group);

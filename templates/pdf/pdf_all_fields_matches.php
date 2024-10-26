@@ -1,6 +1,6 @@
 <?php
 
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -23,7 +23,7 @@ try {
             </style>';
             }
 
-            $html .= '<h1>Feldspielplan am  ' . FrozenTime::createFromFormat('Y-m-d H:i:s', $fields['matches'][0]->matchStartTime)->i18nFormat('d.MM.Y') . '</h1>';
+            $html .= '<h1>Feldspielplan am  ' . DateTime::createFromFormat('Y-m-d H:i:s', $fields['matches'][0]->matchStartTime)->i18nFormat('d.MM.Y') . '</h1>';
 
             $html .= '<table border="0"  cellspacing="0" cellpadding="8" align="center" width="100%">';
             $html .= '<tr>';
@@ -37,7 +37,7 @@ try {
 
             foreach ($fields['matches'] as $match) {
                 $html .= '<tr>';
-                $html .= '<td>' . FrozenTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime)->i18nFormat('HH:mm') . ' Uhr</td>';
+                $html .= '<td>' . DateTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime)->i18nFormat('HH:mm') . ' Uhr</td>';
                 $html .= '<td>' . $match->teams1->name . '</td>';
                 $html .= '<td>' . $match->teams2->name . '</td>';
                 $html .= '<td>' . $match->teams3->name . '</td>';

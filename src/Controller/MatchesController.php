@@ -7,7 +7,7 @@ use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Match4schedulingPattern16;
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 
 /**
  * Matches Controller
@@ -69,7 +69,7 @@ class MatchesController extends AppController
             ));
 
             $currentYear = $this->getCurrentYear()->toArray();
-            $day = FrozenTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $this->getCurrentDayId()]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+            $day = DateTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $this->getCurrentDayId()]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
             foreach ($groups as $group) {
                 $group['rounds'] = $this->getMatchesByGroup($group);
@@ -213,7 +213,7 @@ class MatchesController extends AppController
                  */
                 $newLog = $this->fetchTable('MatcheventLogs')->newEmptyEntity();
                 $newLog->set('match_id', $match->id);
-                $newLog->set('datetime', FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                $newLog->set('datetime', DateTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
                 $newLog->set('matchEvent_id', $this->fetchTable('Matchevents')->find()->where(['code' => 'LOGOUT'])->first()->get('id'));
                 $this->fetchTable('MatcheventLogs')->save($newLog);
             }
@@ -290,7 +290,7 @@ class MatchesController extends AppController
                         // create event_log 'RESULT_CONFIRM'
                         $newLog = $this->fetchTable('MatcheventLogs')->newEmptyEntity();
                         $newLog->set('match_id', $match->id);
-                        $newLog->set('datetime', FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                        $newLog->set('datetime', DateTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
                         $newLog->set('matchEvent_id', $this->fetchTable('Matchevents')->find()->where(['code' => 'RESULT_CONFIRM'])->first()->get('id'));
                         $this->fetchTable('MatcheventLogs')->save($newLog);
 

@@ -8,7 +8,7 @@ use App\Model\Entity\Match4;
 use App\Model\Entity\Setting;
 use App\Model\Entity\TeamYear;
 use Cake\Datasource\ConnectionManager;
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 
 /**
  * TeamYears Controller
@@ -110,7 +110,7 @@ class TeamYearsController extends AppController
                 $gN = $this->getGroupPosNumber($g->id);
 
                 $ty['infos'] = $this->getMatchesByTeam($ty->team_id, $year['id'], $this->getCurrentDayId(), 1);
-                $ty['day'] = FrozenTime::createFromFormat('Y-m-d H:i:s', $year['day' . $this->getCurrentDayId()]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                $ty['day'] = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $this->getCurrentDayId()]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
                 $ty['group'] = $groups[$gN];
             }
 

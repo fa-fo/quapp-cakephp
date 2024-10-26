@@ -6,7 +6,7 @@ namespace App\Controller;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Match4event;
 use App\Model\Entity\Match4eventLog;
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 use Thumber\Cake\Utility\ThumbCreator;
 
 /**
@@ -40,7 +40,7 @@ class MatcheventLogsController extends AppController
                         $newLog = $this->MatcheventLogs->newEmptyEntity();
                         $newLog = $this->MatcheventLogs->patchEntity($newLog, $postData);
                         $newLog->set('match_id', $match_id);
-                        $newLog->set('datetime', FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                        $newLog->set('datetime', DateTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
                         if ($this->MatcheventLogs->save($newLog)) {
                             $logs = $this->getLogs($match_id);
@@ -85,7 +85,7 @@ class MatcheventLogsController extends AppController
                         $newLog = $this->MatcheventLogs->newEmptyEntity();
                         $newLog = $this->MatcheventLogs->patchEntity($newLog, $postData);
                         $newLog->set('match_id', $match_id);
-                        $newLog->set('datetime', FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                        $newLog->set('datetime', DateTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
                         if ($this->MatcheventLogs->save($newLog)) {
                             if ($postData['matchEventCode'] == 'PHOTO_UPLOAD') {
@@ -174,7 +174,7 @@ class MatcheventLogsController extends AppController
                              * @var Match4eventLog $log
                              */
                             $log->set('canceled', 1);
-                            $log->set('cancelTime', FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                            $log->set('cancelTime', DateTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
                             if ($this->MatcheventLogs->save($log)) {
                                 $isMatchLive = $match['logsCalc']['isMatchLive'] ?? 0;

@@ -1,7 +1,7 @@
 <?php
 ini_set('max_execution_time', '300');
 
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/pdf_functions.php';
@@ -65,7 +65,7 @@ try {
             }
             $html .= '<tr>';
             $html .= '<td width="75">'
-                . '<span class="t">' . FrozenTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') . 'h:</span>'
+                . '<span class="t">' . DateTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') . 'h:</span>'
                 . '<br/>Runde ' . $round->id . '</td>';
 
             foreach ($round['matches'] as $match) {

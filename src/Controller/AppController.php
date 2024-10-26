@@ -29,7 +29,7 @@ use Cake\Controller\Controller;
 use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 use Cake\View\JsonView;
 use App\View\PdfView;
 
@@ -210,7 +210,7 @@ class AppController extends Controller
         return $group;
     }
 
-    protected function getScheduleShowTime(int $year_id, int $day_id, int $adminView = 0): int|FrozenTime
+    protected function getScheduleShowTime(int $year_id, int $day_id, int $adminView = 0): int|DateTime
     {
         $settings = $this->getSettings();
         $currentYear = $this->getCurrentYear();
@@ -218,9 +218,9 @@ class AppController extends Controller
          * @var Year $currentYear
          */
         $currentYear = $currentYear->toArray();
-        $stime = FrozenTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+        $stime = DateTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
         $showTime = $stime->subHours($settings['showScheduleHoursBefore']);
-        $now = FrozenTime::now();
+        $now = DateTime::now();
 
         if ($settings['isTest'] || $adminView || $currentYear['id'] != $year_id || $settings['currentDay_id'] != $day_id || $now > $showTime) {
             return 0; // show Schedule
@@ -343,18 +343,18 @@ class AppController extends Controller
                     }
 
                     if ($row['matchStartTime']) {
-                        $stime = FrozenTime::createFromFormat('Y-m-d H:i:s', $row['matchStartTime']);
-                        $now = FrozenTime::now();
+                        $stime = DateTime::createFromFormat('Y-m-d H:i:s', $row['matchStartTime']);
+                        $now = DateTime::now();
                         $row['isTime2login'] = $now > $stime->subMinutes($settings['time2LoginMinsBeforeFrom']) && $now < $stime->addMinutes($settings['time2LoginMinsAfterUntil']) ? 1 : 0;
 
                         if ($row['isTest']) {
                             $row['isTime2login'] = 1;
 
                             // set test time for isTime2matchEnd and isTime2confirm
-                            $s3 = FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:');
-                            $s4 = FrozenTime::now()->i18nFormat('mm');
+                            $s3 = DateTime::now()->i18nFormat('yyyy-MM-dd HH:');
+                            $s4 = DateTime::now()->i18nFormat('mm');
                             $mt = $s3 . ((int)$s4 > 29 ? '30' : '00') . ':00'; // set to full half hour
-                            $stime = FrozenTime::createFromFormat('Y-m-d H:i:s', $mt);
+                            $stime = DateTime::createFromFormat('Y-m-d H:i:s', $mt);
                         }
                         if ($includeLogs) {
                             $row['isTime2matchEnd'] = ($now > $stime->addMinutes($settings['time2MatchEndMinAfterFrom'])) ? 1 : 0;
@@ -531,11 +531,11 @@ class AppController extends Controller
                             }
 
                             if ($l['matchevent']->playerFoulSuspMinutes) {  // Fouls with suspension
-                                $rtime = FrozenTime::createFromFormat('Y-m-d H:i:s', $l['datetimeSent']->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                                $rtime = DateTime::createFromFormat('Y-m-d H:i:s', $l['datetimeSent']->i18nFormat('yyyy-MM-dd HH:mm:ss'));
                                 $rtime = $rtime->addMinutes($l['matchevent']->playerFoulSuspMinutes);
 
-                                if ($rtime > FrozenTime::now()) {
-                                    $calc[$code][$l['team_id']][$l['playerNumber']]['reEntryTime'][$l['id']] = $rtime->diffInSeconds(FrozenTime::now());
+                                if ($rtime > DateTime::now()) {
+                                    $calc[$code][$l['team_id']][$l['playerNumber']]['reEntryTime'][$l['id']] = $rtime->diffInSeconds(DateTime::now());
                                 }
                             }
                         }
@@ -619,7 +619,7 @@ class AppController extends Controller
 
             if ($lastAliveTime !== null) {
                 $setting = $this->getSettings();
-                $aliveDiff = $lastAliveTime->diffInSeconds(FrozenTime::now());
+                $aliveDiff = $lastAliveTime->diffInSeconds(DateTime::now());
                 $calc['isLoggedIn'] = (int)($aliveDiff < ($setting['autoLogoutSecsAfter'] ?? 60)) * (int)($calc['isLoggedIn'] ?? 0);
             }
 
@@ -994,13 +994,13 @@ class AppController extends Controller
         $settings = $this->getSettings();
         $currentYear = $this->getCurrentYear()->toArray();
         $day = $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd');
-        $now = FrozenTime::now()->i18nFormat('yyyy-MM-dd');
+        $now = DateTime::now()->i18nFormat('yyyy-MM-dd');
 
         if (($yearId == 0 || $yearId == $settings['currentYear_id'])
             && ($dayId == 0 || $dayId == $settings['currentDay_id'])
             && ($settings['isTest'] == 1 || $now == $day)
         ) {
-            $time = FrozenTime::now();
+            $time = DateTime::now();
             $time = $time->addMinutes($offset);
             $time = $time->subHours($dayId == 2 ? 1 : 2);
             $cycle = (int)floor($time->hour / 8);
