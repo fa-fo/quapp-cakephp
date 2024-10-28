@@ -310,6 +310,7 @@ class AppController extends Controller
                         $row['resultGoals1'] = null;
                         $row['resultGoals2'] = null;
                         $row['resultTrend'] = null;
+                        $row['resultAdmin'] = null;
                     } else {
                         $row['round']['autoUpdateResults'] = 1;
                     }

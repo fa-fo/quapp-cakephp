@@ -17,15 +17,15 @@ use Cake\ORM\Entity;
  * @property int|null $refereeTeam_id
  * @property int|null $refereeTeamSubst_id
  * @property string|null $refereePIN
- * @property string|null $refereeName
  * @property int|null $resultTrend
  * @property int|null $resultGoals1
  * @property int|null $resultGoals2
+ * @property int $resultAdmin
  * @property string|null $remarks
  * @property int $canceled
  * @property int|null $isRefereeCanceled
  * @property int|null $isTime2login
- * @property int|null isTime2matchEnd
+ * @property int|null $isTime2matchEnd
  * @property int|null $isTime2confirm
  * @property array|null $logsCalc
  *
@@ -58,10 +58,10 @@ class Match4 extends Entity
         'refereeTeam_id' => true,
         'refereeTeamSubst_id' => true,
         'refereePIN' => true,
-        'refereeName' => true,
         'resultTrend' => true,
         'resultGoals1' => true,
         'resultGoals2' => true,
+        'resultAdmin' => true,
         'remarks' => true,
         'canceled' => true,
         'group' => true,

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -104,11 +103,6 @@ class MatchesTable extends Table
             ->allowEmptyString('refereePIN');
 
         $validator
-            ->scalar('refereeName')
-            ->maxLength('refereeName', 64)
-            ->allowEmptyString('refereeName');
-
-        $validator
             ->integer('resultTrend')
             ->allowEmptyString('resultTrend');
 
@@ -119,6 +113,10 @@ class MatchesTable extends Table
         $validator
             ->integer('resultGoals2')
             ->allowEmptyString('resultGoals2');
+
+        $validator
+            ->integer('resultAdmin')
+            ->notEmptyString('resultAdmin');
 
         $validator
             ->scalar('remarks')

@@ -91,10 +91,10 @@ CREATE TABLE `matches` (
   `refereeTeam_id` int(11) DEFAULT NULL,
   `refereeTeamSubst_id` int(11) DEFAULT NULL,
   `refereePIN` varchar(5) DEFAULT NULL,
-  `refereeName` varchar(64) DEFAULT NULL,
   `resultTrend` int(11) DEFAULT NULL,
   `resultGoals1` int(11) DEFAULT NULL,
   `resultGoals2` int(11) DEFAULT NULL,
+  `resultAdmin` int(11) DEFAULT 0,
   `remarks` text DEFAULT NULL,
   `canceled` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;

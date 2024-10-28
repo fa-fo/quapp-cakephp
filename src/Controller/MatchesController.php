@@ -245,12 +245,14 @@ class MatchesController extends AppController
                      */
 
                     if ($match && $match->isTime2confirm && $this->isConfirmable($match, $match->logsCalc, $mode)) {
-                        if ($mode == 1 && isset($postData['goals1']) && isset($postData['goals2'])) {
+                        if ($mode == 1 && isset($postData['goals1']) && isset($postData['goals2']) && isset($postData['resultAdmin'])) {
                             $score1 = $postData['goals1'];
                             $score2 = $postData['goals2'];
+                            $resultAdmin = $postData['resultAdmin'];
                         } else {
                             $score1 = $match->logsCalc['score'][$match->team1_id] ?? 0;
                             $score2 = $match->logsCalc['score'][$match->team2_id] ?? 0;
+                            $resultAdmin = 0;
                         }
                         // Goal factor
                         $factor = $this->fetchTable('Sports')->find()->where(['id' => $match->sport_id])->first()->get('goalFactor');
@@ -285,6 +287,7 @@ class MatchesController extends AppController
                         $match->set('resultTrend', $rTrend);
                         $match->set('resultGoals1', (int)($score1 * $factor));
                         $match->set('resultGoals2', (int)($score2 * $factor));
+                        $match->set('resultAdmin', (int)$resultAdmin);
                         $this->Matches->save($match);
 
                         // create event_log 'RESULT_CONFIRM'
@@ -602,6 +605,5 @@ class MatchesController extends AppController
          */
         return $group->get('year_id');
     }
-
 }
 
