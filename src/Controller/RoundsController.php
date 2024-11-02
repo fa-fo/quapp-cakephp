@@ -12,7 +12,7 @@ use App\Model\Entity\Round;
  */
 class RoundsController extends AppController
 {
-    public function all(string $adminView = ''): void
+    public function all(string $adminView = '', string $offset = '0'): void
     {
         // only current day !!!
         $settings = $this->getSettings();
@@ -59,7 +59,7 @@ class RoundsController extends AppController
             unset($r['timeStartDay' . $day_id]); // no need
         }
 
-        $year['currentRoundId'] = $this->getCurrentRoundId($year_id, $day_id);
+        $year['currentRoundId'] = $this->getCurrentRoundId($year_id, $day_id, (int)$offset);
         $this->apiReturn($year);
     }
 }
