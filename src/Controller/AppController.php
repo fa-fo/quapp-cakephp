@@ -25,13 +25,13 @@ use App\Model\Entity\Round;
 use App\Model\Entity\Team;
 use App\Model\Entity\TeamYear;
 use App\Model\Entity\Year;
+use App\View\PdfView;
 use Cake\Controller\Controller;
 use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\I18n\DateTime;
 use Cake\View\JsonView;
-use App\View\PdfView;
 
 /**
  * Application Controller
@@ -185,7 +185,7 @@ class AppController extends Controller
     {
         $group = $this->fetchTable('Groups')->find()->where(['id' => $group_id])->first();
         /**
-         * @var Group $group
+         * @var Group|null $group
          */
         if ($group) {
             $countGroups = $this->fetchTable('Groups')->find('all', array(
@@ -332,7 +332,7 @@ class AppController extends Controller
                     if ($adminView) {
                         $refereeTy = $this->fetchTable('TeamYears')->find('all', array('conditions' => array('team_id' => ($row['refereeTeam_id'] ?? 0), 'year_id' => $row['group']['year']['id'])))->first();
                         /**
-                         * @var TeamYear $refereeTy
+                         * @var TeamYear|null $refereeTy
                          */
                         $row['isRefereeCanceled'] = $refereeTy ? $refereeTy->get('canceled') : 1;
                     } else {
@@ -463,169 +463,167 @@ class AppController extends Controller
     protected function getCalcFromLogs(array $logs): array
     {
         $calc = array();
+        $calc['maxOffset'] = 0;
+        $calc['minOffset'] = 9999;
+        $calc['photos'] = array();
 
-        if ($logs && count($logs) > 0) {
-            $offsetCount = 0;
-            $allOffset = 0;
-            $calc['maxOffset'] = 0;
-            $calc['minOffset'] = 9999;
-            $calc['photos'] = array();
-            $lastAliveTime = null;
-            $matcheventFoulPersonal = false;
+        $offsetCount = 0;
+        $allOffset = 0;
+        $lastAliveTime = null;
+        $matcheventFoulPersonal = false;
 
-            foreach ($logs as $l) {
-                if (isset($l['matchevent'])) {
-                    $code = $l['matchevent']->code;
+        foreach ($logs as $l) {
+            if (isset($l['matchevent'])) {
+                $code = $l['matchevent']->code;
 
-                    //Adding Calculated Fields
-                    if (isset($l['team_id'])) {
-                        $calc['score'][$l['team_id']] ??= 0;
+                //Adding Calculated Fields
+                if (isset($l['team_id'])) {
+                    $calc['score'][$l['team_id']] ??= 0;
 
-                        if (strstr($code, 'FOUL_')) { // Card and Foul score
-                            $calc['foulOutLogIds'] ??= array();
-                            $calc['doubleYellowLogIds'] ??= array();
-                            $calc[$code][$l['team_id']] ??= array();
+                    if (strstr($code, 'FOUL_')) { // Card and Foul score
+                        $calc['foulOutLogIds'] ??= array();
+                        $calc['doubleYellowLogIds'] ??= array();
+                        $calc[$code][$l['team_id']] ??= array();
 
-                            // todo: delete after V2.0 complete rollout:
-                            $calc[$code][$l['team_id']][] = $l['playerNumber'];
-                            // todo: delete end
+                        // todo: delete after V2.0 complete rollout:
+                        $calc[$code][$l['team_id']][] = $l['playerNumber'];
+                        // todo: delete end
 
-                            $code .= '_V2';
-                            $calc[$code][$l['team_id']][$l['playerNumber']]['count'] ??= 0;
-                            $calc[$code]['name'] = $l['matchevent']->name;
+                        $code .= '_V2';
+                        $calc[$code][$l['team_id']][$l['playerNumber']]['count'] ??= 0;
+                        $calc[$code]['name'] = $l['matchevent']->name;
 
-                            if ($l['matchevent']->showOnSportsOnly == 1) { // BB only
-                                $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] ??= 0; // needed for later increment
+                        if ($l['matchevent']->showOnSportsOnly == 1) { // BB only
+                            $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] ??= 0; // needed for later increment
 
-                                if (substr($code, 0, 13) == 'FOUL_PERSONAL') {
-                                    $matcheventFoulPersonal = $l['matchevent'];
-                                }
-                                if (substr($code, 0, 15) == 'FOUL_TECH_FLAGR') { // add tech. foul to pers. foul count
-                                    if ($calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] >= 0) { // add only if not foul-out yet
-                                        $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count']++;
-                                    }
+                            if (substr($code, 0, 13) == 'FOUL_PERSONAL') {
+                                $matcheventFoulPersonal = $l['matchevent'];
+                            }
+                            if (substr($code, 0, 15) == 'FOUL_TECH_FLAGR') { // add tech. foul to pers. foul count
+                                if ($calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] >= 0) { // add only if not foul-out yet
+                                    $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count']++;
                                 }
                             }
+                        }
 
-                            if ($calc[$code][$l['team_id']][$l['playerNumber']]['count'] >= 0) { // add only if not foul-out yet
-                                $calc[$code][$l['team_id']][$l['playerNumber']]['count']++;
-                            }
+                        if ($calc[$code][$l['team_id']][$l['playerNumber']]['count'] >= 0) { // add only if not foul-out yet
+                            $calc[$code][$l['team_id']][$l['playerNumber']]['count']++;
+                        }
 
-                            if ($l['matchevent']->playerFouledOutAfter
-                                && $calc[$code][$l['team_id']][$l['playerNumber']]['count'] >= $l['matchevent']->playerFouledOutAfter) {
-                                // set negative value as marker to foul-out players
-                                $calc[$code][$l['team_id']][$l['playerNumber']]['count'] *= -1;
+                        if ($l['matchevent']->playerFouledOutAfter
+                            && $calc[$code][$l['team_id']][$l['playerNumber']]['count'] >= $l['matchevent']->playerFouledOutAfter) {
+                            // set negative value as marker to foul-out players
+                            $calc[$code][$l['team_id']][$l['playerNumber']]['count'] *= -1;
+                            $calc['foulOutLogIds'][] = $l['id'];
+                        }
+
+                        if ($l['matchevent']->showOnSportsOnly == 1) { // BB only
+                            // needed for case PF+PF+TF: set negative value as marker to foul-out players
+                            if ($matcheventFoulPersonal
+                                && $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] >= $matcheventFoulPersonal->playerFouledOutAfter) {
+                                $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] *= -1;
                                 $calc['foulOutLogIds'][] = $l['id'];
                             }
+                        }
 
-                            if ($l['matchevent']->showOnSportsOnly == 1) { // BB only
-                                // needed for case PF+PF+TF: set negative value as marker to foul-out players
-                                if ($matcheventFoulPersonal
-                                    && $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] >= $matcheventFoulPersonal->playerFouledOutAfter) {
-                                    $calc['FOUL_PERSONAL_V2'][$l['team_id']][$l['playerNumber']]['count'] *= -1;
-                                    $calc['foulOutLogIds'][] = $l['id'];
-                                }
-                            }
+                        if (substr($code, 0, 16) == 'FOUL_CARD_YELLOW' && $calc[$code][$l['team_id']][$l['playerNumber']]['count'] > 1) {
+                            $calc['doubleYellowLogIds'][] = $l['id'];
+                        }
 
-                            if (substr($code, 0, 16) == 'FOUL_CARD_YELLOW' && $calc[$code][$l['team_id']][$l['playerNumber']]['count'] > 1) {
-                                $calc['doubleYellowLogIds'][] = $l['id'];
-                            }
+                        if ($l['matchevent']->playerFoulSuspMinutes) {  // Fouls with suspension
+                            $rtime = DateTime::createFromFormat('Y-m-d H:i:s', $l['datetimeSent']->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                            $rtime = $rtime->addMinutes($l['matchevent']->playerFoulSuspMinutes);
 
-                            if ($l['matchevent']->playerFoulSuspMinutes) {  // Fouls with suspension
-                                $rtime = DateTime::createFromFormat('Y-m-d H:i:s', $l['datetimeSent']->i18nFormat('yyyy-MM-dd HH:mm:ss'));
-                                $rtime = $rtime->addMinutes($l['matchevent']->playerFoulSuspMinutes);
-
-                                if ($rtime > DateTime::now()) {
-                                    $calc[$code][$l['team_id']][$l['playerNumber']]['reEntryTime'][$l['id']] = $rtime->diffInSeconds(DateTime::now());
-                                }
+                            if ($rtime > DateTime::now()) {
+                                $calc[$code][$l['team_id']][$l['playerNumber']]['reEntryTime'][$l['id']] = $rtime->diffInSeconds(DateTime::now());
                             }
                         }
-                    }
-
-                    switch ($code) {
-                        case 'LOGIN':
-                            $calc['isLoggedIn'] = 1;
-                            $calc['wasLoggedIn'] = 1;
-                            break;
-                        case 'ON_PLACE_REF':
-                            $calc['isRefereeOnPlace'] = 1;
-                            break;
-                        case 'ON_PLACE_TEAM1':
-                            $calc['isTeam1OnPlace'] = 1;
-                            break;
-                        case 'ON_PLACE_TEAM2':
-                            $calc['isTeam2OnPlace'] = 1;
-                            break;
-                        case 'MATCH_START':
-                            $calc['isMatchStarted'] = 1;
-                            $calc['isMatchLive'] = 1;
-                            break;
-                        case 'MATCH_END':
-                            $calc['isMatchLive'] = 0;
-                            $calc['isMatchEnded'] = 1;
-                            break;
-                        case 'RESULT_WIN_NONE':
-                            $calc['teamWon'] = 0; // Remis
-                            break;
-                        case 'RESULT_WIN_TEAM1':
-                            $calc['teamWon'] = 1;
-                            break;
-                        case 'RESULT_WIN_TEAM2':
-                            $calc['teamWon'] = 2;
-                            break;
-                        case 'MATCH_CONCLUDE':
-                            $calc['isMatchConcluded'] = 1;
-                            $calc['isMatchLive'] = 0;
-                            $calc['isMatchEnded'] = 1;
-                            break;
-                        case 'RESULT_CONFIRM':
-                            $calc['isResultConfirmed'] = 1;
-                            $calc['isMatchConcluded'] = 1;
-                            $calc['isMatchStarted'] = 1; // ! needed
-                            $calc['isMatchLive'] = 0;
-                            $calc['isMatchEnded'] = 1;
-                            break;
-                        case 'PHOTO_UPLOAD':
-                            $calc['photos'][] = array('id' => $l['id'], 'checked' => $l['playerNumber']);
-                            break;
-                        case 'LOGOUT':
-                            $calc['isLoggedIn'] = 0; // sic!
-                            break;
-
-                        case 'GOAL_1POINT':
-                            $calc['score'][$l['team_id']] += 1;
-                            break;
-                        case 'GOAL_2POINT':
-                            $calc['score'][$l['team_id']] += 2;
-                            break;
-                        case 'GOAL_3POINT':
-                            $calc['score'][$l['team_id']] += 3;
-                            break;
-                    }
-
-                    $calc['isMatchReadyToStart'] = (int)($calc['isRefereeOnPlace'] ?? 0) * (int)($calc['isTeam1OnPlace'] ?? 0) * (int)($calc['isTeam2OnPlace'] ?? 0);
-
-                    if ($l['datetimeSent']) {
-                        $offset = $l['datetime']->diffInSeconds($l['datetimeSent']) % 3600; // clear timezone difference by modulus
-                        if ($offset < 1000) { // ignore offsets like 3599
-                            $offsetCount++;
-                            $calc['maxOffset'] = $calc['maxOffset'] > $offset ? $calc['maxOffset'] : $offset;
-                            $calc['minOffset'] = $calc['minOffset'] < $offset ? $calc['minOffset'] : $offset;
-                            $allOffset += $offset;
-                        }
-                        $lastAliveTime = $l['datetime'];
                     }
                 }
-            }
 
-            if ($lastAliveTime !== null) {
-                $setting = $this->getSettings();
-                $aliveDiff = $lastAliveTime->diffInSeconds(DateTime::now());
-                $calc['isLoggedIn'] = (int)($aliveDiff < ($setting['autoLogoutSecsAfter'] ?? 60)) * (int)($calc['isLoggedIn'] ?? 0);
-            }
+                switch ($code) {
+                    case 'LOGIN':
+                        $calc['isLoggedIn'] = 1;
+                        $calc['wasLoggedIn'] = 1;
+                        break;
+                    case 'ON_PLACE_REF':
+                        $calc['isRefereeOnPlace'] = 1;
+                        break;
+                    case 'ON_PLACE_TEAM1':
+                        $calc['isTeam1OnPlace'] = 1;
+                        break;
+                    case 'ON_PLACE_TEAM2':
+                        $calc['isTeam2OnPlace'] = 1;
+                        break;
+                    case 'MATCH_START':
+                        $calc['isMatchStarted'] = 1;
+                        $calc['isMatchLive'] = 1;
+                        break;
+                    case 'MATCH_END':
+                        $calc['isMatchLive'] = 0;
+                        $calc['isMatchEnded'] = 1;
+                        break;
+                    case 'RESULT_WIN_NONE':
+                        $calc['teamWon'] = 0; // Remis
+                        break;
+                    case 'RESULT_WIN_TEAM1':
+                        $calc['teamWon'] = 1;
+                        break;
+                    case 'RESULT_WIN_TEAM2':
+                        $calc['teamWon'] = 2;
+                        break;
+                    case 'MATCH_CONCLUDE':
+                        $calc['isMatchConcluded'] = 1;
+                        $calc['isMatchLive'] = 0;
+                        $calc['isMatchEnded'] = 1;
+                        break;
+                    case 'RESULT_CONFIRM':
+                        $calc['isResultConfirmed'] = 1;
+                        $calc['isMatchConcluded'] = 1;
+                        $calc['isMatchStarted'] = 1; // ! needed
+                        $calc['isMatchLive'] = 0;
+                        $calc['isMatchEnded'] = 1;
+                        break;
+                    case 'PHOTO_UPLOAD':
+                        $calc['photos'][] = array('id' => $l['id'], 'checked' => $l['playerNumber']);
+                        break;
+                    case 'LOGOUT':
+                        $calc['isLoggedIn'] = 0; // sic!
+                        break;
 
-            $calc['avgOffset'] = $offsetCount > 0 ? round($allOffset / $offsetCount, 2) : 0;
+                    case 'GOAL_1POINT':
+                        $calc['score'][$l['team_id']] += 1;
+                        break;
+                    case 'GOAL_2POINT':
+                        $calc['score'][$l['team_id']] += 2;
+                        break;
+                    case 'GOAL_3POINT':
+                        $calc['score'][$l['team_id']] += 3;
+                        break;
+                }
+
+                $calc['isMatchReadyToStart'] = (int)($calc['isRefereeOnPlace'] ?? 0) * (int)($calc['isTeam1OnPlace'] ?? 0) * (int)($calc['isTeam2OnPlace'] ?? 0);
+
+                if ($l['datetimeSent']) {
+                    $offset = $l['datetime']->diffInSeconds($l['datetimeSent']) % 3600; // clear timezone difference by modulus
+                    if ($offset < 1000) { // ignore offsets like 3599
+                        $offsetCount++;
+                        $calc['maxOffset'] = $calc['maxOffset'] > $offset ? $calc['maxOffset'] : $offset;
+                        $calc['minOffset'] = $calc['minOffset'] < $offset ? $calc['minOffset'] : $offset;
+                        $allOffset += $offset;
+                    }
+                    $lastAliveTime = $l['datetime'];
+                }
+            }
         }
+
+        if ($lastAliveTime !== null) {
+            $setting = $this->getSettings();
+            $aliveDiff = $lastAliveTime->diffInSeconds(DateTime::now());
+            $calc['isLoggedIn'] = (int)($aliveDiff < ($setting['autoLogoutSecsAfter'] ?? 60)) * (int)($calc['isLoggedIn'] ?? 0);
+        }
+
+        $calc['avgOffset'] = $offsetCount > 0 ? round($allOffset / $offsetCount, 2) : 0;
 
         return $calc;
     }
@@ -824,7 +822,9 @@ class AppController extends Controller
                 $rc = 0;
 
                 $conn = ConnectionManager::get('default');
-
+                /**
+                 * @var \Cake\Database\Connection $conn
+                 */
                 $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN matches m ON ml.match_id=m.id LEFT JOIN groups g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE m FROM matches m LEFT JOIN groups g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE gt FROM group_teams gt LEFT JOIN groups g ON gt.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
@@ -861,6 +861,9 @@ class AppController extends Controller
             if ($settings['isTest'] ?? 0) {
                 $rc = 0;
                 $conn = ConnectionManager::get('default');
+                /**
+                 * @var \Cake\Database\Connection $conn
+                 */
                 $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN matches m ON ml.match_id=m.id LEFT JOIN groups g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE m FROM matches m LEFT JOIN groups g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $this->apiReturn(array('rows affected' => $rc));
@@ -871,6 +874,9 @@ class AppController extends Controller
     protected function updateCalcTotal(): int
     {
         $conn = ConnectionManager::get('default');
+        /**
+         * @var \Cake\Database\Connection $conn
+         */
         $conn->execute(file_get_contents(__DIR__ . "/sql/setnull_team_calcTotal.sql"));
         $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcTotal.sql"));
 
@@ -962,7 +968,7 @@ class AppController extends Controller
                 'conditions' => array('name' => $name, 'password' => md5($password)),
             ))->first();
             /**
-             * @var Login $login
+             * @var Login|null $login
              */
             if ($login && ($login->id ?? 0) > 0) {
                 $return = $login->id;

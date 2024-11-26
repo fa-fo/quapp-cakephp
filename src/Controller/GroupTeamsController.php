@@ -24,7 +24,7 @@ class GroupTeamsController extends AppController
         $adminView = (int)$adminView;
         $group = $group_id ? $this->getPrevAndNextGroup($group_id) : false;
         /**
-         * @var Group $group
+         * @var Group|false $group
          */
 
         if ($group) {
@@ -135,7 +135,7 @@ class GroupTeamsController extends AppController
         $this->apiReturn(count($groupTeams));
     }
 
-    private function addFromTeamYearsOrderById($year, Group $group, $countGroup): array
+    private function addFromTeamYearsOrderById(Year $year, Group $group, int $countGroup): array
     {
         $groupTeams = array();
 
@@ -401,7 +401,7 @@ class GroupTeamsController extends AppController
                     'conditions' => array('GroupTeams.group_id' => $groupteam->group_id, 'GroupTeams.placeNumber' => $msc->placenumberTeam1 == $groupteam->placeNumber ? $msc->placenumberTeam2 : $msc->placenumberTeam1),
                 ))->first();
                 /**
-                 * @var GroupTeam $opponentGroupteam
+                 * @var GroupTeam|null $opponentGroupteam
                  */
 
                 if ($opponentGroupteam) {
@@ -450,7 +450,7 @@ class GroupTeamsController extends AppController
                     'conditions' => array('GroupTeams.group_id' => $groupteam->group_id, 'GroupTeams.placeNumber' => $msc->placenumberTeam1 == $groupteam->placeNumber ? $msc->placenumberTeam2 : $msc->placenumberTeam1, 'Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
                 ))->first();
                 /**
-                 * @var GroupTeam $currentOpponentGroupteam
+                 * @var GroupTeam|null $currentOpponentGroupteam
                  */
                 $currentOpponentTeamIds[$msc->sport_id] = $currentOpponentTeamIds[$msc->sport_id] ?? array();
                 $currentOpponentTeamIds[$msc->sport_id][] = $currentOpponentGroupteam->team_id;
@@ -515,15 +515,13 @@ class GroupTeamsController extends AppController
         $c = 0;
         $sum = 0;
 
-        if (is_array($array)) {
-            foreach ($array as $key => $value) {
-                $value = ($value - 1) % 4 + 1;
-                $sum += $value;
-                $c++;
-            }
+        foreach ($array as $value) {
+            $value = ($value - 1) % 4 + 1;
+            $sum += $value;
+            $c++;
         }
 
-        return $sum / $c;
+        return $c ? $sum / $c : 0;
     }
 
     private function getNewPlaceNumberRandom4(int $placeNumber, int $groupPosNumber, array $rand4_array): int

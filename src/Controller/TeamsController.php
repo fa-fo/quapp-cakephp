@@ -31,7 +31,7 @@ class TeamsController extends AppController
                 'conditions' => array('name' => $name),
             ))->first();
             /**
-             * @var Team $team
+             * @var Team|null $team
              */
             if ($team) {
                 $team_id = $team->id;
@@ -164,7 +164,7 @@ class TeamsController extends AppController
                     'conditions' => array('name' => $name),
                 ))->first();
                 /**
-                 * @var Team $team
+                 * @var Team|null $team
                  */
                 $team_id = $team ? $team->id : 0;
 

@@ -363,6 +363,9 @@ class TeamYearsController extends AppController
 
         if (($settings['isTest'] ?? 0) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $conn = ConnectionManager::get('default');
+            /**
+             * @var \Cake\Database\Connection $conn
+             */
             $rc = $conn->execute(file_get_contents(__DIR__ . "/sql/insert_team_years2024.sql"))->rowCount();
 
             $teamYears = $this->TeamYears->find('all', array(

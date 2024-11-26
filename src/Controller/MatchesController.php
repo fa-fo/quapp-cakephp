@@ -41,7 +41,7 @@ class MatchesController extends AppController
     {
         $group = $this->getPrevAndNextGroup((int)$group_id);
         /**
-         * @var Group $group
+         * @var Group|null $group
          */
         if ($group) {
             $showTime = $this->getScheduleShowTime($group->year_id, $group->day_id, (int)$adminView);
@@ -241,7 +241,7 @@ class MatchesController extends AppController
                     $a = is_array($a) ? $a : false;
                     $match = $a ? $a[0] : false;
                     /**
-                     * @var Match4 $match
+                     * @var Match4|false $match
                      */
 
                     if ($match && $match->isTime2confirm && $this->isConfirmable($match, $match->logsCalc, $mode)) {
@@ -524,8 +524,8 @@ class MatchesController extends AppController
             $match2 = $this->Matches->find()->where(['id' => $id2])->first();
 
             /**
-             * @var Match4 $match1
-             * @var Match4 $match2
+             * @var Match4|null $match1
+             * @var Match4|null $match2
              */
             if ($match1 && $match2 && in_array($match1->canceled, array(1, 2)) && in_array($match2->canceled, array(1, 2))) {
                 $t1 = $match1->canceled == 1 ? $match1->team1_id : $match1->team2_id; // canceled team

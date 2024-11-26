@@ -32,6 +32,9 @@ class YearsController extends AppController
     public function updateTeamsCount(): void
     {
         $conn = ConnectionManager::get('default');
+        /**
+         * @var \Cake\Database\Connection $conn
+         */
         $stmt = $conn->execute(file_get_contents(__DIR__ . "/sql/update_years_teamsCount.sql"));
 
         $this->apiReturn($stmt->rowCount());

@@ -1,8 +1,16 @@
 parameters:
     level: 7
-    checkMissingIterableValueType: false
-    treatPhpDocTypesAsCertain: false
     paths:
-        - src
-    excludes_analyse:
+        - config/
+        - src/
+    excludePaths:
         - src/Console/Installer.php
+    bootstrapFiles:
+        - config/bootstrap.php
+        - config/paths.php
+        - vendor/cakephp/cakephp/src/I18n/functions_global.php
+        - vendor/cakephp/cakephp/src/Core/functions_global.php
+    ignoreErrors:
+        - identifier: missingType.iterableValue
+includes:
+    - vendor/cakedc/cakephp-phpstan/extension.neon
