@@ -21,7 +21,7 @@ try {
         $p++;
         $html = '';
         $mpdf->AddPage('L');
-        $mpdf->SetDefaultBodyCSS('background', "url('img/logo2024.png')");
+        $mpdf->SetDefaultBodyCSS('background', "url('img/logo2025.png')");
         $mpdf->SetDefaultBodyCSS('background-position', "50px 152px");
         $mpdf->SetDefaultBodyCSS('background-repeat', "no-repeat");
 

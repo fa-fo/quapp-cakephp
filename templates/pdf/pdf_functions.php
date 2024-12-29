@@ -10,7 +10,7 @@ function ellipsis(string $input, int $maxLength = 25): string
 function getMatchHtml(string $html, mixed $teamYears): string
 {
     $html = '';
-    //$html .= '<img src="img/logo2024.png" style="float:left" width="150">';
+    //$html .= '<img src="img/logo2025.png" style="float:left" width="150">';
     $html .= '<table border="0" cellspacing="0" cellpadding="6" align="center" width="70%">';
     $html .= '<tr>';
     $html .= '<th>Uhrzeit</th>';

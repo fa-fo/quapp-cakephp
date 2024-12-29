@@ -1,7 +1,7 @@
 # QuattFo Quapp CakePHP
 
 This is the Backend application of the tournament management Software "Quapp". It uses
-CakePHP [CakePHP](https://cakephp.org) 4.4.
+CakePHP [CakePHP](https://cakephp.org) 5.1
 
 ## 📝 Check it out on Play Stores
 
