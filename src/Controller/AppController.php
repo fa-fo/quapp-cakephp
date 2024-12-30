@@ -31,6 +31,7 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\I18n\DateTime;
+use Cake\I18n\Time;
 use Cake\View\JsonView;
 
 /**
@@ -998,6 +999,7 @@ class AppController extends Controller
 
     protected function getCurrentRoundId(int $yearId = 0, int $dayId = 0, int $offset = 0): float|int
     {
+        $return = 0;
         $settings = $this->getSettings();
         $currentYear = $this->getCurrentYear()->toArray();
         $day = $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd');
@@ -1007,20 +1009,25 @@ class AppController extends Controller
             && ($dayId == 0 || $dayId == $settings['currentDay_id'])
             && ($settings['isTest'] == 1 || $now == $day)
         ) {
-            $time = DateTime::now();
-            $time = $time->addMinutes($offset);
-            $time = $time->subHours($dayId == 2 ? 1 : 2);
-            $cycle = (int)floor($time->hour / 8);
+            $cRound = $this->fetchTable('Rounds')->find('all', array(
+                'conditions' => array('timeStartDay' . $dayId . ' <=' => Time::now()),
+                'order' => array('id' => 'DESC')
+            ))->first();
 
-            if ($cycle != 1) {
-                if ($settings['isTest'] == 0) {
-                    return $settings['alwaysAutoUpdateResults'] ? 16 : 1; // as an index
+            $return = $cRound ? $cRound->id : 1;
+
+            if ($settings['isTest'] == 1) {
+                $time = DateTime::now();
+                $time = $time->addMinutes($offset);
+                $time = $time->subHours($dayId == 2 ? 1 : 2);
+                $cycle = (int)floor($time->hour / 8);
+
+                if ($cycle != 1) {
+                    $return = ($time->hour % 8 * 2 + 1) + (int)floor($time->minute / 30);
                 }
             }
-
-            return ($time->hour % 8 * 2 + 1) + (int)floor($time->minute / 30);
         }
 
-        return 0;
+        return $return;
     }
 }
