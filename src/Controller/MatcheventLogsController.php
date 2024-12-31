@@ -416,18 +416,19 @@ class MatcheventLogsController extends AppController
         $this->apiReturn($return);
     }
 
-    public function getPhotosAll(string $myTeamId): void
+    public function getPhotosAll(string $myTeamId = '', string $year_id = ''): void
     {
         $return = array();
         $myPhotos = array();
         $myTeamId = (int)$myTeamId;
         $settings = $this->getSettings();
+        $year_id = (int)$year_id ?: $settings['currentYear_id'];
 
         $photos = $this->MatcheventLogs->find('all', array(
             'conditions' => array(
                 'Matchevents.code' => 'PHOTO_UPLOAD',
                 'playerNumber' => '1',
-                'year_id' => $settings['currentYear_id'],
+                'year_id' => $year_id,
             ),
             'fields' => array('id', 'match_id'),
             'contain' => array(
