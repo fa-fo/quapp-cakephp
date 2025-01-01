@@ -23,7 +23,6 @@ class PushTokensController extends AppController
                 $pushToken = $this->PushTokens->newEmptyEntity();
             }
             $pushToken = $this->PushTokens->patchEntity($pushToken, $postData);
-            $pushToken->set('my_year_id', $this->getCurrentYearId());
 
             if ($this->PushTokens->save($pushToken)) {
                 $return = $pushToken;
