@@ -67,6 +67,10 @@ class PushTokensTable extends Table
             ->requirePresence('expoPushToken', 'create')
             ->notEmptyString('expoPushToken');
 
+        $validator
+            ->integer('my_year_id')
+            ->allowEmptyString('my_year_id');
+
         return $validator;
     }
 

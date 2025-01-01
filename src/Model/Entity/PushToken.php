@@ -11,6 +11,7 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property string $expoPushToken
  * @property int $my_team_id
+ * @property int $my_year_id
  *
  * @property \App\Model\Entity\Team $team
  */
@@ -26,6 +27,7 @@ class PushToken extends Entity
     protected array $_accessible = [
         'expoPushToken' => true,
         'my_team_id' => true,
+        'my_year_id' => true,
         'team' => true,
     ];
 }

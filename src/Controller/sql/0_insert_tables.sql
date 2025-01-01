@@ -262,8 +262,9 @@ CREATE TABLE `push_tokens` (
   `id` int(11) NOT NULL,
   `expoPushToken` varchar(64) NOT NULL,
   `my_team_id` int(11) NOT NULL,
+  `my_year_id` int(11) DEFAULT NULL,
   `edited` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8_general_ci;
 
 --
 -- Tabellenstruktur für Tabelle `rankingpoints`
