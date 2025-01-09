@@ -966,13 +966,19 @@ class AppController extends Controller
 
         if ($this->request->is('post')) {
             $login = $this->fetchTable('Logins')->find('all', array(
-                'conditions' => array('name' => $name, 'password' => md5($password)),
+                'conditions' => array('name' => $name),
             ))->first();
             /**
              * @var Login|null $login
              */
             if ($login && ($login->id ?? 0) > 0) {
-                $return = $login->id;
+                if ($login->failedlogincount < 5 && md5($password) == $login->password) {
+                    $return = $login->id;
+                    $login->set('failedlogincount', 0);
+                } else {
+                    $login->set('failedlogincount', $login->failedlogincount + 1);
+                }
+                $this->fetchTable('Logins')->save($login);
             }
         }
 

@@ -73,7 +73,8 @@ CREATE TABLE `group_teams` (
 CREATE TABLE `logins` (
   `id` int(11) NOT NULL,
   `name` varchar(32) NOT NULL,
-  `password` varchar(32) NOT NULL
+  `password` varchar(32) NOT NULL,
+  `failedlogincount` INT NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 
@@ -126,7 +127,7 @@ CREATE TABLE `matchevents` (
 
 INSERT INTO `matchevents` (`id`, `code`, `name`, `needsTeamAssoc`, `needsPlayerAssoc`, `playerFouledOutAfter`, `playerFoulSuspMinutes`, `logsAddableWithoutModal`, `logsAddableOnLoggedIn`, `showOnSportsOnly`, `textConfirmHeader`, `textHeaderBeforeButton`, `isCancelable`) VALUES
 (1, 'LOGIN', 'SR zum Spiel eingeloggt', 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0),
-(2, 'ON_PLACE_REF', 'Anwesend: SR', 0, 0, NULL, NULL, 1, 1, NULL, NULL, 'Vor Spielbeginn bitte vor Ort die Anwesenheit (und Spielbereitschaft) der Teilnehmer durch Drücken der Buttons bestätigen:', 0),
+(2, 'ON_PLACE_REF', 'Anwesend: SR', 0, 0, NULL, NULL, 1, 1, NULL, NULL, 'Vor Spielbeginn bitte vor Ort die Anwesenheit (und Spielbereitschaft) der Teilnehmer*innen durch Drücken der Buttons bestätigen:', 0),
 (3, 'ON_PLACE_TEAM1', 'Anwesend: Team 1', 0, 0, NULL, NULL, 1, 1, NULL, NULL, NULL, 0),
 (4, 'ON_PLACE_TEAM2', 'Anwesend: Team 2', 0, 0, NULL, NULL, 1, 1, NULL, NULL, NULL, 0),
 (10, 'IS_ALIVE', 'alive', 0, 0, NULL, NULL, 1, 0, NULL, NULL, NULL, 0),
