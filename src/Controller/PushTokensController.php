@@ -19,9 +19,7 @@ class PushTokensController extends AppController
                 'conditions' => array('expoPushToken' => $postData['expoPushToken'])
             ))->first();
 
-            if (!$pushToken) {
-                $pushToken = $this->PushTokens->newEmptyEntity();
-            }
+            $pushToken = $pushToken ?: $this->PushTokens->newEmptyEntity();
             $pushToken = $this->PushTokens->patchEntity($pushToken, $postData);
 
             if ($this->PushTokens->save($pushToken)) {
