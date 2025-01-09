@@ -11,6 +11,7 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property string $name
  * @property string $password
+ * @property int $failedlogincount
  */
 class Login extends Entity
 {
@@ -24,6 +25,7 @@ class Login extends Entity
     protected array $_accessible = [
         'name' => true,
         'password' => true,
+        'failedlogincount' => true
     ];
 
     /**
