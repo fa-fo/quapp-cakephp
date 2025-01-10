@@ -183,8 +183,8 @@ class MatchesController extends AppController
         $teams = $query->select([
             'count' => $query->func()->count('*')
         ])
-            ->group('refereeTeamSubst_id')
-            ->order(array('count' => 'DESC'))
+            ->groupBy('refereeTeamSubst_id')
+            ->orderBy(array('count' => 'DESC'))
             ->toArray();
 
         $c = 0;
@@ -566,8 +566,8 @@ class MatchesController extends AppController
                          * @var Match4 $m
                          */
                         if ($m->resultTrend === null || $m->resultGoals1 === null || $m->resultGoals1 === null) {
-                            $factor1 = ($m->team1) && ($m->team1)->calcTotalPointsPerYear ? (int)($m->team1)->calcTotalPointsPerYear / 7 : 1;
-                            $factor2 = ($m->team2) && ($m->team2)->calcTotalPointsPerYear ? (int)($m->team2)->calcTotalPointsPerYear / 7 : 1;
+                            $factor1 = ($m->team1)->calcTotalPointsPerYear ? (int)($m->team1)->calcTotalPointsPerYear / 7 : 1;
+                            $factor2 = ($m->team2)->calcTotalPointsPerYear ? (int)($m->team2)->calcTotalPointsPerYear / 7 : 1;
                             $sportsFactor = $m->sport->goalFactor;
 
                             $m->set('resultGoals1', (int)round(random_int(0, 44) / $sportsFactor * $factor1) * $sportsFactor);
