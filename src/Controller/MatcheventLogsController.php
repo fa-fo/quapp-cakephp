@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Match4event;
 use App\Model\Entity\Match4eventLog;
+use Cake\Datasource\ConnectionManager;
 use Cake\I18n\DateTime;
 use Thumber\Cake\Utility\ThumbCreator;
 
@@ -522,5 +523,32 @@ class MatcheventLogsController extends AppController
 
         $matchesCount = is_array($matches) ? count($matches) : false;
         $this->apiReturn($matchesCount);
+    }
+
+    public function clearByRound(string $round_id = ''): void
+    {
+        $return = false;
+        $round_id = (int)$round_id;
+        $postData = $this->request->getData();
+
+        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            if ($round_id > 0) {
+                $settings = $this->getSettings();
+                $conn = ConnectionManager::get('default');
+                /**
+                 * @var \Cake\Database\Connection $conn
+                 */
+
+                $sql = "DELETE ml FROM matchevent_logs ml
+                        LEFT JOIN matches m ON ml.match_id=m.id
+                        LEFT JOIN groups g ON m.group_id=g.id
+                        WHERE m.round_id = " . $round_id . "
+                        AND g.year_id = " . $settings['currentYear_id'] . " AND g.day_id = " . $settings['currentDay_id'];
+
+                $return = $conn->execute($sql)->rowCount();
+            }
+        }
+
+        $this->apiReturn($return);
     }
 }
