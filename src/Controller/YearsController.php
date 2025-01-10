@@ -123,70 +123,64 @@ class YearsController extends AppController
     // get Status of current Day
     public function getStatus(): void
     {
-        $year = $this->getCurrentYear();
+        $settings = $this->getSettings();
+        $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']);
 
         $teamYears = $this->fetchTable('TeamYears')->find('all', array(
-            'conditions' => array('year_id' => $year->id),
+            'conditions' => array('year_id' => $settings['currentYear_id']),
         ))->toArray();
         $teamYearsEndRanking = $this->fetchTable('TeamYears')->find('all', array(
-            'conditions' => array('year_id' => $year->id, 'endRanking IS NOT' => null),
+            'conditions' => array('year_id' => $settings['currentYear_id'], 'endRanking IS NOT' => null),
         ))->toArray();
         $teamYearsPins = $this->fetchTable('TeamYears')->find('all', array(
-            'conditions' => array('year_id' => $year->id, 'refereePIN IS NOT' => null),
+            'conditions' => array('year_id' => $settings['currentYear_id'], 'refereePIN IS NOT' => null),
         ))->toArray();
 
         $groups = $this->fetchTable('Groups')->find('all', array(
-            'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
+            'conditions' => $conditionsArray,
         ))->toArray();
 
         $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
             'contain' => array(
                 'Groups' => array('fields' => array('year_id', 'day_id')),
             ),
-            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
+            'conditions' => $conditionsArray,
         ))->toArray();
 
-        $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
         $matches = $this->getMatches($conditionsArray, 0, 2, 1); // sortBy 2: get non-midday matches first
         $matchesPins = $this->getMatches(array_merge($conditionsArray, array('refereePIN IS NOT' => null)), 0, 0, 0);
 
         $sumCalcMatches = 0;
         $sumMatchesByTeam = array();
-
-        if (is_array($matches)) {
-            foreach ($groupTeams as $gt) {
-                if ($gt->canceled == 0) {
-                    $sumCalcMatches += $gt->calcCountMatches;
-                    $sumMatchesByTeam[$gt->team_id] = 0;
-
-                    foreach ($matches as $m) {
-                        if (in_array($gt->team_id, array($m->team1_id, $m->team2_id))) {
-                            $sumMatchesByTeam[$gt->team_id]++;
-                        }
-                    }
-                }
-            }
-        }
+        $sumJobsByTeamByRound = array();
+        $maxJobsByTeamPerRound = array(0);
 
         $matchesRefChangeable = array();
         $matchesTeamsChangeable = array();
         $missingRefereesCount = 0;
         $matchesWith1CanceledCount = 0;
         $matchResultCount = 0;
+
         if (is_array($matches)) {
+            foreach ($groupTeams as $gt) {
+                if ($gt->canceled == 0) {
+                    $sumCalcMatches += $gt->calcCountMatches;
+                }
+            }
+
             foreach ($matches as $m) {
                 // search for minimize missing referees
                 if ($m->isRefereeCanceled && !$m->canceled && $m->resultTrend === null) {
                     $missingRefereesCount++;
 
                     // search for available refs from same sport with canceled match
-                    $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId(), 'sport_id' => $m->sport_id, 'Matches.canceled >' => 0);
+                    $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id'], 'sport_id' => $m->sport_id, 'Matches.canceled >' => 0);
                     $matches1 = $this->getMatches($conditionsArray, 0, 3, 1); // sortBy 3: get midday matches first
                     if (is_array($matches1)) {
                         foreach ($matches1 as $m1) {
                             if (!$m1->isRefereeCanceled) {
                                 // check if ref's team is already in play in same round with non-canceled match
-                                $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId(), 'round_id' => $m->round_id, 'Matches.canceled' => 0,
+                                $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id'], 'round_id' => $m->round_id, 'Matches.canceled' => 0,
                                     'OR' => array(
                                         'team1_id' => $m1->refereeTeam_id,
                                         'team2_id' => $m1->refereeTeam_id,
@@ -205,17 +199,17 @@ class YearsController extends AppController
                 }
 
                 // search for minimize canceled matches
-                if ($this->getCurrentDayId() == 2 && ($m->canceled == 1 || $m->canceled == 2) && $m->resultTrend === null) {
+                if ($settings['currentDay_id'] == 2 && ($m->canceled == 1 || $m->canceled == 2) && $m->resultTrend === null) {
                     $matchesWith1CanceledCount++;
 
                     // search for available teams from same group and same sport with canceled match
-                    $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId(), 'group_id' => $m->group_id, 'sport_id' => $m->sport_id, 'Matches.canceled >' => 0, 'Matches.canceled <' => 3, 'Matches.id !=' => $m->id);
+                    $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id'], 'group_id' => $m->group_id, 'sport_id' => $m->sport_id, 'Matches.canceled >' => 0, 'Matches.canceled <' => 3, 'Matches.id !=' => $m->id);
                     $matches1 = $this->getMatches($conditionsArray, 0, 0, 1);
                     if (is_array($matches1)) {
                         foreach ($matches1 as $m1) {
                             // check if other team is already in play in same round with non-canceled match
                             $otherTeam = $m1->canceled == 1 ? $m1->team2_id : $m1->team1_id;
-                            $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId(), 'round_id' => $m->round_id, 'Matches.canceled' => 0,
+                            $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id'], 'round_id' => $m->round_id, 'Matches.canceled' => 0,
                                 'OR' => array(
                                     'team1_id' => $otherTeam,
                                     'team2_id' => $otherTeam,
@@ -233,8 +227,33 @@ class YearsController extends AppController
                 }
 
                 $matchResultCount += ($m->resultTrend !== null ? 1 : 0);
+
+                $acv1 = array_count_values(array($m->team1_id, $m->team2_id));
+                foreach ($acv1 as $k => $v) {
+                    $sumMatchesByTeam[$k] ??= 0;
+                    $sumMatchesByTeam[$k] += $v;
+                }
+                $acv2 = array_count_values(array_filter(array($m->team1_id, $m->team2_id, $m->refereeTeam_id, $m->refereeTeamSubst_id)));
+                foreach ($acv2 as $k => $v) {
+                    $sumJobsByTeamByRound[$m->round_id][$k] ??= 0;
+                    $sumJobsByTeamByRound[$m->round_id][$k] += $v;
+                }
             }
         }
+
+        foreach ($sumJobsByTeamByRound as $k => $v) {
+            $maxJobsByTeamPerRound[$k] = max($v);
+        }
+
+        // roundsWithPossibleLogsDelete: select for possible logs delete
+        $query2 = $this->fetchTable('MatcheventLogs')->find('all', array(
+            'contain' => array('Matches', 'Matches.Groups', 'Matches.Rounds', 'Matchevents'),
+            'conditions' => array_merge($conditionsArray, array('Matchevents.code' => 'LOGIN', 'Matches.resultTrend IS' => null))
+        ));
+        $roundsWithPossibleLogsDelete = $query2->select(array('round_id' => 'Matches.round_id'))
+            ->groupBy('Matches.round_id')
+            ->orderBy(array('Matches.round_id' => 'ASC'))
+            ->toArray();
 
         $status['teamYearsCount'] = count($teamYears);
         $status['teamYearsEndRankingCount'] = count($teamYearsEndRanking);
@@ -247,12 +266,15 @@ class YearsController extends AppController
         $status['matchResultCount'] = $matchResultCount;
         $status['minMatchesByTeam'] = !empty($sumMatchesByTeam) ? min($sumMatchesByTeam) : 0;
         $status['maxMatchesByTeam'] = !empty($sumMatchesByTeam) ? max($sumMatchesByTeam) : 0;
+        $status['maxJobsByTeamPerRound'] = max($maxJobsByTeamPerRound);
 
         $status['missingRefereesCount'] = $missingRefereesCount;
         $status['matchesRefChangeable'] = $matchesRefChangeable;
 
         $status['matchesWith1CanceledCount'] = $matchesWith1CanceledCount;
         $status['matchesTeamsChangeable'] = $matchesTeamsChangeable;
+
+        $status['roundsWithPossibleLogsDelete'] = array_column($roundsWithPossibleLogsDelete, 'round_id');
 
         $this->apiReturn($status);
     }
