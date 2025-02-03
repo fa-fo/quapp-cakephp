@@ -91,6 +91,7 @@ CREATE TABLE `matches` (
   `team2_id` int(11) NOT NULL,
   `refereeTeam_id` int(11) DEFAULT NULL,
   `refereeTeamSubst_id` int(11) DEFAULT NULL,
+  `refereeName` VARCHAR(32) DEFAULT NULL,
   `refereePIN` varchar(5) DEFAULT NULL,
   `resultTrend` int(11) DEFAULT NULL,
   `resultGoals1` int(11) DEFAULT NULL,
@@ -408,7 +409,11 @@ INSERT INTO `settings` (`id`, `name`, `value`) VALUES
 (11, 'showEndRanking', 0),
 (12, 'showLocalStorageScore', 0),
 (13, 'maxPhotos', 5),
-(14, 'autoLogoutSecsAfter', 60);
+(14, 'autoLogoutSecsAfter', 60),
+(15, 'useLiveScouting', 1),
+(16, 'usePlayOff', 0),
+(17, 'useResourceContentApi', 0),
+(18, 'showArchieve', 1);
 
 --
 -- Tabellenstruktur für Tabelle `sports`

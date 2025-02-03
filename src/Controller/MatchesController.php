@@ -144,6 +144,29 @@ class MatchesController extends AppController
         $this->apiReturn($return);
     }
 
+    public function saveRefereeName(string $id = ''): void
+    {
+        $id = (int)$id;
+        $match = false;
+        $postData = $this->request->getData();
+
+        if (isset($postData['refereeName']) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $conditionsArray = array('Matches.id' => $id);
+            $matches = $this->getMatches($conditionsArray, 1);
+            if (is_array($matches)) {
+                $match = $matches[0];
+                /**
+                 * @var Match4 $match
+                 */
+
+                $match->set('refereeName', $postData['refereeName']);
+                $this->Matches->save($match);
+            }
+        }
+
+        $this->apiReturn($match);
+    }
+
     public function saveRefereeTeamSubst(string $id = ''): void
     {
         $id = (int)$id;
@@ -246,9 +269,9 @@ class MatchesController extends AppController
 
                     if ($match && $match->isTime2confirm && $this->isConfirmable($match, $match->logsCalc, $mode)) {
                         if ($mode == 1 && isset($postData['goals1']) && isset($postData['goals2']) && isset($postData['resultAdmin'])) {
-                            $score1 = $postData['goals1'];
-                            $score2 = $postData['goals2'];
-                            $resultAdmin = $postData['resultAdmin'];
+                            $score1 = (int)$postData['goals1'];
+                            $score2 = (int)$postData['goals2'];
+                            $resultAdmin = (int)$postData['resultAdmin'];
                         } else {
                             $score1 = $match->logsCalc['score'][$match->team1_id] ?? 0;
                             $score2 = $match->logsCalc['score'][$match->team2_id] ?? 0;

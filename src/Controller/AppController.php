@@ -362,6 +362,9 @@ class AppController extends Controller
                             $row['isTime2matchEnd'] = ($now > $stime->addMinutes($settings['time2MatchEndMinAfterFrom'])) ? 1 : 0;
                             $row['isTime2confirm'] = ($now > $stime->addMinutes($settings['time2ConfirmMinsAfterFrom']) && $now < $stime->addMinutes($settings['time2ConfirmMinsAfterUntil'])) ? 1 : 0;
                         }
+                        if (!$settings['useLiveScouting']) {
+                            $row['isTime2login'] = 0;
+                        }
                     }
 
                     if ((($conditionsArray['OR']['refereeTeam_id'] ?? 0) > 0
