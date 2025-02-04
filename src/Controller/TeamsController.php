@@ -151,6 +151,27 @@ class TeamsController extends AppController
         $this->apiReturn($matches);
     }
 
+    public function getTestTeamNames(): void
+    {
+        $return['teamNames'] = '';
+        $year = $this->getCurrentYear();
+
+        $teams = $this->Teams->find('all', array(
+            'conditions' => array('calcTotalRanking IS NOT' => null),
+            'order' => array('calcTotalRanking' => 'ASC'),
+        ))->limit($year['teamsCount']);
+
+        foreach ($teams as $team) {
+            /**
+             * @var Team|null $team
+             */
+            $return['teamNames'] .= $return['teamNames'] != '' ? '\n' : '';
+            $return['teamNames'] .= $team->name;
+        }
+
+        $this->apiReturn($return);
+    }
+
     public function checkTeamNames(): void
     {
         $return = array();
