@@ -50,7 +50,8 @@ class GroupsController extends AppController
                 ))->count();
 
                 if ($countTeams == $year->teamsCount) {
-                    $countGroups = $countGroups ?: (int)ceil($countTeams / 16);
+                    $teamsPerGroup = $year->teamsCount > 24 ? 16 : $year->teamsCount;
+                    $countGroups = $countGroups ?: (int)ceil($countTeams / $teamsPerGroup);
                     $alphabet = range('A', 'Z');
 
                     for ($c = 0; $c < $countGroups; $c++) {
@@ -58,7 +59,7 @@ class GroupsController extends AppController
                         $group->set('year_id', $year->id);
                         $group->set('day_id', $this->getCurrentDayId());
                         $group->set('name', $alphabet[$c]);
-                        $group->set('teamsCount', 16);
+                        $group->set('teamsCount', $teamsPerGroup);
 
                         if ($this->Groups->save($group)) {
                             $groups[] = $group;
