@@ -257,6 +257,121 @@ INSERT INTO `matchscheduling_pattern16` (`id`, `round_id`, `placenumberTeam1`, `
 (64, 16, 12, 6, 13, 4);
 
 --
+-- Tabellenstruktur für Tabelle `matchscheduling_pattern24`
+--
+
+CREATE TABLE `matchscheduling_pattern24` (
+                                             `id` int(11) NOT NULL,
+                                             `round_id` int(11) NOT NULL,
+                                             `placenumberTeam1` int(11) NOT NULL,
+                                             `placenumberTeam2` int(11) NOT NULL,
+                                             `placenumberRefereeTeam` int(11) DEFAULT NULL,
+                                             `sport_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- Daten für Tabelle `matchscheduling_pattern24`
+--
+
+INSERT INTO `matchscheduling_pattern24` (`id`, `round_id`, `placenumberTeam1`, `placenumberTeam2`, `placenumberRefereeTeam`, `sport_id`) VALUES
+(1, 1, 5, 22, NULL, 1),
+(2, 2, 9, 18, NULL, 1),
+(3, 3, 13, 14, NULL, 1),
+(4, 4, 6, 23, NULL, 1),
+(5, 5, 10, 19, NULL, 1),
+(6, 6, 14, 15, NULL, 1),
+(7, 7, 7, 24, NULL, 1),
+(8, 8, 11, 20, NULL, 1),
+(9, 9, 15, 16, NULL, 1),
+(10, 10, 8, 1, NULL, 1),
+(11, 11, 12, 21, NULL, 1),
+(12, 12, 16, 17, NULL, 1),
+(13, 13, 9, 2, NULL, 1),
+(14, 14, 13, 22, NULL, 1),
+(15, 15, 17, 18, NULL, 1),
+(16, 16, 10, 3, NULL, 1),
+(17, 17, 14, 23, NULL, 1),
+(18, 18, 18, 19, NULL, 1),
+(19, 19, 11, 4, NULL, 1),
+(20, 20, 15, 24, NULL, 1),
+(21, 21, 19, 20, NULL, 1),
+(22, 22, 12, 5, NULL, 1),
+(23, 23, 16, 1, NULL, 1),
+(24, 24, 20, 21, NULL, 1),
+(25, 1, 2, 1, NULL, 2),
+(26, 2, 6, 21, NULL, 2),
+(27, 3, 10, 17, NULL, 2),
+(28, 4, 3, 2, NULL, 2),
+(29, 5, 7, 22, NULL, 2),
+(30, 6, 11, 18, NULL, 2),
+(31, 7, 4, 3, NULL, 2),
+(32, 8, 8, 23, NULL, 2),
+(33, 9, 12, 19, NULL, 2),
+(34, 10, 5, 4, NULL, 2),
+(35, 11, 9, 24, NULL, 2),
+(36, 12, 13, 20, NULL, 2),
+(37, 13, 6, 5, NULL, 2),
+(38, 14, 10, 1, NULL, 2),
+(39, 15, 14, 21, NULL, 2),
+(40, 16, 7, 6, NULL, 2),
+(41, 17, 11, 2, NULL, 2),
+(42, 18, 15, 22, NULL, 2),
+(43, 19, 8, 7, NULL, 2),
+(44, 20, 12, 3, NULL, 2),
+(45, 21, 16, 23, NULL, 2),
+(46, 22, 9, 8, NULL, 2),
+(47, 23, 13, 4, NULL, 2),
+(48, 24, 17, 24, NULL, 2),
+(49, 1, 3, 24, NULL, 3),
+(50, 2, 7, 20, NULL, 3),
+(51, 3, 11, 16, NULL, 3),
+(52, 4, 4, 1, NULL, 3),
+(53, 5, 8, 21, NULL, 3),
+(54, 6, 12, 17, NULL, 3),
+(55, 7, 5, 2, NULL, 3),
+(56, 8, 9, 22, NULL, 3),
+(57, 9, 13, 18, NULL, 3),
+(58, 10, 6, 3, NULL, 3),
+(59, 11, 10, 23, NULL, 3),
+(60, 12, 14, 19, NULL, 3),
+(61, 13, 7, 4, NULL, 3),
+(62, 14, 11, 24, NULL, 3),
+(63, 15, 15, 20, NULL, 3),
+(64, 16, 8, 5, NULL, 3),
+(65, 17, 12, 1, NULL, 3),
+(66, 18, 16, 21, NULL, 3),
+(67, 19, 9, 6, NULL, 3),
+(68, 20, 13, 2, NULL, 3),
+(69, 21, 17, 22, NULL, 3),
+(70, 22, 10, 7, NULL, 3),
+(71, 23, 14, 3, NULL, 3),
+(72, 24, 18, 23, NULL, 3),
+(73, 1, 4, 23, NULL, 4),
+(74, 2, 8, 19, NULL, 4),
+(75, 3, 12, 15, NULL, 4),
+(76, 4, 5, 24, NULL, 4),
+(77, 5, 9, 20, NULL, 4),
+(78, 6, 13, 16, NULL, 4),
+(79, 7, 6, 1, NULL, 4),
+(80, 8, 10, 21, NULL, 4),
+(81, 9, 14, 17, NULL, 4),
+(82, 10, 7, 2, NULL, 4),
+(83, 11, 11, 22, NULL, 4),
+(84, 12, 15, 18, NULL, 4),
+(85, 13, 8, 3, NULL, 4),
+(86, 14, 12, 23, NULL, 4),
+(87, 15, 16, 19, NULL, 4),
+(88, 16, 9, 4, NULL, 4),
+(89, 17, 13, 24, NULL, 4),
+(90, 18, 17, 20, NULL, 4),
+(91, 19, 10, 5, NULL, 4),
+(92, 20, 14, 1, NULL, 4),
+(93, 21, 18, 21, NULL, 4),
+(94, 22, 11, 6, NULL, 4),
+(95, 23, 15, 2, NULL, 4),
+(96, 24, 19, 22, NULL, 4);
+
+--
 -- Tabellenstruktur für Tabelle `push_tokens`
 --
 
@@ -376,10 +491,18 @@ INSERT INTO `rounds` (`id`, `timeStartDay1`, `timeStartDay2`, `autoUpdateResults
 (10, '14:30:00', '13:30:00', 1),
 (11, '15:00:00', '14:00:00', 1),
 (12, '15:30:00', '14:30:00', 1),
-(13, '16:00:00', '15:00:00', 0),
-(14, '16:30:00', '15:30:00', 0),
-(15, '17:00:00', '16:00:00', 0),
-(16, '17:30:00', '16:30:00', 0);
+(13, '16:00:00', '15:00:00', 1),
+(14, '16:30:00', '15:30:00', 1),
+(15, '17:00:00', '16:00:00', 1),
+(16, '17:30:00', '16:30:00', 1),
+(17, '18:00:00', '17:00:00', 1),
+(18, '18:30:00', '17:30:00', 1),
+(19, '19:00:00', '18:00:00', 1),
+(20, '19:30:00', '18:30:00', 1),
+(21, '20:00:00', '19:00:00', 1),
+(22, '20:30:00', '19:30:00', 1),
+(23, '21:00:00', '20:00:00', 1),
+(24, '21:30:00', '20:30:00', 1);
 
 --
 -- Tabellenstruktur für Tabelle `settings`
@@ -585,10 +708,19 @@ ALTER TABLE `matchevent_logs`
 -- Indizes für die Tabelle `matchscheduling_pattern16`
 --
 ALTER TABLE `matchscheduling_pattern16`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_sportId_round_id` (`sport_id`,`round_id`),
-  ADD UNIQUE KEY `unique_referee_round_id` (`placenumberRefereeTeam`,`round_id`),
-  ADD KEY `fk_round_id2` (`round_id`);
+    ADD PRIMARY KEY (`id`),
+    ADD UNIQUE KEY `unique_sportId_round_id` (`sport_id`,`round_id`),
+    ADD UNIQUE KEY `unique_referee_round_id` (`placenumberRefereeTeam`,`round_id`),
+    ADD KEY `fk_round_id2` (`round_id`);
+
+--
+-- Indizes für die Tabelle `matchscheduling_pattern24`
+--
+ALTER TABLE `matchscheduling_pattern24`
+    ADD PRIMARY KEY (`id`),
+    ADD UNIQUE KEY `unique_sportId_round_id` (`sport_id`,`round_id`),
+    ADD UNIQUE KEY `unique_referee_round_id` (`placenumberRefereeTeam`,`round_id`),
+    ADD KEY `fk_round_id2` (`round_id`);
 
 --
 -- Indizes für die Tabelle `push_tokens`
@@ -662,13 +794,13 @@ ALTER TABLE `days`
 -- AUTO_INCREMENT für Tabelle `groups`
 --
 ALTER TABLE `groups`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=293;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
 --
 -- AUTO_INCREMENT für Tabelle `group_teams`
 --
 ALTER TABLE `group_teams`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4713;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
 --
 -- AUTO_INCREMENT für Tabelle `logins`
@@ -680,7 +812,7 @@ ALTER TABLE `logins`
 -- AUTO_INCREMENT für Tabelle `matches`
 --
 ALTER TABLE `matches`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17665;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
 --
 -- AUTO_INCREMENT für Tabelle `matchevents`
@@ -692,19 +824,25 @@ ALTER TABLE `matchevents`
 -- AUTO_INCREMENT für Tabelle `matchevent_logs`
 --
 ALTER TABLE `matchevent_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93422;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
 --
 -- AUTO_INCREMENT für Tabelle `matchscheduling_pattern16`
 --
 ALTER TABLE `matchscheduling_pattern16`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+
+--
+-- AUTO_INCREMENT für Tabelle `matchscheduling_pattern24`
+--
+ALTER TABLE `matchscheduling_pattern24`
+    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
 
 --
 -- AUTO_INCREMENT für Tabelle `push_tokens`
 --
 ALTER TABLE `push_tokens`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=942;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
 --
 -- AUTO_INCREMENT für Tabelle `rankingpoints`
@@ -716,13 +854,13 @@ ALTER TABLE `rankingpoints`
 -- AUTO_INCREMENT für Tabelle `rounds`
 --
 ALTER TABLE `rounds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT für Tabelle `settings`
 --
 ALTER TABLE `settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT für Tabelle `sports`
@@ -790,8 +928,15 @@ ALTER TABLE `matchevent_logs`
 -- Constraints der Tabelle `matchscheduling_pattern16`
 --
 ALTER TABLE `matchscheduling_pattern16`
-  ADD CONSTRAINT `fk_round_id2` FOREIGN KEY (`round_id`) REFERENCES `rounds` (`id`),
-  ADD CONSTRAINT `fk_sport_id2` FOREIGN KEY (`sport_id`) REFERENCES `sports` (`id`);
+    ADD CONSTRAINT `fk_round_id2` FOREIGN KEY (`round_id`) REFERENCES `rounds` (`id`),
+    ADD CONSTRAINT `fk_sport_id2` FOREIGN KEY (`sport_id`) REFERENCES `sports` (`id`);
+
+--
+-- Constraints der Tabelle `matchscheduling_pattern24`
+--
+ALTER TABLE `matchscheduling_pattern24`
+    ADD CONSTRAINT `fk_round_id2` FOREIGN KEY (`round_id`) REFERENCES `rounds` (`id`),
+    ADD CONSTRAINT `fk_sport_id2` FOREIGN KEY (`sport_id`) REFERENCES `sports` (`id`);
 
 --
 -- Constraints der Tabelle `push_tokens`

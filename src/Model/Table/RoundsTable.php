@@ -13,6 +13,7 @@ use Cake\Validation\Validator;
  *
  * @property \App\Model\Table\MatchesTable&\Cake\ORM\Association\HasMany $Matches
  * @property \App\Model\Table\MatchschedulingPattern16Table&\Cake\ORM\Association\HasMany $MatchschedulingPattern16
+ * @property \App\Model\Table\MatchschedulingPattern24Table&\Cake\ORM\Association\HasMany $MatchschedulingPattern24
  *
  * @method \App\Model\Entity\Round newEmptyEntity()
  * @method \App\Model\Entity\Round newEntity(array $data, array $options = [])
@@ -49,6 +50,9 @@ class RoundsTable extends Table
         ]);
         $this->hasMany('MatchschedulingPattern16', [
             'foreignKey' => 'round_id',
+        ]);
+        $this->hasMany('MatchschedulingPattern24', [
+            'foreignKey' => 'sport_id',
         ]);
     }
 

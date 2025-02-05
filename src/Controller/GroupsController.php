@@ -50,7 +50,7 @@ class GroupsController extends AppController
                 ))->count();
 
                 if ($countTeams == $year->teamsCount) {
-                    $teamsPerGroup = $year->teamsCount > 24 ? 16 : $year->teamsCount;
+                    $teamsPerGroup = $this->getTeamsCountPerGroup($year);
                     $countGroups = $countGroups ?: (int)ceil($countTeams / $teamsPerGroup);
                     $alphabet = range('A', 'Z');
 

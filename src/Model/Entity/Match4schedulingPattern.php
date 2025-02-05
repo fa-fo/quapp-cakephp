@@ -6,7 +6,7 @@ namespace App\Model\Entity;
 use Cake\ORM\Entity;
 
 /**
- * MatchschedulingPattern16 Entity
+ * MatchschedulingPattern Entity
  *
  * @property int $id
  * @property int $round_id
@@ -18,7 +18,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Round $round
  * @property \App\Model\Entity\Sport $sport
  */
-class Match4schedulingPattern16 extends Entity
+class Match4schedulingPattern extends Entity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().

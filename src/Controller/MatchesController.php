@@ -6,7 +6,7 @@ namespace App\Controller;
 use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4;
-use App\Model\Entity\Match4schedulingPattern16;
+use App\Model\Entity\Match4schedulingPattern;
 use Cake\I18n\DateTime;
 
 /**
@@ -365,7 +365,6 @@ class MatchesController extends AppController
         return false;
     }
 
-
     /**
      * @throws \Exception
      */
@@ -401,15 +400,18 @@ class MatchesController extends AppController
                         'order' => array('id' => 'ASC')
                     ));
 
-                    $matchschedulings = $this->fetchTable('MatchschedulingPattern16')->find('all', array(
+                    $teamsPerGroup = $this->getTeamsCountPerGroup($year);
+                    $tableName = 'MatchschedulingPattern' . $teamsPerGroup;
+                    $matchschedulings = $this->fetchTable($tableName)->find('all', array(
                         'order' => array('id' => 'ASC')
                     ));
 
                     foreach ($groups as $group) {
+                        $c=0;
                         foreach ($matchschedulings as $matchscheduling) {
                             /**
                              * @var Group $group
-                             * @var Match4schedulingPattern16 $matchscheduling
+                             * @var Match4schedulingPattern $matchscheduling
                              */
                             $groupteam1 = $this->fetchTable('GroupTeams')->find('all', array(
                                 'conditions' => array('group_id' => $group->id, 'placeNumber' => $matchscheduling->placenumberTeam1)
@@ -419,14 +421,14 @@ class MatchesController extends AppController
                                 'conditions' => array('group_id' => $group->id, 'placeNumber' => $matchscheduling->placenumberTeam2)
                             ))->first();
 
-                            $groupteam3 = $this->fetchTable('GroupTeams')->find('all', array(
+                            $groupteam3 = $matchscheduling->placenumberRefereeTeam ? $this->fetchTable('GroupTeams')->find('all', array(
                                 'conditions' => array('group_id' => $this->getRefereeGroup($group)->id, 'placeNumber' => $matchscheduling->placenumberRefereeTeam)
-                            ))->first();
+                            ))->first() : null;
 
                             /**
                              * @var GroupTeam $groupteam1
                              * @var GroupTeam $groupteam2
-                             * @var GroupTeam $groupteam3
+                             * @var GroupTeam|null $groupteam3
                              */
                             $match = $this->Matches->newEmptyEntity();
                             $match->set('group_id', $group->id);
@@ -434,7 +436,7 @@ class MatchesController extends AppController
                             $match->set('sport_id', $matchscheduling->sport_id);
                             $match->set('team1_id', $groupteam1->team_id);
                             $match->set('team2_id', $groupteam2->team_id);
-                            $match->set('refereeTeam_id', $groupteam3->team_id);
+                            $match->set('refereeTeam_id', $groupteam3 ? $groupteam3->team_id : null);
                             $match->set('refereePIN', $this->createUniquePIN($matchscheduling->sport_id, $group->id, $matchscheduling->round_id));
 
                             $canceled = 0;

@@ -13,7 +13,7 @@ use Cake\ORM\Entity;
  * @property \Cake\I18n\DateTime $timeStartDay2
  *
  * @property \App\Model\Entity\Match4[] $matches
- * @property \App\Model\Entity\Match4schedulingPattern16[] $matchscheduling_pattern16
+ * @property \App\Model\Entity\Match4schedulingPattern[] $matchscheduling_pattern
  * @property int $autoUpdateResults
  */
 class Round extends Entity
@@ -29,7 +29,7 @@ class Round extends Entity
         'timeStartDay1' => true,
         'timeStartDay2' => true,
         'matches' => true,
-        'matchscheduling_pattern16' => true,
+        'matchscheduling_pattern' => true,
         'autoUpdateResults' => true,
     ];
 }

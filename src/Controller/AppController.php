@@ -988,6 +988,11 @@ class AppController extends Controller
         return $return;
     }
 
+    protected function getTeamsCountPerGroup(Year $year): int
+    {
+        return $year->teamsCount > 24 ? 16 : $year->teamsCount;
+    }
+
     protected function getRefereeGroup(Group $playGroup): Group
     {
         // groupName: A->B, B->A, C->D, D->C, E->F, F->E, ...

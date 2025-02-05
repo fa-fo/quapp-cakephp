@@ -8,7 +8,7 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 /**
- * MatchschedulingPattern16 Model
+ * MatchschedulingPattern24 Model
  *
  * @property \App\Model\Table\RoundsTable&\Cake\ORM\Association\BelongsTo $Rounds
  * @property \App\Model\Table\SportsTable&\Cake\ORM\Association\BelongsTo $Sports
@@ -27,7 +27,7 @@ use Cake\Validation\Validator;
  * @method \App\Model\Entity\Match4schedulingPattern[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
  * @method \App\Model\Entity\Match4schedulingPattern[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
  */
-class MatchschedulingPattern16Table extends Table
+class MatchschedulingPattern24Table extends Table
 {
     /**
      * Initialize method
@@ -39,7 +39,7 @@ class MatchschedulingPattern16Table extends Table
     {
         parent::initialize($config);
 
-        $this->setTable('matchscheduling_pattern16');
+        $this->setTable('matchscheduling_pattern24');
         $this->setDisplayField('id');
         $this->setPrimaryKey('id');
 
@@ -77,8 +77,7 @@ class MatchschedulingPattern16Table extends Table
 
         $validator
             ->integer('placenumberRefereeTeam')
-            ->requirePresence('placenumberRefereeTeam', 'create')
-            ->notEmptyString('placenumberRefereeTeam');
+            ->allowEmptyString('placenumberRefereeTeam');
 
         return $validator;
     }
