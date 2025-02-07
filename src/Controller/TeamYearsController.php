@@ -356,37 +356,6 @@ class TeamYearsController extends AppController
     /**
      * @throws \Exception
      */
-    public function insertTestValues(): void  // not used anymore
-    {
-        $postData = $this->request->getData();
-        $settings = $this->getSettings();
-
-        if (($settings['isTest'] ?? 0) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $conn = ConnectionManager::get('default');
-            /**
-             * @var \Cake\Database\Connection $conn
-             */
-            $rc = $conn->execute(file_get_contents(__DIR__ . "/sql/insert_team_years2024.sql"))->rowCount();
-
-            $teamYears = $this->TeamYears->find('all', array(
-                'conditions' => array('year_id' => $this->getCurrentYearId()),
-            ));
-
-            foreach ($teamYears as $ty) {
-                $ty->set('refereePIN', $this->createUniquePIN($ty->year_id, $ty->team_id));
-                $this->TeamYears->save($ty);
-            }
-
-            $this->apiReturn($rc);
-        }
-
-        $this->apiReturn(array());
-    }
-
-
-    /**
-     * @throws \Exception
-     */
     private function createUniquePIN(int $yearId, int $teamId): int
     {
         $str123 = str_pad((string)(($teamId + 107) % 1000), 3, "0", STR_PAD_LEFT);
