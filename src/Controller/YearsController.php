@@ -154,6 +154,8 @@ class YearsController extends AppController
         $sumMatchesByTeam = array();
         $sumJobsByTeamByRound = array();
         $maxJobsByTeamPerRound = array(0);
+        $sumJobsByTeamBy3Rounds = array();
+        $maxJobsByTeamPer3Rounds = array(0);
 
         $matchesRefChangeable = array();
         $matchesTeamsChangeable = array();
@@ -170,7 +172,7 @@ class YearsController extends AppController
 
             foreach ($matches as $m) {
                 // search for minimize missing referees
-                if ($m->isRefereeCanceled && !$m->canceled && $m->resultTrend === null) {
+                if ($m->isRefereeCanceled && $m->refereeName == '' && !$m->canceled && $m->resultTrend === null) {
                     $missingRefereesCount++;
 
                     // search for available refs from same sport with canceled match
@@ -237,12 +239,18 @@ class YearsController extends AppController
                 foreach ($acv2 as $k => $v) {
                     $sumJobsByTeamByRound[$m->round_id][$k] ??= 0;
                     $sumJobsByTeamByRound[$m->round_id][$k] += $v;
+
+                    $sumJobsByTeamBy3Rounds[floor(($m->round_id - 1) / 3)][$k] ??= 0;
+                    $sumJobsByTeamBy3Rounds[floor(($m->round_id - 1) / 3)][$k] += $v;
                 }
             }
         }
 
         foreach ($sumJobsByTeamByRound as $k => $v) {
             $maxJobsByTeamPerRound[$k] = max($v);
+        }
+        foreach ($sumJobsByTeamBy3Rounds as $k => $v) {
+            $maxJobsByTeamPer3Rounds[$k] = max($v);
         }
 
         // roundsWithPossibleLogsDelete: select for possible logs delete
@@ -267,6 +275,7 @@ class YearsController extends AppController
         $status['minMatchesByTeam'] = !empty($sumMatchesByTeam) ? min($sumMatchesByTeam) : 0;
         $status['maxMatchesByTeam'] = !empty($sumMatchesByTeam) ? max($sumMatchesByTeam) : 0;
         $status['maxJobsByTeamPerRound'] = max($maxJobsByTeamPerRound);
+        $status['maxJobsByTeamPer3Rounds'] = max($maxJobsByTeamPer3Rounds);
 
         $status['missingRefereesCount'] = $missingRefereesCount;
         $status['matchesRefChangeable'] = $matchesRefChangeable;
