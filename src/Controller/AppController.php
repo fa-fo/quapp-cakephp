@@ -260,7 +260,8 @@ class AppController extends Controller
                  */
                 $return['group']['group_id'] = $group->get('id');
                 $return['group']['group_name'] = $group->get('name');
-                $return['referee_group_name'] = $this->getRefereeGroup($group)->get('name');
+                $refGroup = $this->getRefereeGroup($group);
+                $return['referee_group_name'] = $refGroup ? $refGroup->get('name') : null;
             }
         }
 
@@ -993,7 +994,7 @@ class AppController extends Controller
         return $year->teamsCount > 24 ? 16 : $year->teamsCount;
     }
 
-    protected function getRefereeGroup(Group $playGroup): Group
+    protected function getRefereeGroup(Group $playGroup): Group|null
     {
         // groupName: A->B, B->A, C->D, D->C, E->F, F->E, ...
         // groupPosNumber: 0->1, 1->0, 2->3, 3->2, 4->5, 5->4, ...
@@ -1006,7 +1007,7 @@ class AppController extends Controller
             'conditions' => array('year_id' => $playGroup->year_id, 'day_id' => $playGroup->day_id, 'name' => $name)
         ))->first();
         /**
-         * @var Group $refereeGroup
+         * @var Group|null $refereeGroup
          */
         return $refereeGroup;
     }
