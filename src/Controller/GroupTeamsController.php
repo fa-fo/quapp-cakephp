@@ -22,9 +22,9 @@ class GroupTeamsController extends AppController
     {
         $group_id = (int)$group_id;
         $adminView = (int)$adminView;
-        $group = $group_id ? $this->getPrevAndNextGroup($group_id) : false;
+        $group = $this->getPrevAndNextGroup($group_id);
         /**
-         * @var Group|false $group
+         * @var Group|null $group
          */
 
         if ($group) {
