@@ -184,6 +184,7 @@ class AppController extends Controller
 
     protected function getPrevAndNextGroup(int $group_id): array|EntityInterface|null
     {
+        $group_id = $group_id ?: $this->getCurrentGroupId(0);
         $group = $this->fetchTable('Groups')->find()->where(['id' => $group_id])->first();
         /**
          * @var Group|null $group
@@ -214,11 +215,7 @@ class AppController extends Controller
     protected function getScheduleShowTime(int $year_id, int $day_id, int $adminView = 0): int|DateTime
     {
         $settings = $this->getSettings();
-        $currentYear = $this->getCurrentYear();
-        /**
-         * @var Year $currentYear
-         */
-        $currentYear = $currentYear->toArray();
+        $currentYear = $this->getCurrentYear()->toArray();
         $stime = DateTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
         $showTime = $stime->subHours($settings['showScheduleHoursBefore']);
         $now = DateTime::now();
