@@ -68,8 +68,8 @@ class GroupTeamsController extends AppController
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $groups = $this->fetchTable('Groups')->find('all', array(
-                'fields' => array('id', 'name', 'year_id', 'day_id'),
-                'conditions' => array('year_id' => $this->getCurrentYearId(), 'day_id' => $this->getCurrentDayId()),
+                'fields' => array('id', 'name', 'year_id', 'day_id', 'teamsCount'),
+                'conditions' => array('year_id' => $this->getCurrentYearId(), 'day_id' => $this->getCurrentDayId(), 'name !=' => 'Play-Off'),
                 'order' => array('name' => 'ASC')
             ));
 
@@ -98,17 +98,18 @@ class GroupTeamsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
             $year = $this->getCurrentYear();
 
             $oldGroupTeams = $this->GroupTeams->find('all', array(
                 'contain' => array('Groups' => array('fields' => array('name', 'year_id', 'day_id'))),
-                'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
+                'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']),
                 'order' => array('GroupTeams.id' => 'ASC')
             ));
 
             if ($oldGroupTeams->count() == 0) {
                 $groups = $this->fetchTable('Groups')->find('all', array(
-                    'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
+                    'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
                     'order' => array('id' => 'ASC')
                 ));
 
@@ -118,13 +119,13 @@ class GroupTeamsController extends AppController
                         /**
                          * @var Group $group
                          */
-
-                        if ($this->getCurrentDayId() == 1) {
-                            $groupTeams = array_merge($groupTeams, $this->addFromTeamYearsOrderById($year, $group, $countGroup));
-                        } else {
-                            $groupTeams = array_merge($groupTeams, $this->addFromPrevDayRanking($year, $group, $countGroup));
+                        if ($group->name != 'Play-Off') {
+                            if ($settings['currentDay_id'] == 1) {
+                                $groupTeams = array_merge($groupTeams, $this->addFromTeamYearsOrderById($year, $group, $countGroup));
+                            } else {
+                                $groupTeams = array_merge($groupTeams, $this->addFromPrevDayRanking($year, $group, $countGroup));
+                            }
                         }
-
                         $countGroup++;
                     }
                 }

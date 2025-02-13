@@ -33,13 +33,13 @@ class RoundsController extends AppController
             /**
              * @var Round $r
              */
-            $conditionsArray = array(
-                'Groups.year_id' => $year_id,
-                'Groups.day_id' => $day_id,
-                'round_id' => $r->id
-            );
-
             if ($adminView) {
+                $conditionsArray = array(
+                    'Groups.year_id' => $year_id,
+                    'Groups.day_id' => $day_id,
+                    'round_id' => $r->id,
+                );
+
                 $query1 = $this->fetchTable('Matches')->find('all', array(
                     'contain' => array('Groups'),
                     'conditions' => $conditionsArray

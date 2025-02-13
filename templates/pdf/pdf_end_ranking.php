@@ -14,19 +14,34 @@ try {
 
     $c = 0;
     $teamYears = $teamYears ?? array();
+    $year = $year ?? array();
+
+    if ($year['teamsCount'] > 24) {
+        $newPageArray = array(0, $year['teamsCount'] / 2);
+        $endPageArray = array($year['teamsCount'] / 2, $year['teamsCount']);
+        $breakArray = array($year['teamsCount'] / 4, $year['teamsCount'] / 4 * 3);
+        $newTableArray = array(0, $year['teamsCount'] / 4, $year['teamsCount'] / 4 * 2, $year['teamsCount'] / 4 * 3);
+        $endTableArray = array($year['teamsCount'] / 4, $year['teamsCount'] / 4 * 2, $year['teamsCount'] / 4 * 3, $year['teamsCount']);
+    } else {
+        $newPageArray = array(0);
+        $endPageArray = array($year['teamsCount']);
+        $breakArray = array();
+        $newTableArray = array(0);
+        $endTableArray = array($year['teamsCount']);
+    }
 
     foreach ($teamYears as $ty) {
-        if ($c % 32 == 0) {
+        if (in_array($c, $newPageArray)) {
             if ($c > 0) {
                 $html = '';
                 $mpdf->AddPage('P');
             }
-            $html .= '<h1>Endstand QuattFo</span></h1>';
+            $html .= '<h1>Endstand QuattFo ' . $year['name'] . '</span></h1>';
         }
-        if ($c % 16 == 0) {
-            if ($c != 0 && $c != 32) {
-                $html .= '<p>&nbsp;</p>';
-            }
+        if (in_array($c, $breakArray)) {
+            $html .= '<p>&nbsp;</p>';
+        }
+        if (in_array($c, $newTableArray)) {
             $html .= '<table border="0"  cellspacing="0" cellpadding="2" align="center" width="100%">';
         }
         $c++;
@@ -34,10 +49,10 @@ try {
         $html .= '<td>' . ($ty->endRanking ?? 0) . '</td>';
         $html .= '<td>' . ($ty->canceled ? '<s>' : '') . $ty->team_name . ($ty->canceled ? '</s>' : '') . '</td>';
         $html .= '</tr>';
-        if ($c % 16 == 0) {
+        if (in_array($c, $endTableArray)) {
             $html .= '</table>';
         }
-        if ($c % 32 == 0) {
+        if (in_array($c, $endPageArray)) {
             $mpdf->WriteHTML($html);
         }
     }

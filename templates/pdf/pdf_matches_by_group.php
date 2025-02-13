@@ -30,58 +30,60 @@ try {
         }
 
         foreach ($group['rounds'] as $round) {
-            if (($round->id - 1) % 8 == 0) {
-                if ($round->id != 1) {
-                    $mpdf->AddPage('L');
-                    $html = '';
+            if ($round['matches']) {
+                if (($round->id - 1) % 8 == 0) {
+                    if ($round->id != 1) {
+                        $mpdf->AddPage('L');
+                        $html = '';
+                    }
+                    $html .= '<h2>Spielplan Gruppe ' . $group->name . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
+                    $html .= '<table border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">';
+                    $html .= '<tr>';
+                    $html .= '<th>&nbsp;</th>';
+                    $html .= '<th><img src="img/bb.png" width="15">Basketball</th>';
+                    $html .= '<th><img src="img/fb.png" width="15">Fußball</th>';
+                    $html .= '<th><img src="img/hb.png" width="15">Handball</th>';
+                    $html .= '<th><img src="img/vb.png" width="15">Volleyball</th>';
+                    $html .= '</tr>';
                 }
-                $html .= '<h2>Spielplan Gruppe ' . $group->name . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
-                $html .= '<table border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">';
                 $html .= '<tr>';
-                $html .= '<th>&nbsp;</th>';
-                $html .= '<th><img src="img/bb.png" width="15">Basketball</th>';
-                $html .= '<th><img src="img/fb.png" width="15">Fußball</th>';
-                $html .= '<th><img src="img/hb.png" width="15">Handball</th>';
-                $html .= '<th><img src="img/vb.png" width="15">Volleyball</th>';
+                $html .= '<td width="75">'
+                    . '<span class="t">' . ($round['matches'][0]->matchStartTime ? DateTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') : '') . 'h:</span>'
+                    . '<br/>Runde ' . $round->id . '</td>';
+
+                foreach ($round['matches'] as $match) {
+                    $html .= '<td class="r" width="200">';
+
+                    $html .= '<table border="0" cellspacing="0" cellpadding="0" width="100%">';
+                    $html .= '<tr>';
+                    $html .= '<td class="m">';
+
+                    $html .= '<table border="0" cellspacing="0" cellpadding="2" width="100%">';
+                    $html .= '<tr>';
+                    $html .= '<td>' . ellipsis(!$match->canceled ? $match->teams1->name : '-') . '</td>';
+                    $html .= '<td class="g" width="10">' . $match->resultGoals1 . '&nbsp;</td>';
+                    $html .= '</tr>';
+                    $html .= '<tr>';
+                    $html .= '<td>' . ellipsis(!$match->canceled ? $match->teams2->name : '-') . '</td>';
+                    $html .= '<td class="g">' . $match->resultGoals2 . '&nbsp;</td>';
+                    $html .= '</tr>';
+                    $html .= '</table>';
+
+                    $html .= '</td>';
+                    $html .= '</tr>';
+                    $html .= '<tr>';
+                    $html .= '<td class="sr">' . ellipsis('SR: ' . (!$match->canceled ? $match->teams3->name : '-'), 28) . '</td>';
+                    $html .= '</tr>';
+                    $html .= '</table>';
+
+                    $html .= '</td>';
+                }
+
                 $html .= '</tr>';
-            }
-            $html .= '<tr>';
-            $html .= '<td width="75">'
-                . '<span class="t">' . DateTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') . 'h:</span>'
-                . '<br/>Runde ' . $round->id . '</td>';
-
-            foreach ($round['matches'] as $match) {
-                $html .= '<td class="r" width="200">';
-
-                $html .= '<table border="0" cellspacing="0" cellpadding="0" width="100%">';
-                $html .= '<tr>';
-                $html .= '<td class="m">';
-
-                $html .= '<table border="0" cellspacing="0" cellpadding="2" width="100%">';
-                $html .= '<tr>';
-                $html .= '<td>' . ellipsis(!$match->canceled ? $match->teams1->name : '-') . '</td>';
-                $html .= '<td class="g" width="10">' . $match->resultGoals1 . '&nbsp;</td>';
-                $html .= '</tr>';
-                $html .= '<tr>';
-                $html .= '<td>' . ellipsis(!$match->canceled ? $match->teams2->name : '-') . '</td>';
-                $html .= '<td class="g">' . $match->resultGoals2 . '&nbsp;</td>';
-                $html .= '</tr>';
-                $html .= '</table>';
-
-                $html .= '</td>';
-                $html .= '</tr>';
-                $html .= '<tr>';
-                $html .= '<td class="sr">' . ellipsis('SR: ' . (!$match->canceled ? $match->teams3->name : '-'), 28) . '</td>';
-                $html .= '</tr>';
-                $html .= '</table>';
-
-                $html .= '</td>';
-            }
-
-            $html .= '</tr>';
-            if ($round->id % 8 == 0) {
-                $html .= '</table>';
-                $mpdf->WriteHTML($html);
+                if ($round->id % 8 == 0) {
+                    $html .= '</table>';
+                    $mpdf->WriteHTML($html);
+                }
             }
         }
     }

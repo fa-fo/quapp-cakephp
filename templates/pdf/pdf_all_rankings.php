@@ -11,13 +11,16 @@ try {
         $p++;
         $html = '';
         $mpdf->AddPage('L');
+        $fontSize = $group->teamsCount > 16 ? 14 : 20;
+        $padding = $group->teamsCount > 16 ? 4 : 6;
 
         if ($p == 1) {
             $html .= '<style>
-            table{border-collapse: collapse}
-            th {border: 0}
-            td {border: solid 2px #000}
-            span{font-size: 16px}
+            h1 {margin: 0; padding: 0; font-size: 22px}
+            table {border-collapse: collapse}
+            th {border: 0; padding: 2px; font-size: ' . $fontSize . 'px}
+            td {border: solid 1px #000; padding: ' . $padding . 'px; font-size: ' . $fontSize . 'px}
+            span {font-size: 16px}
             </style>';
         }
 

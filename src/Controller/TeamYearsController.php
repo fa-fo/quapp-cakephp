@@ -7,7 +7,6 @@ use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Setting;
 use App\Model\Entity\TeamYear;
-use Cake\Datasource\ConnectionManager;
 use Cake\I18n\DateTime;
 
 /**
@@ -258,9 +257,10 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $year = $this->getCurrentYear()->toArray();
             $teamYears = $this->TeamYears->find('all', array(
                 'fields' => array('id', 'endRanking', 'team_id', 'canceled'),
-                'conditions' => array('year_id' => $this->getCurrentYearId()),
+                'conditions' => array('year_id' => $year['id']),
                 'contain' => array('Teams' => array('fields' => array('team_name' => 'name'))),
                 'order' => array('endRanking' => 'ASC', 'team_name' => 'ASC')
             ))->toArray();
@@ -268,6 +268,7 @@ class TeamYearsController extends AppController
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('teamYears', $teamYears);
+            $this->viewBuilder()->setVar('year', $year);
 
             $this->pdfReturn();
         } else {
@@ -281,9 +282,10 @@ class TeamYearsController extends AppController
         $rowsCount = 0;
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
             $year = $this->getCurrentYear();
 
-            if ($this->getCurrentDayId() === $year->daysCount) {
+            if ($settings['currentDay_id'] === $year->daysCount) {
                 $teamYears = $this->TeamYears->find('all', array(
                     'conditions' => array('year_id' => $year->id)
                 ));
@@ -297,25 +299,34 @@ class TeamYearsController extends AppController
                         $this->TeamYears->save($ty);
                     }
 
+                    $poArray = $settings['usePlayOff'] > 0 ? $this->getPlayOffRanking($year) : array();
+
+                    $gtArray = $this->fetchTable('GroupTeams')->find('all', array(
+                        'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
+                        'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId(), 'team_id NOT IN' => $poArray),
+                        'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcRanking' => 'ASC')
+                    ))->toArray();
+                    foreach ($gtArray as $k => $v) {
+                        $gtArray[$k] = $v['team_id'];
+                    }
+
                     foreach ($teamYears as $ty) {
                         /**
                          * @var TeamYear $ty
                          */
-                        $groupteam = $this->fetchTable('GroupTeams')->find('all', array(
-                            'contain' => array('Groups' => array('fields' => array('year_id', 'day_id', 'teamsCount'))),
-                            'conditions' => array('GroupTeams.team_id' => $ty->team_id, 'Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
-                        ))->first();
+                        $key1 = array_search($ty->team_id, $poArray) ?: 0;
+                        $key2 = array_search($ty->team_id, $gtArray) ?: 0;
 
-                        if ($groupteam) {
-                            /**
-                             * @var GroupTeam $groupteam
-                             */
-                            if ($groupteam->group) {
-                                $groupCountTeams = ($groupteam->group)->teamsCount;
+                        $endRanking = $key1 ?: (count($poArray) + (int)$key2 + 1);
 
-                                $ty->set('endRanking', $this->getGroupPosNumber($groupteam->group_id) * $groupCountTeams + $groupteam->calcRanking);
-                                $this->TeamYears->save($ty);
-                            }
+                        /*  was:
+                            $groupCountTeams = ($groupteam->group)->teamsCount;
+                            $endRanking = $this->getGroupPosNumber($groupteam->group_id) * $groupCountTeams + $groupteam->calcRanking;
+                        */
+
+                        if ($endRanking) {
+                            $ty->set('endRanking', $endRanking);
+                            $this->TeamYears->save($ty);
                         }
                     }
                 }

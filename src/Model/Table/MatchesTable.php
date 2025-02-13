@@ -63,12 +63,12 @@ class MatchesTable extends Table
         $this->belongsTo('Teams1', [
             'className' => 'Teams',
             'foreignKey' => 'team1_id',
-            'joinType' => 'INNER',
+            'joinType' => 'LEFT',
         ]);
         $this->belongsTo('Teams2', [
             'className' => 'Teams',
             'foreignKey' => 'team2_id',
-            'joinType' => 'INNER',
+            'joinType' => 'LEFT',
         ]);
         $this->belongsTo('Teams3', [
             'className' => 'Teams',
@@ -121,6 +121,10 @@ class MatchesTable extends Table
         $validator
             ->scalar('remarks')
             ->allowEmptyString('remarks');
+
+        $validator
+            ->integer('isPlayOff')
+            ->notEmptyString('isPlayOff');
 
         $validator
             ->integer('canceled')

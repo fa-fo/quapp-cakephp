@@ -62,14 +62,15 @@ class MatchesController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
             $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id'),
-                'conditions' => array('year_id' => $this->getCurrentYearId(), 'day_id' => $this->getCurrentDayId()),
+                'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'name !=' => 'Play-Off'),
                 'order' => array('name' => 'ASC')
             ));
 
-            $currentYear = $this->getCurrentYear()->toArray();
-            $day = DateTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $this->getCurrentDayId()]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+            $year = $this->getCurrentYear()->toArray();
+            $day = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
             foreach ($groups as $group) {
                 $group['rounds'] = $this->getMatchesByGroup($group);
@@ -101,14 +102,15 @@ class MatchesController extends AppController
         if ($showTime !== 0) {
             $return['showTime'] = $showTime;
         } else {
-            $return['groups'] = $this->fetchTable('Groups')->find('all', array(
-                'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
-                'conditions' => array('year_id' => $year_id, 'day_id' => $day_id),
-                'order' => array('Groups.name' => 'ASC')
-            ))->toArray();
-
             $return['currentRoundId'] = $this->getCurrentRoundId($year_id, $day_id, (int)$offset);
             $round_id = $round_id > 0 ? $round_id : $return['currentRoundId'];
+            $isPlayOffRound = $settings['usePlayOff'] > 0 && $round_id == $this->fetchTable('Rounds')->find('all')->count();
+
+            $return['groups'] = $this->fetchTable('Groups')->find('all', array(
+                'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
+                'conditions' => array('year_id' => $year_id, 'day_id' => $day_id, 'name IN' => $isPlayOffRound ? array('Play-Off') : range('A', 'Z')),
+                'order' => array('Groups.name' => 'ASC')
+            ))->toArray();
 
             if ($round_id && count($return['groups']) > 0) {
                 foreach ($return['groups'] as $group) {
@@ -124,13 +126,24 @@ class MatchesController extends AppController
 
                     // use parameter for same sort as Excel: $sortBySportId=!$includeLogs
                     $group['matches'] = $this->getMatches($conditionsArray, $includeLogs, 1, $adminView);
+
+                    if ($isPlayOffRound) {
+                        $group['playOffTeams'] = $this->fetchTable('GroupTeams')->find('all', array(
+                            'contain' => array(
+                                'Groups' => array('fields' => array('year_id', 'day_id')),
+                                'Teams' => array('fields' => array('id', 'name'))
+                            ),
+                            'conditions' => array('GroupTeams.canceled' => 0, 'Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']),
+                            'order' => array('Groups.id' => 'ASC', 'GroupTeams.calcRanking' => 'ASC')
+                        ))->limit(8);
+                    }
                 }
 
                 $return['round'] = $this->fetchTable('Rounds')->find()->where(['id' => $round_id])->first();
             }
 
-            if ($adminView) { // get last remarks
-                $conditionsArray = array(
+            if ($adminView) {
+                $conditionsArray = array( // get last remarks
                     'Groups.year_id' => $year_id,
                     'Groups.day_id' => $day_id,
                     'round_id >' => $round_id - 2,
@@ -142,6 +155,29 @@ class MatchesController extends AppController
         }
 
         $this->apiReturn($return);
+    }
+
+    public function saveMatchTeamIds(string $id = ''): void
+    {
+        $id = (int)$id;
+        $match = false;
+        $postData = $this->request->getData();
+
+        if (isset($postData['team1_id']) && isset($postData['team2_id']) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $conditionsArray = array('Matches.id' => $id);
+            $matches = $this->getMatches($conditionsArray, 1);
+            if (is_array($matches)) {
+                $match = $matches[0];
+                /**
+                 * @var Match4 $match
+                 */
+                $match->set('team1_id', $postData['team1_id']);
+                $match->set('team2_id', $postData['team2_id']);
+                $this->Matches->save($match);
+            }
+        }
+
+        $this->apiReturn($match);
     }
 
     public function saveRefereeName(string $id = ''): void
@@ -158,7 +194,6 @@ class MatchesController extends AppController
                 /**
                  * @var Match4 $match
                  */
-
                 $match->set('refereeName', $postData['refereeName']);
                 $this->Matches->save($match);
             }
@@ -388,6 +423,8 @@ class MatchesController extends AppController
                 ))->toArray();
 
                 if (count($teamYears) == $year->teamsCount) {
+                    $settings = $this->getSettings();
+
                     $canceledTeamsArray = array();
                     if ($teamYearsCanceled) {
                         foreach ($teamYearsCanceled as $ty) {
@@ -396,7 +433,7 @@ class MatchesController extends AppController
                     }
 
                     $groups = $this->fetchTable('Groups')->find('all', array(
-                        'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
+                        'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
                         'order' => array('id' => 'ASC')
                     ));
 
@@ -407,45 +444,63 @@ class MatchesController extends AppController
                     ));
 
                     foreach ($groups as $group) {
-                        $c=0;
-                        foreach ($matchschedulings as $matchscheduling) {
-                            /**
-                             * @var Group $group
-                             * @var Match4schedulingPattern $matchscheduling
-                             */
-                            $groupteam1 = $this->fetchTable('GroupTeams')->find('all', array(
-                                'conditions' => array('group_id' => $group->id, 'placeNumber' => $matchscheduling->placenumberTeam1)
-                            ))->first();
+                        if ($group->name != 'Play-Off') {
+                            foreach ($matchschedulings as $matchscheduling) {
+                                /**
+                                 * @var Group $group
+                                 * @var Match4schedulingPattern $matchscheduling
+                                 */
+                                $groupteam1 = $this->fetchTable('GroupTeams')->find('all', array(
+                                    'conditions' => array('group_id' => $group->id, 'placeNumber' => $matchscheduling->placenumberTeam1)
+                                ))->first();
 
-                            $groupteam2 = $this->fetchTable('GroupTeams')->find('all', array(
-                                'conditions' => array('group_id' => $group->id, 'placeNumber' => $matchscheduling->placenumberTeam2)
-                            ))->first();
+                                $groupteam2 = $this->fetchTable('GroupTeams')->find('all', array(
+                                    'conditions' => array('group_id' => $group->id, 'placeNumber' => $matchscheduling->placenumberTeam2)
+                                ))->first();
 
-                            $groupteam3 = $matchscheduling->placenumberRefereeTeam ? $this->fetchTable('GroupTeams')->find('all', array(
-                                'conditions' => array('group_id' => $this->getRefereeGroup($group)->id, 'placeNumber' => $matchscheduling->placenumberRefereeTeam)
-                            ))->first() : null;
+                                $groupteam3 = $matchscheduling->placenumberRefereeTeam ? $this->fetchTable('GroupTeams')->find('all', array(
+                                    'conditions' => array('group_id' => $this->getRefereeGroup($group)->id, 'placeNumber' => $matchscheduling->placenumberRefereeTeam)
+                                ))->first() : null;
 
-                            /**
-                             * @var GroupTeam $groupteam1
-                             * @var GroupTeam $groupteam2
-                             * @var GroupTeam|null $groupteam3
-                             */
-                            $match = $this->Matches->newEmptyEntity();
-                            $match->set('group_id', $group->id);
-                            $match->set('round_id', $matchscheduling->round_id);
-                            $match->set('sport_id', $matchscheduling->sport_id);
-                            $match->set('team1_id', $groupteam1->team_id);
-                            $match->set('team2_id', $groupteam2->team_id);
-                            $match->set('refereeTeam_id', $groupteam3 ? $groupteam3->team_id : null);
-                            $match->set('refereePIN', $this->createUniquePIN($matchscheduling->sport_id, $group->id, $matchscheduling->round_id));
+                                /**
+                                 * @var GroupTeam $groupteam1
+                                 * @var GroupTeam $groupteam2
+                                 * @var GroupTeam|null $groupteam3
+                                 */
+                                $match = $this->Matches->newEmptyEntity();
+                                $match->set('group_id', $group->id);
+                                $match->set('round_id', $matchscheduling->round_id);
+                                $match->set('sport_id', $matchscheduling->sport_id);
+                                $match->set('team1_id', $groupteam1->team_id);
+                                $match->set('team2_id', $groupteam2->team_id);
+                                $match->set('refereeTeam_id', $groupteam3 ? $groupteam3->team_id : null);
 
-                            $canceled = 0;
-                            $canceled = in_array($groupteam1->team_id, $canceledTeamsArray) ? $canceled + 1 : $canceled;
-                            $canceled = in_array($groupteam2->team_id, $canceledTeamsArray) ? $canceled + 2 : $canceled;
-                            $match->set('canceled', $canceled);
+                                if ($settings['useLiveScouting']) {
+                                    $match->set('refereePIN', $this->createUniquePIN($matchscheduling->sport_id, $group->id, $matchscheduling->round_id));
+                                }
 
-                            if ($this->Matches->save($match)) {
-                                $matches[] = $match;
+                                $canceled = 0;
+                                $canceled = in_array($groupteam1->team_id, $canceledTeamsArray) ? $canceled + 1 : $canceled;
+                                $canceled = in_array($groupteam2->team_id, $canceledTeamsArray) ? $canceled + 2 : $canceled;
+                                $match->set('canceled', $canceled);
+
+                                if ($this->Matches->save($match)) {
+                                    $matches[] = $match;
+                                }
+                            }
+                        } else {
+                            if ($settings['usePlayOff'] > 0) {
+                                for ($i = 0; $i < $settings['usePlayOff']; $i++) {
+                                    $match = $this->Matches->newEmptyEntity();
+                                    $match->set('group_id', $group->id);
+                                    $match->set('round_id', $this->fetchTable('Rounds')->find('all')->count()); // last Round
+                                    $match->set('sport_id', 5); // sport=multi
+                                    $match->set('isPlayOff', $this->getPlayOffNumber($i, $settings['usePlayOff'], $year->id));
+
+                                    if ($this->Matches->save($match)) {
+                                        $matches[] = $match;
+                                    }
+                                }
                             }
                         }
                     }
@@ -458,6 +513,23 @@ class MatchesController extends AppController
         );
 
         $this->apiReturn($checkings);
+    }
+
+    private function getPlayOffNumber(int $i, int $use, int $year_id): int
+    {
+        $number = 0;
+
+        if ($i < $use / 2) { // Quarter-Finale
+            $number = $use; // 4
+        }
+        if ($i == $use - 2) { // Third-Place-Match
+            $number = 3;
+        }
+        if ($i == $use - 1) { // Finale
+            $number = 2;
+        }
+
+        return (int)($year_id . $number);
     }
 
     /**
@@ -590,17 +662,19 @@ class MatchesController extends AppController
                         /**
                          * @var Match4 $m
                          */
-                        if ($m->resultTrend === null || $m->resultGoals1 === null || $m->resultGoals1 === null) {
-                            $factor1 = ($m->team1)->calcTotalPointsPerYear ? (int)($m->team1)->calcTotalPointsPerYear / 7 : 1;
-                            $factor2 = ($m->team2)->calcTotalPointsPerYear ? (int)($m->team2)->calcTotalPointsPerYear / 7 : 1;
-                            $sportsFactor = $m->sport->goalFactor;
+                        if ($m->team1_id && $m->team2_id) {
+                            if ($m->resultTrend === null || $m->resultGoals1 === null || $m->resultGoals1 === null) {
+                                $factor1 = ($m->team1)->calcTotalPointsPerYear ? (int)($m->team1)->calcTotalPointsPerYear / 7 : 1;
+                                $factor2 = ($m->team2)->calcTotalPointsPerYear ? (int)($m->team2)->calcTotalPointsPerYear / 7 : 1;
+                                $sportsFactor = $m->sport->goalFactor;
 
-                            $m->set('resultGoals1', (int)round(random_int(0, 44) / $sportsFactor * $factor1) * $sportsFactor);
-                            $m->set('resultGoals2', (int)round(random_int(0, 44) / $sportsFactor * $factor2) * $sportsFactor);
+                                $m->set('resultGoals1', (int)round(random_int(0, 44) / $sportsFactor * $factor1) * $sportsFactor);
+                                $m->set('resultGoals2', (int)round(random_int(0, 44) / $sportsFactor * $factor2) * $sportsFactor);
 
-                            $diff = (int)($m->resultGoals1 - $m->resultGoals2);
-                            $m->set('resultTrend', $diff > 0 ? 1 : ($diff < 0 ? 2 : 0));
-                            $this->Matches->save($m);
+                                $diff = (int)($m->resultGoals1 - $m->resultGoals2);
+                                $m->set('resultTrend', $diff > 0 ? 1 : ($diff < 0 ? 2 : 0));
+                                $this->Matches->save($m);
+                            }
                         }
                     }
 

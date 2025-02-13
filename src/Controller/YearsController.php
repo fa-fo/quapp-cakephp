@@ -149,6 +149,7 @@ class YearsController extends AppController
 
         $matches = $this->getMatches($conditionsArray, 0, 2, 1); // sortBy 2: get non-midday matches first
         $matchesPins = $this->getMatches(array_merge($conditionsArray, array('refereePIN IS NOT' => null)), 0, 0, 0);
+        $matchesPlayOff = $this->fetchTable('Matches')->find('all', conditions: ['isPlayOff >' => (int)($settings['currentYear_id'] . '0')]);
 
         $sumCalcMatches = 0;
         $sumMatchesByTeam = array();
@@ -230,18 +231,20 @@ class YearsController extends AppController
 
                 $matchResultCount += ($m->resultTrend !== null ? 1 : 0);
 
-                $acv1 = array_count_values(array($m->team1_id, $m->team2_id));
-                foreach ($acv1 as $k => $v) {
-                    $sumMatchesByTeam[$k] ??= 0;
-                    $sumMatchesByTeam[$k] += $v;
-                }
-                $acv2 = array_count_values(array_filter(array($m->team1_id, $m->team2_id, $m->refereeTeam_id, $m->refereeTeamSubst_id)));
-                foreach ($acv2 as $k => $v) {
-                    $sumJobsByTeamByRound[$m->round_id][$k] ??= 0;
-                    $sumJobsByTeamByRound[$m->round_id][$k] += $v;
+                if ($m->team1_id && $m->team2_id) {
+                    $acv1 = array_count_values(array($m->team1_id, $m->team2_id));
+                    foreach ($acv1 as $k => $v) {
+                        $sumMatchesByTeam[$k] ??= 0;
+                        $sumMatchesByTeam[$k] += $v;
+                    }
+                    $acv2 = array_count_values(array_filter(array($m->team1_id, $m->team2_id, $m->refereeTeam_id, $m->refereeTeamSubst_id)));
+                    foreach ($acv2 as $k => $v) {
+                        $sumJobsByTeamByRound[$m->round_id][$k] ??= 0;
+                        $sumJobsByTeamByRound[$m->round_id][$k] += $v;
 
-                    $sumJobsByTeamBy3Rounds[floor(($m->round_id - 1) / 3)][$k] ??= 0;
-                    $sumJobsByTeamBy3Rounds[floor(($m->round_id - 1) / 3)][$k] += $v;
+                        $sumJobsByTeamBy3Rounds[floor(($m->round_id - 1) / 3)][$k] ??= 0;
+                        $sumJobsByTeamBy3Rounds[floor(($m->round_id - 1) / 3)][$k] += $v;
+                    }
                 }
             }
         }
@@ -271,6 +274,7 @@ class YearsController extends AppController
         $status['sumCalcMatchesGroupTeams'] = $sumCalcMatches / 2;
         $status['matchesCount'] = is_array($matches) ? count($matches) : 0;
         $status['matchesPins'] = is_array($matchesPins) ? count($matchesPins) : 0;
+        $status['matchesPlayOff'] = $matchesPlayOff->count();
         $status['matchResultCount'] = $matchResultCount;
         $status['minMatchesByTeam'] = !empty($sumMatchesByTeam) ? min($sumMatchesByTeam) : 0;
         $status['maxMatchesByTeam'] = !empty($sumMatchesByTeam) ? max($sumMatchesByTeam) : 0;

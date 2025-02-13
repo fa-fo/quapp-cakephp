@@ -203,7 +203,7 @@ class AppController extends Controller
             if ($groupPosNumber + 1 < $countGroups) {
                 $group['nextGroup'] = $this->fetchTable('Groups')->find('all', array(
                     'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
-                    'conditions' => array('id' => $group_id + 1)
+                    'conditions' => array('id' => $group_id + 1, 'name !=' => 'Play-Off')
                 ))->first();
             }
         }
@@ -389,6 +389,10 @@ class AppController extends Controller
                         }
                     }
 
+                    if ($row['isPlayOff'] > 0) {
+                        $row['playOffName'] = $this->getPlayOffName($row['isPlayOff']);
+                    }
+
                     return $row;
                 });
             })->toArray();
@@ -432,6 +436,38 @@ class AppController extends Controller
                     (int)($row['logsCalc']['score'][$row['team1_id']] ?? 0) < (int)($row['logsCalc']['score'][$row['team2_id']] ?? 0)
                 )
             ));
+    }
+
+    private function getPlayOffName(int $isPlayOff): string
+    {
+        return match ($isPlayOff % 10) {
+            4 => 'Halbfinale',
+            3 => 'Spiel um Platz 3',
+            2 => 'Finale',
+            default => '',
+        };
+    }
+
+    protected function getPlayOffRanking(Year $year): array
+    {
+        $return = array();
+        $match2 = $this->fetchTable('Matches')->find()->where(['isPlayOff' => (int)($year->id . '2')])->first(); // Finale
+        $match3 = $this->fetchTable('Matches')->find()->where(['isPlayOff' => (int)($year->id . '3')])->first(); // 3rd-Place-Match
+        /**
+         * @var Match4 $match2
+         * @var Match4 $match3
+         */
+        if ($match2->resultTrend) {
+            $return[1] = $match2->resultTrend == 1 ? $match2->team1_id : ($match2->resultTrend == 2 ? $match2->team2_id : 0);
+            $return[2] = $match2->resultTrend == 1 ? $match2->team2_id : ($match2->resultTrend == 2 ? $match2->team1_id : 0);
+
+            if ($match3->resultTrend) {
+                $return[3] = $match3->resultTrend == 1 ? $match3->team1_id : ($match3->resultTrend == 2 ? $match3->team2_id : 0);
+                $return[4] = $match3->resultTrend == 1 ? $match3->team2_id : ($match3->resultTrend == 2 ? $match3->team1_id : 0);
+            }
+        }
+
+        return $return;
     }
 
     private function wasLoggedIn(int $match_id): int
@@ -1031,7 +1067,7 @@ class AppController extends Controller
 
             $return = $cRound ? $cRound->id : 1;
 
-            if ($settings['isTest'] == 1) {
+            if ($settings['isTest'] == 1 && !$cRound) {
                 $time = DateTime::now();
                 $time = $time->addMinutes($offset);
                 $time = $time->subHours($dayId == 2 ? 1 : 2);

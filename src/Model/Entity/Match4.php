@@ -12,8 +12,8 @@ use Cake\ORM\Entity;
  * @property int $group_id
  * @property int $round_id
  * @property int $sport_id
- * @property int $team1_id
- * @property int $team2_id
+ * @property int|null $team1_id
+ * @property int|null $team2_id
  * @property int|null $refereeTeam_id
  * @property int|null $refereeTeamSubst_id
  * @property string|null $refereePIN
@@ -22,6 +22,7 @@ use Cake\ORM\Entity;
  * @property int|null $resultGoals2
  * @property int $resultAdmin
  * @property string|null $remarks
+ * @property int $isPlayOff
  * @property int $canceled
  * @property int|null $isRefereeCanceled
  * @property int|null $isTime2login
@@ -61,6 +62,7 @@ class Match4 extends Entity
         'resultGoals2' => true,
         'resultAdmin' => true,
         'remarks' => true,
+        'isPlayOff' => true,
         'canceled' => true,
         'group' => true,
         'round' => true,

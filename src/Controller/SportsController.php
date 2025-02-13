@@ -39,11 +39,12 @@ class SportsController extends AppController
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $year = $this->getCurrentYear();
             $sports = $this->Sports->find('all', array(
+                'conditions' => array('name !=' => 'Multi'),
                 'order' => array('name' => 'ASC')
             ))->toArray();
 
             $groups = $this->fetchTable('Groups')->find('all', array(
-                'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
+                'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId(), 'name !=' => 'Play-Off'),
                 'order' => array('name' => 'ASC')
             ))->toArray();
 

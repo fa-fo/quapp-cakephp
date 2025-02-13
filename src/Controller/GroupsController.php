@@ -22,7 +22,7 @@ class GroupsController extends AppController
         $year = array();
         $year['groups'] = $this->Groups->find('all', array(
             'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name', 'year_id', 'day_id', 'teamsCount'),
-            'conditions' => array('year_id' => $year_id, 'day_id' => $day_id),
+            'conditions' => array('year_id' => $year_id, 'day_id' => $day_id, 'name !=' => 'Play-Off'),
             'order' => array('group_name' => 'ASC')
         ))->toArray();
 
@@ -36,10 +36,11 @@ class GroupsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
             $year = $this->getCurrentYear();
 
             $existingGroups = $this->Groups->find('all', array(
-                'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
+                'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
                 'order' => array('id' => 'ASC')
             ));
 
@@ -57,9 +58,21 @@ class GroupsController extends AppController
                     for ($c = 0; $c < $countGroups; $c++) {
                         $group = $this->Groups->newEmptyEntity();
                         $group->set('year_id', $year->id);
-                        $group->set('day_id', $this->getCurrentDayId());
+                        $group->set('day_id', $settings['currentDay_id']);
                         $group->set('name', $alphabet[$c]);
                         $group->set('teamsCount', $teamsPerGroup);
+
+                        if ($this->Groups->save($group)) {
+                            $groups[] = $group;
+                        }
+                    }
+
+                    if ($settings['usePlayOff'] > 0) {
+                        $group = $this->Groups->newEmptyEntity();
+                        $group->set('year_id', $year->id);
+                        $group->set('day_id', $settings['currentDay_id']);
+                        $group->set('name', 'Play-Off');
+                        $group->set('teamsCount', $settings['usePlayOff']);
 
                         if ($this->Groups->save($group)) {
                             $groups[] = $group;

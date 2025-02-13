@@ -87,8 +87,8 @@ CREATE TABLE `matches` (
   `group_id` int(11) NOT NULL,
   `round_id` int(11) NOT NULL,
   `sport_id` int(11) NOT NULL,
-  `team1_id` int(11) NOT NULL,
-  `team2_id` int(11) NOT NULL,
+  `team1_id` int(11) DEFAULT NULL,
+  `team2_id` int(11) DEFAULT NULL,
   `refereeTeam_id` int(11) DEFAULT NULL,
   `refereeTeamSubst_id` int(11) DEFAULT NULL,
   `refereeName` VARCHAR(32) DEFAULT NULL,
@@ -98,6 +98,7 @@ CREATE TABLE `matches` (
   `resultGoals2` int(11) DEFAULT NULL,
   `resultAdmin` int(11) DEFAULT 0,
   `remarks` text DEFAULT NULL,
+  `isPlayOff` INT(11) NOT NULL DEFAULT 0,
   `canceled` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
@@ -559,7 +560,8 @@ INSERT INTO `sports` (`id`, `name`, `code`, `goalFactor`, `color`, `icon`) VALUE
 (1, 'Basketball', 'BB', 1, NULL, NULL),
 (2, 'Fußball', 'FB', 5, NULL, NULL),
 (3, 'Handball', 'HB', 3, NULL, NULL),
-(4, 'Volleyball', 'VB', 1, NULL, NULL);
+(4, 'Volleyball', 'VB', 1, NULL, NULL),
+(5, 'Multi', '', 1, NULL, NULL);
 
 --
 -- Tabellenstruktur für Tabelle `teams`
@@ -779,112 +781,6 @@ ALTER TABLE `team_years`
 ALTER TABLE `years`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_name` (`name`) USING BTREE;
-
---
--- AUTO_INCREMENT für exportierte Tabellen
---
-
---
--- AUTO_INCREMENT für Tabelle `days`
---
-ALTER TABLE `days`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT für Tabelle `groups`
---
-ALTER TABLE `groups`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
-
---
--- AUTO_INCREMENT für Tabelle `group_teams`
---
-ALTER TABLE `group_teams`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
-
---
--- AUTO_INCREMENT für Tabelle `logins`
---
-ALTER TABLE `logins`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT für Tabelle `matches`
---
-ALTER TABLE `matches`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
-
---
--- AUTO_INCREMENT für Tabelle `matchevents`
---
-ALTER TABLE `matchevents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
-
---
--- AUTO_INCREMENT für Tabelle `matchevent_logs`
---
-ALTER TABLE `matchevent_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
-
---
--- AUTO_INCREMENT für Tabelle `matchscheduling_pattern16`
---
-ALTER TABLE `matchscheduling_pattern16`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
-
---
--- AUTO_INCREMENT für Tabelle `matchscheduling_pattern24`
---
-ALTER TABLE `matchscheduling_pattern24`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
-
---
--- AUTO_INCREMENT für Tabelle `push_tokens`
---
-ALTER TABLE `push_tokens`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
-
---
--- AUTO_INCREMENT für Tabelle `rankingpoints`
---
-ALTER TABLE `rankingpoints`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
-
---
--- AUTO_INCREMENT für Tabelle `rounds`
---
-ALTER TABLE `rounds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
-
---
--- AUTO_INCREMENT für Tabelle `settings`
---
-ALTER TABLE `settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
-
---
--- AUTO_INCREMENT für Tabelle `sports`
---
-ALTER TABLE `sports`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT für Tabelle `teams`
---
-ALTER TABLE `teams`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=353;
-
---
--- AUTO_INCREMENT für Tabelle `team_years`
---
-ALTER TABLE `team_years`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5120;
-
---
--- AUTO_INCREMENT für Tabelle `years`
---
-ALTER TABLE `years`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- Constraints der exportierten Tabellen

@@ -23,7 +23,7 @@ try {
             </style>';
             }
 
-            $html .= '<h1>Feldspielplan am  ' . DateTime::createFromFormat('Y-m-d H:i:s', $fields['matches'][0]->matchStartTime)->i18nFormat('d.MM.Y') . '</h1>';
+            $html .= '<h1>Feldspielplan am  ' . ($fields['matches'][0]->matchStartTime ? DateTime::createFromFormat('Y-m-d H:i:s', $fields['matches'][0]->matchStartTime)->i18nFormat('d.MM.Y') : '') . '</h1>';
 
             $html .= '<table border="0"  cellspacing="0" cellpadding="8" align="center" width="100%">';
             $html .= '<tr>';
