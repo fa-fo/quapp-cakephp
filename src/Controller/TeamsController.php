@@ -122,7 +122,7 @@ class TeamsController extends AppController
             }
 
             $return['sports'] = $this->fetchTable('Sports')->find('all', array(
-                'order' => array('name' => 'ASC')
+                'order' => array('id' => 'ASC')
             ))->toArray();
         }
 
