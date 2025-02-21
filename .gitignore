@@ -51,3 +51,5 @@ src/Model/Entity/.gitkeep
 tests/Fixture/.gitkeep
 src/Model/Table/.gitkeep
 .htaccess
+/webroot/resources
+/.expo

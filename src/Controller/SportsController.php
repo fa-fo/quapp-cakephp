@@ -14,23 +14,64 @@ class SportsController extends AppController
 {
     public function getRules(): void
     {
-        $this->getResourceContent(16);
+        $this->getResourceContent('16');
         // todo: deprecated: after V3.0.0 complete rollout: function not needed anymore
     }
 
-    public function getResourceContent(int $id): void
+    public function getResourceContent(string $id): void
     {
-        $http = new Client([
-            'ssl_verify_host' => false,
-            'ssl_verify_peer' => false,
-            'ssl_verify_peer_name' => false,
-        ]);
+        $id = (int)$id;
+        $return = array();
+        $settings = $this->getSettings();
 
-        $response = $http->get('https://www.quattfo.de/api/getResource.php?id=' . $id);
-        $json = $response->getJson();
+        if ($settings['useResourceContentApi']) {
+            $http = new Client([
+                'ssl_verify_host' => false,
+                'ssl_verify_peer' => false,
+                'ssl_verify_peer_name' => false,
+            ]);
 
-        $this->apiReturn($json);
+            $response = $http->get('https://www.quattfo.de/api/getResource.php?id=' . $id);
+            $return = $response->getJson();
+        } else {
+            $dir = $this->getResourceDir();
+            $filename = $this->getResourceFilename($dir, $id);
+            $return['content'] = file_get_contents($filename);
+        }
+
+        $this->apiReturn($return);
     }
+
+    public function saveResourceContent(string $id): void
+    {
+        $id = (int)$id;
+        $postData = $this->request->getData();
+        $return = array();
+
+        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            if (isset($postData['content'])) {
+                $dir = $this->getResourceDir();
+                $filename = $this->getResourceFilename($dir, $id);
+                if (!file_exists($dir)) {
+                    mkdir($dir, 0755, true);
+                }
+                $return = file_put_contents($filename, $postData['content']);
+            }
+        }
+
+        $this->apiReturn($return);
+    }
+
+    private function getResourceDir(): string
+    {
+        return __DIR__ . '/../../webroot/resources';
+    }
+
+    private function getResourceFilename(string $dir, int $id): string
+    {
+        return $dir . '/resource' . $id . '.html';
+    }
+
 
     public function pdfAllFieldsMatches(): void
     {
