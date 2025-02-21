@@ -536,8 +536,9 @@ INSERT INTO `settings` (`id`, `name`, `value`) VALUES
 (14, 'autoLogoutSecsAfter', 60),
 (15, 'useLiveScouting', 1),
 (16, 'usePlayOff', 0),
-(17, 'useResourceContentApi', 0),
-(18, 'showArchieve', 1);
+(17, 'usePush', 1),
+(18, 'useResourceContentApi', 0),
+(19, 'showArchieve', 1);
 
 --
 -- Tabellenstruktur für Tabelle `sports`
