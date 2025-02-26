@@ -16,6 +16,7 @@ use Cake\ORM\Entity;
  * @property int|null $team2_id
  * @property int|null $refereeTeam_id
  * @property int|null $refereeTeamSubst_id
+ * @property string|null $refereeName
  * @property string|null $refereePIN
  * @property int|null $resultTrend
  * @property int|null $resultGoals1

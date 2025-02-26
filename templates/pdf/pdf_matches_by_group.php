@@ -73,7 +73,7 @@ try {
                     $html .= '</td>';
                     $html .= '</tr>';
                     $html .= '<tr>';
-                    $html .= '<td class="sr">' . ellipsis('SR: ' . (!$match->canceled ? ($match->refereeName != '' ? $match->refereeName : $match->teams3->name) : '-'), 28) . '</td>';
+                    $html .= '<td class="sr">' . ellipsis('SR: ' . (!$match->canceled ? ($match->refereeName ?: $match->teams3->name) : '-'), 28) . '</td>';
                     $html .= '</tr>';
                     $html .= '</table>';
 

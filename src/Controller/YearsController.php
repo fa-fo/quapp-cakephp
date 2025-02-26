@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Match4;
 use App\Model\Entity\Setting;
 use Cake\Datasource\ConnectionManager;
 
@@ -172,8 +173,11 @@ class YearsController extends AppController
             }
 
             foreach ($matches as $m) {
+                /**
+                 * @var Match4 $m
+                 */
                 // search for minimize missing referees
-                if ($m->isRefereeCanceled && $m->refereeName == '' && !$m->canceled && $m->resultTrend === null) {
+                if ($m->isRefereeCanceled && !$m->refereeName && !$m->canceled && $m->resultTrend === null) {
                     $missingRefereesCount++;
 
                     // search for available refs from same sport with canceled match
@@ -231,7 +235,7 @@ class YearsController extends AppController
 
                 $matchResultCount += ($m->resultTrend !== null ? 1 : 0);
 
-                if ($m->team1_id && $m->team2_id) {
+                if ($m->team1_id && $m->team2_id && !$m->isPlayOff) {
                     $acv1 = array_count_values(array($m->team1_id, $m->team2_id));
                     foreach ($acv1 as $k => $v) {
                         $sumMatchesByTeam[$k] ??= 0;

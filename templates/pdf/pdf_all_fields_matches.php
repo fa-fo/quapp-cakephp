@@ -48,7 +48,7 @@ try {
                 $html .= '<td>' . DateTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime)->i18nFormat('HH:mm') . ' Uhr</td>';
                 $html .= '<td>' . $match->teams1->name . '</td>';
                 $html .= '<td>' . $match->teams2->name . '</td>';
-                $html .= '<td>' . ($match->refereeName != '' ? $match->refereeName : $match->teams3->name) . '</td>';
+                $html .= '<td>' . ($match->refereeName ?: $match->teams3->name) . '</td>';
                 $html .= '</tr>';
             }
 
