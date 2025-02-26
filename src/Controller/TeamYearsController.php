@@ -55,23 +55,23 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-
-            $year = $this->getCurrentYear();
+            $settings = $this->getSettings();
 
             $teamYears = $this->TeamYears->find('all', array(
                 'fields' => array('id', 'team_id', 'year_id', 'refereePIN', 'canceled'),
-                'conditions' => array('year_id' => $year->id),
+                'conditions' => array('year_id' => $settings['currentYear_id']),
                 'contain' => array('Teams' => array('fields' => array('name'))),
                 'order' => array('Teams.name' => 'ASC')
             ))->toArray();
 
             foreach ($teamYears as $ty) {
-                $ty['infos'] = $this->getMatchesByTeam($ty['team_id'], $year->id, $this->getCurrentDayId(), 1);
+                $ty['infos'] = $this->getMatchesByTeam($ty['team_id'], $settings['currentYear_id'], $settings['currentDay_id'], 1);
             }
 
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('teamYears', $teamYears);
+            $this->viewBuilder()->setVar('settings', $settings);
 
             $this->pdfReturn();
         } else {
@@ -85,11 +85,12 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
             $year = $this->getCurrentYear()->toArray();
 
             $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id'),
-                'conditions' => array('year_id' => $this->getCurrentYearId(), 'day_id' => $this->getCurrentDayId()),
+                'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id']),
                 'order' => array('name' => 'ASC')
             ))->toArray();
 
@@ -99,23 +100,24 @@ class TeamYearsController extends AppController
 
             $teamYears = $this->TeamYears->find('all', array(
                 'fields' => array('id', 'team_id', 'year_id', 'refereePIN', 'canceled'),
-                'conditions' => array('year_id' => $year['id']),
+                'conditions' => array('year_id' => $settings['currentYear_id']),
                 'contain' => array('Teams' => array('fields' => array('name'))),
                 'order' => array('Teams.name' => 'ASC')
             ))->offset($offset * 32)->limit(32); // set limit because of execution timeout
 
             foreach ($teamYears as $ty) {
-                $g = $this->getGroupByTeamId($ty->team_id, $year['id'], $this->getCurrentDayId());
+                $g = $this->getGroupByTeamId($ty->team_id, $settings['currentYear_id'], $settings['currentDay_id']);
                 $gN = $this->getGroupPosNumber($g->id);
 
-                $ty['infos'] = $this->getMatchesByTeam($ty->team_id, $year['id'], $this->getCurrentDayId(), 1);
-                $ty['day'] = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $this->getCurrentDayId()]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                $ty['infos'] = $this->getMatchesByTeam($ty->team_id, $settings['currentYear_id'], $settings['currentDay_id'], 1);
+                $ty['day'] = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
                 $ty['group'] = $groups[$gN];
             }
 
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('teamYears', $teamYears);
+            $this->viewBuilder()->setVar('settings', $settings);
 
             $this->pdfReturn();
         } else {

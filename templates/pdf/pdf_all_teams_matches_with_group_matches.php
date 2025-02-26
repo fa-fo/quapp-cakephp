@@ -12,6 +12,7 @@ try {
     $mpdf->showImageErrors = true;
     $p = 0;
     $teamYears = $teamYears ?? array();
+    $settings = $settings ?? array();
 
     foreach ($teamYears as $ty) {
         if (!isset($ty['infos'])) {
@@ -44,7 +45,7 @@ try {
 
         if (isset($ty['infos']['matches'][0])) {
             $html .= '<h2>Mannschaftsspielplan am  ' . $ty['day']->i18nFormat('EEEE, d.MM.Y') . '</h2>';
-            $html .= getMatchHtml($html, $ty);
+            $html .= getMatchHtml($html, $ty, $settings);
         }
         $mpdf->WriteHTML($html);
 
@@ -65,7 +66,7 @@ try {
             }
             $html .= '<tr>';
             $html .= '<td width="75">'
-                . '<span class="t">' . DateTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') . 'h:</span>'
+                . '<span class="t">' . ($round['matches'][0]->matchStartTime ? DateTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') : '') . 'h:</span>'
                 . '<br/>Runde ' . $round->id . '</td>';
 
             foreach ($round['matches'] as $match) {

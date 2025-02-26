@@ -6,6 +6,7 @@ $mpdf = new \Mpdf\Mpdf();
 try {
     $p = 0;
     $groups = $groups ?? array();
+    $year = $year ?? array();
 
     foreach ($groups as $group) {
         $p++;
@@ -24,7 +25,7 @@ try {
             </style>';
         }
 
-        $html .= '<h1>Tabelle Gruppe ' . $group->name . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h1>';
+        $html .= '<h1>Tabelle ' . ($year['teamsCount'] > 24 ? 'Gruppe ' . $group->name : '') . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h1>';
 
         $html .= '<table border="0"  cellspacing="0" cellpadding="8" align="center" width="100%">';
         $html .= '<tr>';

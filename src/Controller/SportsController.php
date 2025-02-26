@@ -78,14 +78,16 @@ class SportsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $year = $this->getCurrentYear();
+            $settings = $this->getSettings();
+            $year = $this->getCurrentYear()->toArray();
+
             $sports = $this->Sports->find('all', array(
                 'conditions' => array('name !=' => 'Multi'),
                 'order' => array('name' => 'ASC')
             ))->toArray();
 
             $groups = $this->fetchTable('Groups')->find('all', array(
-                'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId(), 'name !=' => 'Play-Off'),
+                'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'name !=' => 'Play-Off'),
                 'order' => array('name' => 'ASC')
             ))->toArray();
 
@@ -105,6 +107,7 @@ class SportsController extends AppController
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('sports', $sports);
+            $this->viewBuilder()->setVar('year', $year);
 
             $this->pdfReturn();
         } else {

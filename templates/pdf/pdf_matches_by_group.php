@@ -10,6 +10,7 @@ $mpdf = new \Mpdf\Mpdf();
 try {
     $p = 0;
     $groups = $groups ?? array();
+    $year = $year ?? array();
 
     foreach ($groups as $group) {
         $p++;
@@ -36,7 +37,7 @@ try {
                         $mpdf->AddPage('L');
                         $html = '';
                     }
-                    $html .= '<h2>Spielplan Gruppe ' . $group->name . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
+                    $html .= '<h2>Spielplan ' . ($year['teamsCount'] > 24 ? 'Gruppe ' . $group->name : '') . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
                     $html .= '<table border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">';
                     $html .= '<tr>';
                     $html .= '<th>&nbsp;</th>';
@@ -72,7 +73,7 @@ try {
                     $html .= '</td>';
                     $html .= '</tr>';
                     $html .= '<tr>';
-                    $html .= '<td class="sr">' . ellipsis('SR: ' . (!$match->canceled ? $match->teams3->name : '-'), 28) . '</td>';
+                    $html .= '<td class="sr">' . ellipsis('SR: ' . (!$match->canceled ? ($match->refereeName != '' ? $match->refereeName : $match->teams3->name) : '-'), 28) . '</td>';
                     $html .= '</tr>';
                     $html .= '</table>';
 

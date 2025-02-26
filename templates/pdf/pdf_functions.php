@@ -7,7 +7,7 @@ function ellipsis(string $input, int $maxLength = 25): string
     return strlen($input) > $maxLength ? mb_convert_encoding(substr($input, 0, $maxLength), 'UTF-8', 'UTF-8') . "..." : $input;
 }
 
-function getMatchHtml(string $html, mixed $teamYears): string
+function getMatchHtml(string $html, mixed $teamYears, array $settings): string
 {
     $html = '';
     //$html .= '<img src="img/logo2025.png" style="float:left" width="150">';
@@ -17,7 +17,7 @@ function getMatchHtml(string $html, mixed $teamYears): string
     $html .= '<th>Mannschaft</th>';
     $html .= '<th>Sportart</th>';
     $html .= '<th>Spielfeld</th>';
-    $html .= '<th>Team-PIN<br/>für SR</th>';
+    $html .= $settings['useLiveScouting'] ? '<th>Team-PIN<br/>für SR</th>' : '';
     $html .= '</tr>';
 
     foreach ($teamYears['infos']['matches'] as $match) {
@@ -33,14 +33,14 @@ function getMatchHtml(string $html, mixed $teamYears): string
         //$html .= $tag1 . $match->teams2->name . $tag2;
         $html .= $tag1 . $match->sport->code . ($match->isRefereeJob ? 'SR' : '') . $tag2;
         $html .= $tag1 . $match->group_name . $refNote . $tag2;
-        if ($match->isRefereeJob) {
+        if ($settings['useLiveScouting'] && $match->isRefereeJob) {
             $html .= $tag1 . $teamYears->refereePIN . $tag2;
         }
         $html .= '</tr>';
     }
 
     $html .= '</table>';
-    $html .= '<img src="img/qr-codes.png" style="margin:20px 0 0 150px" width="650">';
+    $html .= $settings['useLiveScouting'] ? '<img src="img/qr-codes.png" style="margin:20px 0 0 150px" width="650">' : '';
 
     return $html;
 }

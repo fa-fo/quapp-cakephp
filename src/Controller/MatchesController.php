@@ -63,6 +63,7 @@ class MatchesController extends AppController
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->getSettings();
+
             $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id'),
                 'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'name !=' => 'Play-Off'),
@@ -80,6 +81,7 @@ class MatchesController extends AppController
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('groups', $groups);
+            $this->viewBuilder()->setVar('year', $year);
 
             $this->pdfReturn();
         } else {

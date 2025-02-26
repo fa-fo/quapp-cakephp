@@ -74,8 +74,8 @@ class GroupTeamsController extends AppController
             ));
 
             $settings = $this->getSettings();
-            $currentYear = $this->getCurrentYear()->toArray();
-            $day = DateTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+            $year = $this->getCurrentYear()->toArray();
+            $day = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
             foreach ($groups as $group) {
                 $group['groupTeams'] = $this->getRanking($group);
@@ -85,6 +85,7 @@ class GroupTeamsController extends AppController
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('groups', $groups);
+            $this->viewBuilder()->setVar('year', $year);
 
             $this->pdfReturn();
         } else {
