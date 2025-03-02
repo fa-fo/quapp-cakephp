@@ -53,6 +53,13 @@ class RoundsController extends AppController
                 ));
 
                 $r['matchesConfirmed'] = $query2->count();
+
+                $query3 = $this->fetchTable('Matches')->find('all', array(
+                    'contain' => array('Groups'),
+                    'conditions' => array_merge($conditionsArray, array('canceled' => 0, 'refereeTeam_id IS' => null, 'OR' => array('refereeName IS' => null, 'refereeName' => '')))
+                ));
+
+                $r['matchesWithoutReferee'] = $query3->count();
             }
 
             $r['timeStart'] = $day . ' ' . $r['timeStartDay' . $day_id]->i18nFormat('HH:mm:ss');
