@@ -37,6 +37,25 @@ class MatchesController extends AppController
         $this->apiReturn($return, $year_id, $day_id);
     }
 
+
+    public function byReferee(): void
+    {
+        $return['matches'] = array();
+        $postData = $this->request->getData();
+
+        if (isset($postData['refereeName'])) {
+            $conditionsArray = array(
+                'refereeName LIKE' => '%' . $postData['refereeName'] . '%',
+                'Groups.year_id' => $this->getCurrentYearId(),
+                'Groups.day_id' => $this->getCurrentDayId(),
+            );
+
+            $return['matches'] = $this->getMatches($conditionsArray, 0, 0, 1);
+        }
+
+        $this->apiReturn($return);
+    }
+
     public function byGroup(string $group_id = '', string $adminView = ''): void
     {
         $group = $this->getPrevAndNextGroup((int)$group_id);
