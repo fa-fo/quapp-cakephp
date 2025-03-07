@@ -10,5 +10,18 @@ namespace App\Controller;
  */
 class SettingsController extends AppController
 {
+    public function setSetting(string $name = ''): void
+    {
+        $setting = false;
+        $postData = $this->request->getData();
+        $value = $postData['value'] ?? '';
 
+        if ($name != '' && $value != '' && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $setting = $this->Settings->find('all')->where(['name' => $name])->first();
+            $setting->set('value', $value);
+            $this->fetchTable('Settings')->save($setting);
+        }
+
+        $this->apiReturn($setting);
+    }
 }
