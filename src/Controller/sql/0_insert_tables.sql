@@ -601,7 +601,7 @@ CREATE TABLE `years` (
   `id` int(11) NOT NULL,
   `name` int(11) NOT NULL,
   `day1` date NOT NULL,
-  `day2` date NOT NULL,
+  `day2` date DEFAULT NULL,
   `teamsCount` int(11) NOT NULL DEFAULT 64,
   `daysCount` int(11) NOT NULL DEFAULT 2
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;

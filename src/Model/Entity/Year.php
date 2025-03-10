@@ -11,7 +11,7 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property int $name
  * @property \Cake\I18n\Date $day1
- * @property \Cake\I18n\Date $day2
+ * @property \Cake\I18n\Date|null $day2
  * @property int $teamsCount
  * @property int $daysCount
  * @property int $alwaysAutoUpdateResults
