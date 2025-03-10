@@ -215,12 +215,17 @@ class AppController extends Controller
     protected function getScheduleShowTime(int $year_id, int $day_id, int $adminView = 0): int|DateTime
     {
         $settings = $this->getSettings();
+
+        if ($settings['showScheduleHoursBefore'] == 0) {
+            return 0; // show Schedule
+        }
+
         $currentYear = $this->getCurrentYear()->toArray();
         $stime = DateTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
         $showTime = $stime->subHours($settings['showScheduleHoursBefore']);
         $now = DateTime::now();
 
-        if ($settings['isTest'] || $adminView || $currentYear['id'] != $year_id || $settings['currentDay_id'] != $day_id || $now > $showTime) {
+        if ($now > $showTime || $currentYear['id'] != $year_id || $settings['currentDay_id'] != $day_id || $settings['isTest'] || $adminView) {
             return 0; // show Schedule
         }
         return $showTime; // do not show schedule
