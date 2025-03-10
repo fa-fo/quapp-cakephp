@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Setting;
 use Cake\Datasource\ConnectionManager;
+use Cake\I18n\DateTime;
 
 /**
  * Years Controller
@@ -119,6 +120,61 @@ class YearsController extends AppController
         }
 
         $this->apiReturn($showEndRanking);
+    }
+
+    public function new(): void
+    {
+        $postData = $this->request->getData();
+        $year = $this->getCurrentYear()->toArray();
+        $newYear = false;
+
+        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
+            $ytime = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $year['daysCount']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+            $ytime = $ytime->addHours(24); // start of next day after last day of the tournament
+            $now = DateTime::now();
+
+            if ($settings['currentDay_id'] == $year['daysCount'] && ($settings['isTest'] || $now > $ytime)) {
+                $newYear = $this->Years->newEmptyEntity();
+                $newYear->set('name', $postData['name']);
+                $newYear->set('day1', $postData['day1']);
+                $newYear->set('day2', $postData['day2'] != '' ? $postData['day2'] : null);
+                $newYear->set('daysCount', $postData['daysCount']);
+                $newYear->set('teamsCount', $postData['teamsCount']);
+                $this->Years->save($newYear);
+
+                $currentYear_id = $this->fetchTable('Settings')->find('all')->where(['name' => 'currentYear_id'])->first();
+                /**
+                 * @var Setting $currentYear_id
+                 */
+                $currentYear_id->set('value', $newYear->id);
+                $this->fetchTable('Settings')->save($currentYear_id);
+
+                $currentDay_id = $this->fetchTable('Settings')->find('all')->where(['name' => 'currentDay_id'])->first();
+                /**
+                 * @var Setting $currentDay_id
+                 */
+                $currentDay_id->set('value', 1);
+                $this->fetchTable('Settings')->save($currentDay_id);
+
+                $alwaysAutoUpdateResults = $this->fetchTable('Settings')->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();
+                /**
+                 * @var Setting $alwaysAutoUpdateResults
+                 */
+                $alwaysAutoUpdateResults->set('value', 0);
+                $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
+
+                $showEndRanking = $this->fetchTable('Settings')->find('all')->where(['name' => 'showEndRanking'])->first();
+                /**
+                 * @var Setting $showEndRanking
+                 */
+                $showEndRanking->set('value', 0);
+                $this->fetchTable('Settings')->save($showEndRanking);
+
+            }
+        }
+
+        $this->apiReturn($newYear);
     }
 
     // get Status of current Day
