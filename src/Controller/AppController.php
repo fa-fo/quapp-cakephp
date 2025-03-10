@@ -385,6 +385,7 @@ class AppController extends Controller
                         $logs = $this->getLogs($row['id']);
                         $row['logsCalc'] = $logs['calc'] ?? array();
                         $row['logsCalc']['isLoggedIn'] = $row['logsCalc']['isLoggedIn'] ?? 0;
+                        $row['logsCalc']['isResultConfirmed'] = $row['logsCalc']['isResultConfirmed'] ?? ($row['resultTrend'] !== null ? 1 : 0);
 
                         if ($adminView) {
                             $row['isResultOk'] = $this->isResultOk($row->toArray()) ? 1 : 0;
@@ -1014,7 +1015,7 @@ class AppController extends Controller
              * @var Login|null $login
              */
             if ($login && ($login->id ?? 0) > 0) {
-                if ($login->failedlogincount < 5 && md5($password) == $login->password) {
+                if ($login->failedlogincount < 100 && md5($password) == $login->password) {
                     $return = $login->id;
                     $login->set('failedlogincount', 0);
                 } else {
