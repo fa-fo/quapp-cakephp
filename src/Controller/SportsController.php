@@ -87,7 +87,7 @@ class SportsController extends AppController
             ))->toArray();
 
             $groups = $this->fetchTable('Groups')->find('all', array(
-                'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'name !=' => 'Play-Off'),
+                'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'name !=' => 'Endrunde'),
                 'order' => array('name' => 'ASC')
             ))->toArray();
 

@@ -69,7 +69,7 @@ class GroupTeamsController extends AppController
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id', 'teamsCount'),
-                'conditions' => array('year_id' => $this->getCurrentYearId(), 'day_id' => $this->getCurrentDayId(), 'name !=' => 'Play-Off'),
+                'conditions' => array('year_id' => $this->getCurrentYearId(), 'day_id' => $this->getCurrentDayId(), 'name !=' => 'Endrunde'),
                 'order' => array('name' => 'ASC')
             ));
 
@@ -120,7 +120,7 @@ class GroupTeamsController extends AppController
                         /**
                          * @var Group $group
                          */
-                        if ($group->name != 'Play-Off') {
+                        if ($group->name != 'Endrunde') {
                             if ($settings['currentDay_id'] == 1) {
                                 $groupTeams = array_merge($groupTeams, $this->addFromTeamYearsOrderById($year, $group, $countGroup));
                             } else {

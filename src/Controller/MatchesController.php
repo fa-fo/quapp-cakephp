@@ -85,7 +85,7 @@ class MatchesController extends AppController
 
             $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id'),
-                'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'name !=' => 'Play-Off'),
+                'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'name !=' => 'Endrunde'),
                 'order' => array('name' => 'ASC')
             ));
 
@@ -129,7 +129,7 @@ class MatchesController extends AppController
 
             $return['groups'] = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
-                'conditions' => array('year_id' => $year_id, 'day_id' => $day_id, 'name IN' => $isPlayOffRound ? array('Play-Off') : range('A', 'Z')),
+                'conditions' => array('year_id' => $year_id, 'day_id' => $day_id, 'name IN' => $isPlayOffRound ? array('Endrunde') : range('A', 'Z')),
                 'order' => array('Groups.name' => 'ASC')
             ))->toArray();
 
@@ -465,7 +465,7 @@ class MatchesController extends AppController
                     ));
 
                     foreach ($groups as $group) {
-                        if ($group->name != 'Play-Off') {
+                        if ($group->name != 'Endrunde') {
                             foreach ($matchschedulings as $matchscheduling) {
                                 /**
                                  * @var Group $group

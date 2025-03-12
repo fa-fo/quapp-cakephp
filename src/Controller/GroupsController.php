@@ -22,7 +22,7 @@ class GroupsController extends AppController
         $year = array();
         $year['groups'] = $this->Groups->find('all', array(
             'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name', 'year_id', 'day_id', 'teamsCount'),
-            'conditions' => array('year_id' => $year_id, 'day_id' => $day_id, 'name !=' => 'Play-Off'),
+            'conditions' => array('year_id' => $year_id, 'day_id' => $day_id, 'name !=' => 'Endrunde'),
             'order' => array('group_name' => 'ASC')
         ))->toArray();
 
@@ -71,7 +71,7 @@ class GroupsController extends AppController
                         $group = $this->Groups->newEmptyEntity();
                         $group->set('year_id', $year->id);
                         $group->set('day_id', $settings['currentDay_id']);
-                        $group->set('name', 'Play-Off');
+                        $group->set('name', 'Endrunde');
                         $group->set('teamsCount', $settings['usePlayOff']);
 
                         if ($this->Groups->save($group)) {

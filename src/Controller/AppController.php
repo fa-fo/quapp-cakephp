@@ -204,7 +204,7 @@ class AppController extends Controller
             if ($groupPosNumber + 1 < $countGroups) {
                 $group['nextGroup'] = $this->fetchTable('Groups')->find('all', array(
                     'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
-                    'conditions' => array('id' => $group_id + 1, 'name !=' => 'Play-Off')
+                    'conditions' => array('id' => $group_id + 1, 'name !=' => 'Endrunde')
                 ))->first();
             }
         }
