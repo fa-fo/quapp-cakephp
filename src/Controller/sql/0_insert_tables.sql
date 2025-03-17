@@ -577,7 +577,8 @@ CREATE TABLE `teams` (
   `calcTotalChampionships` int(11) DEFAULT NULL,
   `calcTotalRanking` int(11) DEFAULT NULL,
   `prevTeam_id` INT NULL DEFAULT NULL,
-  `hidden` int(11) NOT NULL DEFAULT 0
+  `hidden` int(11) NOT NULL DEFAULT 0,
+  `testTeam` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --

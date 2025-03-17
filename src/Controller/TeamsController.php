@@ -83,7 +83,7 @@ class TeamsController extends AppController
             $teams = null;
             $teams['showRanking'] = 0;
         } else {
-            $conditionsArray = array('Teams.calcTotalRanking IS NOT' => null, 'Teams.calcTotalRankingPoints IS NOT' => null, 'Teams.hidden' => 0);
+            $conditionsArray = array('Teams.calcTotalRanking IS NOT' => null, 'Teams.calcTotalRankingPoints IS NOT' => null, 'Teams.hidden' => 0, 'Teams.testTeam' => 0);
 
             $teams = $this->getTeams($conditionsArray);
         }
@@ -157,9 +157,22 @@ class TeamsController extends AppController
         $year = $this->getCurrentYear();
 
         $teams = $this->Teams->find('all', array(
-            'conditions' => array('calcTotalRanking IS NOT' => null),
-            'order' => array('calcTotalRanking' => 'ASC'),
+            'conditions' => array(),
+            'order' => array('testTeam' => 'DESC', 'calcTotalRanking' => 'ASC', 'id' => 'ASC'),
         ))->limit($year['teamsCount']);
+
+        if ($teams->count() == 0) {
+            $teams = array();
+            for ($c = 0; $c < $year['teamsCount']; $c++) {
+                $nTeam = $this->Teams->newEmptyEntity();
+                $nTeam->set('name', 'Test-Team' . str_pad((string)($c + 1),2,'0',STR_PAD_LEFT));
+                $nTeam->set('testTeam', 1);
+
+                if ($this->Teams->save($nTeam)) {
+                    $teams[] = $nTeam;
+                }
+            }
+        }
 
         foreach ($teams as $team) {
             /**
