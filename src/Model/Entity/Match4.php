@@ -34,10 +34,10 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Group $group
  * @property \App\Model\Entity\Round $round
  * @property \App\Model\Entity\Sport $sport
- * @property \App\Model\Entity\Team $team1
- * @property \App\Model\Entity\Team $team2
- * @property \App\Model\Entity\Team $team3
- * @property \App\Model\Entity\Team|null $team4
+ * @property \App\Model\Entity\Team $teams1
+ * @property \App\Model\Entity\Team $teams2
+ * @property \App\Model\Entity\Team $teams3
+ * @property \App\Model\Entity\Team|null $teams4
  * @property \App\Model\Entity\Match4eventLog[] $match_event_logs
  */
 class Match4 extends Entity
