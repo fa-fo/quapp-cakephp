@@ -684,7 +684,7 @@ class MatchesController extends AppController
                          * @var Match4 $m
                          */
                         if ($m->team1_id && $m->team2_id && $m->team1 && $m->team2) {
-                            if ($m->resultTrend === null || $m->resultGoals1 === null || $m->resultGoals1 === null) {
+                            if ($m->resultTrend === null || $m->resultGoals1 === null || $m->resultGoals2 === null) {
                                 $factor1 = ($m->team1)->calcTotalPointsPerYear ? (int)($m->team1)->calcTotalPointsPerYear / 7 : 1;
                                 $factor2 = ($m->team2)->calcTotalPointsPerYear ? (int)($m->team2)->calcTotalPointsPerYear / 7 : 1;
                                 $sportsFactor = $m->sport->goalFactor;
