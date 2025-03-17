@@ -683,10 +683,10 @@ class MatchesController extends AppController
                         /**
                          * @var Match4 $m
                          */
-                        if ($m->team1_id && $m->team2_id && $m->team1 && $m->team2) {
+                        if ($m->team1_id && $m->team2_id) {
                             if ($m->resultTrend === null || $m->resultGoals1 === null || $m->resultGoals2 === null) {
-                                $factor1 = ($m->team1)->calcTotalPointsPerYear ? (int)($m->team1)->calcTotalPointsPerYear / 7 : 1;
-                                $factor2 = ($m->team2)->calcTotalPointsPerYear ? (int)($m->team2)->calcTotalPointsPerYear / 7 : 1;
+                                $factor1 = ($m->teams1)->calcTotalPointsPerYear ? (int)(($m->teams1)->calcTotalPointsPerYear) / 7 : 1;
+                                $factor2 = ($m->teams2)->calcTotalPointsPerYear ? (int)(($m->teams2)->calcTotalPointsPerYear) / 7 : 1;
                                 $sportsFactor = $m->sport->goalFactor;
 
                                 $m->set('resultGoals1', (int)round(random_int(0, 44) / $sportsFactor * $factor1) * $sportsFactor);
