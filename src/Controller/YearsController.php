@@ -157,12 +157,14 @@ class YearsController extends AppController
                 $currentDay_id->set('value', 1);
                 $this->fetchTable('Settings')->save($currentDay_id);
 
-                $alwaysAutoUpdateResults = $this->fetchTable('Settings')->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();
-                /**
-                 * @var Setting $alwaysAutoUpdateResults
-                 */
-                $alwaysAutoUpdateResults->set('value', 0);
-                $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
+                if ($settings['usePlayOff'] == 0) {
+                    $alwaysAutoUpdateResults = $this->fetchTable('Settings')->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();
+                    /**
+                     * @var Setting $alwaysAutoUpdateResults
+                     */
+                    $alwaysAutoUpdateResults->set('value', 0);
+                    $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
+                }
 
                 $showEndRanking = $this->fetchTable('Settings')->find('all')->where(['name' => 'showEndRanking'])->first();
                 /**

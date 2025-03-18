@@ -473,6 +473,23 @@ class AppController extends Controller
         return $return;
     }
 
+    protected function getPlayOffWinLose(Year $year): array
+    {
+        $return = array();
+        $matches = $this->getMatches(array('isPlayOff' => (int)($year->id . '4'))); // Semi-Finales
+
+        foreach ($matches as $m) {
+            /**
+             * @var Match4 $m
+             */
+
+            $return['winners'][] = $m->resultTrend == 1 ? $m->team1_id : ($m->resultTrend == 2 ? $m->team2_id : 0);
+            $return['losers'][] = $m->resultTrend == 1 ? $m->team2_id : ($m->resultTrend == 2 ? $m->team1_id : 0);
+        }
+
+        return $return;
+    }
+
     private function wasLoggedIn(int $match_id): int
     {
         return $this->fetchTable('MatcheventLogs')->find('all', array(
@@ -876,8 +893,10 @@ class AppController extends Controller
                 $rc += $conn->execute("DELETE ty FROM team_years ty LEFT JOIN years y ON ty.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE FROM teams WHERE testTeam=1")->rowCount();
                 $rc += $conn->execute("UPDATE settings SET value=1 WHERE name = 'currentDay_id'")->rowCount();
-                $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'alwaysAutoUpdateResults'")->rowCount();
                 $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'showEndRanking'")->rowCount();
+                if ($settings['usePlayOff'] == 0) {
+                    $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'alwaysAutoUpdateResults'")->rowCount();
+                }
 
                 if ($_SERVER['SERVER_NAME'] == 'localhost') {
                     //$conn->execute("CALL reset_autoincrement('matchevent_logs')");

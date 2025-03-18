@@ -148,8 +148,11 @@ class MatchesController extends AppController
                     // use parameter for same sort as Excel: $sortBySportId=!$includeLogs
                     $group['matches'] = $this->getMatches($conditionsArray, $includeLogs, 1, $adminView);
 
-                    if ($isPlayOffRound) {
-                        $group['playOffTeams'] = $this->fetchTable('GroupTeams')->find('all', array(
+                    if ($isPlayOffRound && $includeLogs) {
+                        $year = $this->getCurrentYear();
+                        $group['playOffTeams'] = $this->getPlayOffWinLose($year);
+
+                        $group['playOffTeams']['all'] = $this->fetchTable('GroupTeams')->find('all', array(
                             'contain' => array(
                                 'Groups' => array('fields' => array('year_id', 'day_id')),
                                 'Teams' => array('fields' => array('id', 'name'))
