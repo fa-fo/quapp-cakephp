@@ -185,31 +185,34 @@ class AppController extends Controller
     protected function getPrevAndNextGroup(int $group_id): array|EntityInterface|null
     {
         $group_id = $group_id ?: $this->getCurrentGroupId(0);
-        $group = $this->fetchTable('Groups')->find()->where(['id' => $group_id])->first();
-        /**
-         * @var Group|null $group
-         */
-        if ($group) {
-            $countGroups = $this->fetchTable('Groups')->find('all', array(
-                'conditions' => array('year_id' => $group->year_id, 'day_id' => $group->day_id)
-            ))->count();
 
-            $groupPosNumber = $this->getGroupPosNumber($group_id);
-            if ($groupPosNumber + 1 > 1) {
-                $group['prevGroup'] = $this->fetchTable('Groups')->find('all', array(
-                    'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
-                    'conditions' => array('id' => $group_id - 1)
-                ))->first();
-            }
-            if ($groupPosNumber + 1 < $countGroups) {
-                $group['nextGroup'] = $this->fetchTable('Groups')->find('all', array(
-                    'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
-                    'conditions' => array('id' => $group_id + 1, 'name !=' => 'Endrunde')
-                ))->first();
+        if ($group_id) {
+            $group = $this->fetchTable('Groups')->find()->where(['id' => $group_id])->first();
+            /**
+             * @var Group|null $group
+             */
+            if ($group) {
+                $countGroups = $this->fetchTable('Groups')->find('all', array(
+                    'conditions' => array('year_id' => $group->year_id, 'day_id' => $group->day_id)
+                ))->count();
+
+                $groupPosNumber = $this->getGroupPosNumber($group_id);
+                if ($groupPosNumber + 1 > 1) {
+                    $group['prevGroup'] = $this->fetchTable('Groups')->find('all', array(
+                        'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
+                        'conditions' => array('id' => $group_id - 1)
+                    ))->first();
+                }
+                if ($groupPosNumber + 1 < $countGroups) {
+                    $group['nextGroup'] = $this->fetchTable('Groups')->find('all', array(
+                        'fields' => array('group_id' => 'id', 'group_name' => 'name', 'id', 'name'),
+                        'conditions' => array('id' => $group_id + 1, 'name !=' => 'Endrunde')
+                    ))->first();
+                }
             }
         }
 
-        return $group;
+        return $group ?? null;
     }
 
     protected function getScheduleShowTime(int $year_id, int $day_id, int $adminView = 0): int|DateTime
@@ -822,7 +825,7 @@ class AppController extends Controller
         return ord(strtoupper($group->name)) - ord('A');
     }
 
-    protected function getCurrentGroupId(int $number): int
+    protected function getCurrentGroupId(int $number): int|false
     {
         $year = $this->getCurrentYear();
         /**
@@ -835,10 +838,10 @@ class AppController extends Controller
             'order' => array('id' => 'ASC')
         ))->first();
         /**
-         * @var Group $group
+         * @var Group|null $group
          */
 
-        return $group->id;
+        return $group ? $group->id : false;
     }
 
     protected function getGroupName(int $number): string|bool
