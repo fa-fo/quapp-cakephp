@@ -305,7 +305,7 @@ class TeamYearsController extends AppController
 
                     $gtArray = $this->fetchTable('GroupTeams')->find('all', array(
                         'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
-                        'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId(), 'team_id NOT IN' => $poArray),
+                        'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id'], 'team_id NOT IN' => $poArray ?: array(0)),
                         'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcRanking' => 'ASC')
                     ))->toArray();
                     foreach ($gtArray as $k => $v) {
