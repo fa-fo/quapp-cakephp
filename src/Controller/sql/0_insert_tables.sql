@@ -834,8 +834,8 @@ ALTER TABLE `matchscheduling_pattern16`
 -- Constraints der Tabelle `matchscheduling_pattern24`
 --
 ALTER TABLE `matchscheduling_pattern24`
-    ADD CONSTRAINT `fk_round_id2` FOREIGN KEY (`round_id`) REFERENCES `rounds` (`id`),
-    ADD CONSTRAINT `fk_sport_id2` FOREIGN KEY (`sport_id`) REFERENCES `sports` (`id`);
+    ADD CONSTRAINT `fk_round_id3` FOREIGN KEY (`round_id`) REFERENCES `rounds` (`id`),
+  ADD CONSTRAINT `fk_sport_id3` FOREIGN KEY (`sport_id`) REFERENCES `sports` (`id`);
 
 --
 -- Constraints der Tabelle `push_tokens`
