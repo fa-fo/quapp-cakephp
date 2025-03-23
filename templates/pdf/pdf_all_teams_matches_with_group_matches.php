@@ -90,7 +90,7 @@ try {
                 $html .= '</td>';
                 $html .= '</tr>';
                 $html .= '<tr>';
-                $html .= '<td class="sr">' . ellipsis('SR: ' . $match->teams3->name, 26) . '</td>';
+                $html .= '<td class="sr">' . ellipsis('SR: ' . ($match->teams3->name ?? ''), 26) . '</td>';
                 $html .= '</tr>';
                 $html .= '</table>';
 
