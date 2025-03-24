@@ -7,7 +7,7 @@ function ellipsis(string $input, int $maxLength = 25): string
     return strlen($input) > $maxLength ? mb_convert_encoding(substr($input, 0, $maxLength), 'UTF-8', 'UTF-8') . "..." : $input;
 }
 
-function getMatchHtml(string $html, mixed $teamYears, array $settings): string
+function getMatchHtml(mixed $teamYears, array $settings): string
 {
     $html = '';
     //$html .= '<img src="img/logo2025.png" style="float:left" width="150">';

@@ -32,7 +32,7 @@ try {
 
         if (isset($ty['infos']['matches'][0])) {
             $html .= '<h2>Mannschaftsspielplan am  ' . DateTime::createFromFormat('Y-m-d H:i:s', $ty['infos']['matches'][0]->matchStartTime)->i18nFormat('d.MM.Y') . '</h2>';
-            $html .= getMatchHtml($html, $ty, $settings);
+            $html .= getMatchHtml($ty, $settings);
 
             $mpdf->WriteHTML($html);
         }

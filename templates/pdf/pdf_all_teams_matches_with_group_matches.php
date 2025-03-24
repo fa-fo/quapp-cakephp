@@ -45,7 +45,7 @@ try {
 
         if (isset($ty['infos']['matches'][0])) {
             $html .= '<h2>Mannschaftsspielplan am  ' . $ty['day']->i18nFormat('EEEE, d.MM.Y') . '</h2>';
-            $html .= getMatchHtml($html, $ty, $settings);
+            $html .= getMatchHtml($ty, $settings);
         }
         $mpdf->WriteHTML($html);
 

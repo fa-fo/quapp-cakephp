@@ -8,6 +8,7 @@ parameters:
     bootstrapFiles:
         - config/bootstrap.php
         - config/paths.php
+        - templates/pdf/pdf_functions.php
         - vendor/cakephp/cakephp/src/I18n/functions_global.php
         - vendor/cakephp/cakephp/src/Core/functions_global.php
     ignoreErrors:
