@@ -481,13 +481,14 @@ class AppController extends Controller
         $return = array();
         $matches = $this->getMatches(array('isPlayOff' => (int)($year->id . '4'))); // Semi-Finales
 
-        foreach ($matches as $m) {
-            /**
-             * @var Match4 $m
-             */
-
-            $return['winners'][] = $m->resultTrend == 1 ? $m->team1_id : ($m->resultTrend == 2 ? $m->team2_id : 0);
-            $return['losers'][] = $m->resultTrend == 1 ? $m->team2_id : ($m->resultTrend == 2 ? $m->team1_id : 0);
+        if (is_array($matches)) {
+            foreach ($matches as $m) {
+                /**
+                 * @var Match4 $m
+                 */
+                $return['winners'][] = in_array($m->resultTrend, array(1, 3)) ? $m->team1_id : (in_array($m->resultTrend, array(2, 4)) ? $m->team2_id : 0);
+                $return['losers'][] = in_array($m->resultTrend, array(1, 3)) ? $m->team2_id : (in_array($m->resultTrend, array(2, 4)) ? $m->team1_id : 0);
+            }
         }
 
         return $return;
@@ -889,10 +890,10 @@ class AppController extends Controller
                 /**
                  * @var \Cake\Database\Connection $conn
                  */
-                $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN matches m ON ml.match_id=m.id LEFT JOIN groups g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("DELETE m FROM matches m LEFT JOIN groups g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("DELETE gt FROM group_teams gt LEFT JOIN groups g ON gt.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("DELETE g FROM groups g LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE m FROM `matches` m LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE gt FROM group_teams gt LEFT JOIN `groups` g ON gt.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE g FROM `groups` g LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE ty FROM team_years ty LEFT JOIN years y ON ty.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE FROM teams WHERE testTeam=1")->rowCount();
                 $rc += $conn->execute("UPDATE settings SET value=1 WHERE name = 'currentDay_id'")->rowCount();
@@ -931,8 +932,8 @@ class AppController extends Controller
                 /**
                  * @var \Cake\Database\Connection $conn
                  */
-                $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN matches m ON ml.match_id=m.id LEFT JOIN groups g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("DELETE m FROM matches m LEFT JOIN groups g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE m FROM `matches` m LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $this->apiReturn(array('rows affected' => $rc));
             }
         }
