@@ -16,10 +16,11 @@ class SettingsController extends AppController
         $postData = $this->request->getData();
         $value = $postData['value'] ?? '';
 
-        if ($name != '' && $value != '' && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if ($name != '' && $value != '' && isset($postData['password'])
+            && $this->checkUsernamePassword('admin', $postData['password'])) {
             $setting = $this->Settings->find('all')->where(['name' => $name])->first();
             $setting->set('value', $value);
-            $this->fetchTable('Settings')->save($setting);
+            $this->Settings->save($setting);
         }
 
         $this->apiReturn($setting);
