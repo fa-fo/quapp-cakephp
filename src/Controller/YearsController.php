@@ -173,6 +173,12 @@ class YearsController extends AppController
                 $showEndRanking->set('value', 0);
                 $this->fetchTable('Settings')->save($showEndRanking);
 
+                $conn = ConnectionManager::get('default');
+                /**
+                 * @var \Cake\Database\Connection $conn
+                 */
+                $conn->execute("UPDATE push_tokens SET ptrPoints=0 WHERE 1")->rowCount();
+                $conn->execute("UPDATE push_tokens SET ptrRanking=NULL WHERE 1")->rowCount();
             }
         }
 

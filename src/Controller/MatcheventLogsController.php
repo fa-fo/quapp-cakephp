@@ -540,8 +540,8 @@ class MatcheventLogsController extends AppController
                  */
 
                 $sql = "DELETE ml FROM matchevent_logs ml
-                        LEFT JOIN matches m ON ml.match_id=m.id
-                        LEFT JOIN groups g ON m.group_id=g.id
+                        LEFT JOIN `matches` m ON ml.match_id=m.id
+                        LEFT JOIN `groups` g ON m.group_id=g.id
                         WHERE m.round_id = " . $round_id . "
                         AND g.year_id = " . $settings['currentYear_id'] . " AND g.day_id = " . $settings['currentDay_id'];
 

@@ -895,9 +895,12 @@ class AppController extends Controller
                 $rc += $conn->execute("DELETE gt FROM group_teams gt LEFT JOIN `groups` g ON gt.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE g FROM `groups` g LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE ty FROM team_years ty LEFT JOIN years y ON ty.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE ptr FROM push_token_ratings ptr LEFT JOIN years y ON ptr.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE FROM teams WHERE testTeam=1")->rowCount();
                 $rc += $conn->execute("UPDATE settings SET value=1 WHERE name = 'currentDay_id'")->rowCount();
                 $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'showEndRanking'")->rowCount();
+                $rc += $conn->execute("UPDATE push_tokens SET ptrPoints=0 WHERE 1")->rowCount();
+                $rc += $conn->execute("UPDATE push_tokens SET ptrRanking=NULL WHERE 1")->rowCount();
                 if ($settings['usePlayOff'] == 0) {
                     $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'alwaysAutoUpdateResults'")->rowCount();
                 }
@@ -934,6 +937,9 @@ class AppController extends Controller
                  */
                 $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE m FROM `matches` m LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE ptr FROM push_token_ratings ptr LEFT JOIN years y ON ptr.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("UPDATE push_tokens SET ptrPoints=0 WHERE 1")->rowCount();
+                $rc += $conn->execute("UPDATE push_tokens SET ptrRanking=NULL WHERE 1")->rowCount();
                 $this->apiReturn(array('rows affected' => $rc));
             }
         }
