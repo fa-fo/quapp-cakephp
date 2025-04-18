@@ -157,15 +157,15 @@ class TeamsController extends AppController
         $year = $this->getCurrentYear();
 
         $teams = $this->Teams->find('all', array(
-            'conditions' => array(),
-            'order' => array('testTeam' => 'DESC', 'calcTotalRanking' => 'ASC', 'id' => 'ASC'),
+            'conditions' => array('hidden' => 0),
+            'order' => array('testTeam' => 'DESC', 'calcTotalRanking IS NOT NULL' => 'DESC', 'calcTotalRanking' => 'ASC', 'id' => 'ASC'),
         ))->limit($year['teamsCount']);
 
         if ($teams->count() == 0) {
             $teams = array();
             for ($c = 0; $c < $year['teamsCount']; $c++) {
                 $nTeam = $this->Teams->newEmptyEntity();
-                $nTeam->set('name', 'Test-Team' . str_pad((string)($c + 1),2,'0',STR_PAD_LEFT));
+                $nTeam->set('name', 'Test-Team' . str_pad((string)($c + 1), 2, '0', STR_PAD_LEFT));
                 $nTeam->set('testTeam', 1);
 
                 if ($this->Teams->save($nTeam)) {
