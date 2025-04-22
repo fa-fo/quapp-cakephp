@@ -358,29 +358,33 @@ class MatcheventLogsController extends AppController
     {
         $photos = array(); // initial
         $postData = $this->request->getData();
+        $settings = $this->getSettings();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $conditionsArray = array('Matchevents.code' => 'PHOTO_UPLOAD', 'year_id' => $settings['currentYear_id']);
+            $containArray = array('Matchevents', 'Matches', 'Matches.Groups');
+
             $photos['toCheck'] = $this->MatcheventLogs->find('all', array(
-                'conditions' => array('Matchevents.code' => 'PHOTO_UPLOAD', 'playerNumber IS' => null),
+                'conditions' => array_merge($conditionsArray, array('playerNumber IS' => null)),
                 'fields' => array('id', 'match_id'),
-                'contain' => array('Matchevents'),
+                'contain' => $containArray,
                 'order' => array('MatcheventLogs.id' => 'ASC')
             ));
 
             $photos['okCount'] = $this->MatcheventLogs->find('all', array(
-                'conditions' => array('Matchevents.code' => 'PHOTO_UPLOAD', 'playerNumber IS' => '1'),
-                'contain' => array('Matchevents'),
+                'conditions' => array_merge($conditionsArray, array('playerNumber IS' => '1')),
+                'contain' => $containArray,
             ))->count();
 
             $photos['notOkCount'] = $this->MatcheventLogs->find('all', array(
-                'conditions' => array('Matchevents.code' => 'PHOTO_UPLOAD', 'playerNumber IS' => '0'),
-                'contain' => array('Matchevents'),
+                'conditions' => array_merge($conditionsArray, array('playerNumber IS' => '0')),
+                'contain' => $containArray,
             ))->count();
 
             $photos['lastChecked'] = $this->MatcheventLogs->find('all', array(
-                'conditions' => array('Matchevents.code' => 'PHOTO_UPLOAD', 'playerNumber IS NOT' => null),
+                'conditions' => array_merge($conditionsArray, array('playerNumber IS NOT' => null)),
                 'fields' => array('id', 'match_id', 'playerNumber'),
-                'contain' => array('Matchevents'),
+                'contain' => $containArray,
                 'order' => array('MatcheventLogs.id' => 'DESC')
             ))->limit(32);
 
@@ -462,7 +466,7 @@ class MatcheventLogsController extends AppController
         $return['photos'] = $photos;
         $return['myPhotos'] = $myPhotos;
 
-        $this->apiReturn($return);
+        $this->apiReturn($return, $year_id);
     }
 
 
