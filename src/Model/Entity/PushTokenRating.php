@@ -12,12 +12,12 @@ use Cake\ORM\Entity;
  * @property int $year_id
  * @property int $push_token_id
  * @property int $matchevent_log_id
- * @property int|null $points_expected
- * @property int|null $points_confirmed
+ * @property int|null $points
+ * @property float|null $confirmed
  *
  * @property \App\Model\Entity\Year $year
  * @property \App\Model\Entity\PushToken $push_token
- * @property \App\Model\Entity\MatcheventLog $matchevent_log
+ * @property \App\Model\Entity\Match4eventLog $matchevent_log
  */
 class PushTokenRating extends Entity
 {
@@ -34,8 +34,8 @@ class PushTokenRating extends Entity
         'year_id' => true,
         'push_token_id' => true,
         'matchevent_log_id' => true,
-        'points_expected' => true,
-        'points_confirmed' => true,
+        'points' => true,
+        'confirmed' => true,
         'year' => true,
         'push_token' => true,
         'matchevent_log' => true,

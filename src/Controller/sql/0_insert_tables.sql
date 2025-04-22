@@ -397,11 +397,10 @@ CREATE TABLE `push_tokens`
 CREATE TABLE `push_token_ratings`
 (
     `id`                int(11) NOT NULL,
-    `year_id`           int(11) NOT NULL,
     `push_token_id`     int(11) NOT NULL,
     `matchevent_log_id` int(11) NOT NULL,
-    `points_expected`   int(11) DEFAULT NULL,
-    `points_confirmed`  int(11) DEFAULT NULL
+    `points`            int(11)        DEFAULT NULL,
+    `confirmed`         decimal(10, 1) DEFAULT NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
   COLLATE = utf8_general_ci;
@@ -709,7 +708,7 @@ ALTER TABLE `push_tokens`
 
 ALTER TABLE `push_token_ratings`
     ADD PRIMARY KEY (`id`),
-    ADD KEY `fk_year_id6` (`year_id`),
+    ADD UNIQUE KEY `unique_log_id` (`matchevent_log_id`),
     ADD KEY `fk_push_token_id` (`push_token_id`),
     ADD KEY `fk_matchevent_log_id` (`matchevent_log_id`);
 
@@ -782,7 +781,6 @@ ALTER TABLE `push_tokens`
     ADD CONSTRAINT `fk_my_team_id` FOREIGN KEY (`my_team_id`) REFERENCES `teams` (`id`);
 
 ALTER TABLE `push_token_ratings`
-    ADD CONSTRAINT `fk_year_id6` FOREIGN KEY (`year_id`) REFERENCES `years` (`id`),
     ADD CONSTRAINT `fk_push_token_id` FOREIGN KEY (`push_token_id`) REFERENCES `push_tokens` (`id`),
     ADD CONSTRAINT `fk_matchevent_log_id` FOREIGN KEY (`matchevent_log_id`) REFERENCES `matchevent_logs` (`id`);
 

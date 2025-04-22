@@ -23,8 +23,8 @@ class PushTokenRatingsFixture extends TestFixture
                 'year_id' => 1,
                 'push_token_id' => 1,
                 'matchevent_log_id' => 1,
-                'points_expected' => 1,
-                'points_confirmed' => 1,
+                'points' => 1,
+                'confirmed' => 1,
             ],
         ];
         parent::init();

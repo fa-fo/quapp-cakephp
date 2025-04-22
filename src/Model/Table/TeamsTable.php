@@ -15,6 +15,7 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\TeamYearsTable&\Cake\ORM\Association\HasMany $TeamYears
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\HasOne $NewTeams
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\BelongsTo $PrevTeams
+ *
  * @method \App\Model\Entity\Team newEmptyEntity()
  * @method \App\Model\Entity\Team newEntity(array $data, array $options = [])
  * @method \App\Model\Entity\Team[] newEntities(array $data, array $options = [])
@@ -57,7 +58,7 @@ class TeamsTable extends Table
         $this->hasMany('TeamYears', [
             'foreignKey' => 'team_id',
         ]);
-        $this->hasOne('NewTeams', [
+        $this->hasOne('Teams', [
             'foreignKey' => 'prevTeam_id',
         ]);
         $this->belongsTo('PrevTeams', [

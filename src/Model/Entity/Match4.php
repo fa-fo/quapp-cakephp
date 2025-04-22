@@ -26,6 +26,8 @@ use Cake\ORM\Entity;
  * @property int $isPlayOff
  * @property int $canceled
  * @property int|null $isRefereeCanceled
+ * @property string $matchStartTime
+ * @property int|null $isResultOk
  * @property int|null $isTime2login
  * @property int|null $isTime2matchEnd
  * @property int|null $isTime2confirm
@@ -74,5 +76,7 @@ class Match4 extends Entity
         'team4' => true,
         'match_event_logs' => true,
         'isRefereeCanceled' => true,
+        'matchStartTime' => true,
+        'isResultOk' => true,
     ];
 }

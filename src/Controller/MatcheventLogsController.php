@@ -6,6 +6,8 @@ namespace App\Controller;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Match4event;
 use App\Model\Entity\Match4eventLog;
+use App\Model\Entity\PushToken;
+use App\Model\Entity\PushTokenRating;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\DateTime;
 use Thumber\Cake\Utility\ThumbCreator;
@@ -91,6 +93,10 @@ class MatcheventLogsController extends AppController
                         if ($this->MatcheventLogs->save($newLog)) {
                             if ($postData['matchEventCode'] == 'PHOTO_UPLOAD') {
                                 $this->savePhoto($postData['photo'], $match_id, $newLog->id);
+                            }
+
+                            if (isset($postData['expoPushToken'])) {
+                                $this->setPushTokenRating($newLog->id, $postData['matchEventCode'], $postData['expoPushToken']);
                             }
 
                             $isMatchLive = $match['logsCalc']['isMatchLive'] ?? 0;
@@ -471,6 +477,39 @@ class MatcheventLogsController extends AppController
         return $dir . '/' . $match_id . '_' . $id . '.jpg';
     }
 
+    private function setPushTokenRating(int $id, string $matchEventCode, string $expoPushToken): void
+    {
+        $settings = $this->getSettings();
+
+        if ($settings['usePushTokenRatings'] && $expoPushToken != '') {
+            $pt = $this->fetchTable('PushTokens')->find()->where(['expoPushToken' => $expoPushToken])->first();
+
+            if ($pt) {
+                /**
+                 * @var PushToken $pt
+                 */
+                $ptr = $this->fetchTable('PushTokenRatings')->newEmptyEntity();
+                /**
+                 * @var PushTokenRating $ptr
+                 */
+                $ptr->set('push_token_id', $pt->id);
+                $ptr->set('matchevent_log_id', $id);
+                $ptr->set('points', $this->getPushTokenRatingPoints($matchEventCode));
+                $this->fetchTable('PushTokenRatings')->save($ptr);
+            }
+        }
+    }
+
+    private function getPushTokenRatingPoints(string $matchEventCode): int
+    {
+        return match ($matchEventCode) {
+            'LOGIN' => 50,
+            'MATCH_CONCLUDE' => 40,
+            'PHOTO_UPLOAD' => 20,
+            default => 0,
+        };
+    }
+
     public function insertTestLogs(): void
     {
         $matches = array();
@@ -492,6 +531,24 @@ class MatcheventLogsController extends AppController
                          * @var Match4 $m
                          */
                         if ($m->resultTrend === null) {
+                            $pt = $this->fetchTable('PushTokens')->find('all')
+                                ->where(['my_year_id >=' => $settings['currentYear_id'] - 1])
+                                ->orderBy('rand()')->first();
+
+                            // LOGIN
+                            $newLog = $this->MatcheventLogs->newEmptyEntity();
+                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'LOGIN'])->first();
+                            $newLog->set('matchEvent_id', $event->get('id'));
+                            $newLog->set('match_id', $m->id);
+                            $this->MatcheventLogs->save($newLog);
+
+                            $ptr = $this->fetchTable('PushTokenRatings')->newEmptyEntity();
+                            $ptr->set('push_token_id', $pt->id);
+                            $ptr->set('matchevent_log_id', $newLog->id);
+                            $ptr->set('points', $this->getPushTokenRatingPoints('LOGIN'));
+                            $this->fetchTable('PushTokenRatings')->save($ptr);
+
+
                             // MATCH_START
                             $newLog = $this->MatcheventLogs->newEmptyEntity();
                             $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'MATCH_START'])->first();
@@ -505,13 +562,40 @@ class MatcheventLogsController extends AppController
                                 $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'GOAL_1POINT'])->first();
                                 $newLog->set('matchEvent_id', $event->get('id'));
                                 $newLog->set('match_id', $m->id);
-                                $newLog->set('team_id', $m->team1_id); // random_int(0, 1) ? $m->team1_id : $m->team2_id);
+                                $newLog->set('team_id', random_int(0, 1) ? $m->team1_id : $m->team2_id);
                                 $this->MatcheventLogs->save($newLog);
                             }
+
+                            // MATCH_END
+                            $newLog = $this->MatcheventLogs->newEmptyEntity();
+                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'MATCH_END'])->first();
+                            $newLog->set('matchEvent_id', $event->get('id'));
+                            $newLog->set('match_id', $m->id);
+                            $this->MatcheventLogs->save($newLog);
 
                             // RESULT_WIN_?
                             $newLog = $this->MatcheventLogs->newEmptyEntity();
                             $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'RESULT_WIN_TEAM1'])->first();
+                            $newLog->set('matchEvent_id', $event->get('id'));
+                            $newLog->set('match_id', $m->id);
+                            $this->MatcheventLogs->save($newLog);
+
+                            // MATCH_CONCLUDE
+                            $newLog = $this->MatcheventLogs->newEmptyEntity();
+                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'MATCH_CONCLUDE'])->first();
+                            $newLog->set('matchEvent_id', $event->get('id'));
+                            $newLog->set('match_id', $m->id);
+                            $this->MatcheventLogs->save($newLog);
+
+                            $ptr = $this->fetchTable('PushTokenRatings')->newEmptyEntity();
+                            $ptr->set('push_token_id', $pt->id);
+                            $ptr->set('matchevent_log_id', $newLog->id);
+                            $ptr->set('points', $this->getPushTokenRatingPoints('MATCH_CONCLUDE'));
+                            $this->fetchTable('PushTokenRatings')->save($ptr);
+
+                            // LOGOUT
+                            $newLog = $this->MatcheventLogs->newEmptyEntity();
+                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'LOGOUT'])->first();
                             $newLog->set('matchEvent_id', $event->get('id'));
                             $newLog->set('match_id', $m->id);
                             $this->MatcheventLogs->save($newLog);
@@ -527,7 +611,7 @@ class MatcheventLogsController extends AppController
 
     public function clearByRound(string $round_id = ''): void
     {
-        $return = false;
+        $rc = 0;
         $round_id = (int)$round_id;
         $postData = $this->request->getData();
 
@@ -538,6 +622,13 @@ class MatcheventLogsController extends AppController
                 /**
                  * @var \Cake\Database\Connection $conn
                  */
+                $sql = "DELETE ptr FROM push_token_ratings ptr
+                        LEFT JOIN matchevent_logs ml ON ml.id = ptr.matchevent_log_id
+                        LEFT JOIN `matches` m ON ml.match_id=m.id
+                        LEFT JOIN `groups` g ON m.group_id=g.id
+                        WHERE m.round_id = " . $round_id . "
+                        AND g.year_id = " . $settings['currentYear_id'] . " AND g.day_id = " . $settings['currentDay_id'];
+                $rc += $conn->execute($sql)->rowCount();
 
                 $sql = "DELETE ml FROM matchevent_logs ml
                         LEFT JOIN `matches` m ON ml.match_id=m.id
@@ -545,10 +636,10 @@ class MatcheventLogsController extends AppController
                         WHERE m.round_id = " . $round_id . "
                         AND g.year_id = " . $settings['currentYear_id'] . " AND g.day_id = " . $settings['currentDay_id'];
 
-                $return = $conn->execute($sql)->rowCount();
+                $rc += $conn->execute($sql)->rowCount();
             }
         }
 
-        $this->apiReturn($return);
+        $this->apiReturn(array('rows affected' => $rc));
     }
 }

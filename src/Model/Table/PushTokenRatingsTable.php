@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -11,7 +10,6 @@ use Cake\Validation\Validator;
 /**
  * PushTokenRatings Model
  *
- * @property \App\Model\Table\YearsTable&\Cake\ORM\Association\BelongsTo $Years
  * @property \App\Model\Table\PushTokensTable&\Cake\ORM\Association\BelongsTo $PushTokens
  * @property \App\Model\Table\MatcheventLogsTable&\Cake\ORM\Association\BelongsTo $MatcheventLogs
  *
@@ -34,7 +32,7 @@ class PushTokenRatingsTable extends Table
     /**
      * Initialize method
      *
-     * @param array<string, mixed> $config The configuration for the Table.
+     * @param array $config The configuration for the Table.
      * @return void
      */
     public function initialize(array $config): void
@@ -45,10 +43,6 @@ class PushTokenRatingsTable extends Table
         $this->setDisplayField('id');
         $this->setPrimaryKey('id');
 
-        $this->belongsTo('Years', [
-            'foreignKey' => 'year_id',
-            'joinType' => 'INNER',
-        ]);
         $this->belongsTo('PushTokens', [
             'foreignKey' => 'push_token_id',
             'joinType' => 'INNER',
@@ -68,10 +62,6 @@ class PushTokenRatingsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('year_id')
-            ->notEmptyString('year_id');
-
-        $validator
             ->integer('push_token_id')
             ->notEmptyString('push_token_id');
 
@@ -80,12 +70,12 @@ class PushTokenRatingsTable extends Table
             ->notEmptyString('matchevent_log_id');
 
         $validator
-            ->integer('points_expected')
-            ->allowEmptyString('points_expected');
+            ->integer('points')
+            ->allowEmptyString('points');
 
         $validator
-            ->integer('points_confirmed')
-            ->allowEmptyString('points_confirmed');
+            ->decimal('confirmed', 1)
+            ->allowEmptyString('confirmed');
 
         return $validator;
     }
@@ -99,7 +89,6 @@ class PushTokenRatingsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['year_id'], 'Years'), ['errorField' => 'year_id']);
         $rules->add($rules->existsIn(['push_token_id'], 'PushTokens'), ['errorField' => 'push_token_id']);
         $rules->add($rules->existsIn(['matchevent_log_id'], 'MatcheventLogs'), ['errorField' => 'matchevent_log_id']);
 

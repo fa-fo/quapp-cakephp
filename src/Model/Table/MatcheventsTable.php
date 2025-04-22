@@ -3,13 +3,14 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 /**
  * Matchevents Model
+ *
+ * @property \App\Model\Table\MatcheventLogsTable&\Cake\ORM\Association\HasMany $MatcheventLogs
  *
  * @method \App\Model\Entity\Match4event newEmptyEntity()
  * @method \App\Model\Entity\Match4event newEntity(array $data, array $options = [])
@@ -40,6 +41,10 @@ class MatcheventsTable extends Table
         $this->setTable('matchevents');
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
+
+        $this->hasMany('MatcheventLogs', [
+            'foreignKey' => 'matchEvent_id',
+        ]);
     }
 
     /**
