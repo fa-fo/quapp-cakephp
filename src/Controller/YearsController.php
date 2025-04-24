@@ -334,6 +334,10 @@ class YearsController extends AppController
             ->orderBy(array('Matches.round_id' => 'ASC'))
             ->toArray();
 
+        $ptrAll = $this->fetchTable('PushTokenRatings')->find('all');
+        $ptrConfirmed = $this->fetchTable('PushTokenRatings')->find('all', conditions: ['confirmed IS NOT' => null]);
+        $ptrRanking = $this->fetchTable('PushTokens')->find('all', conditions: ['ptrRanking IS NOT' => null]);
+
         $status['teamYearsCount'] = count($teamYears);
         $status['teamYearsEndRankingCount'] = count($teamYearsEndRanking);
         $status['teamYearsPins'] = count($teamYearsPins);
@@ -356,6 +360,10 @@ class YearsController extends AppController
         $status['matchesTeamsChangeable'] = $matchesTeamsChangeable;
 
         $status['roundsWithPossibleLogsDelete'] = array_column($roundsWithPossibleLogsDelete, 'round_id');
+
+        $status['ptrAll'] = $ptrAll->count();
+        $status['ptrConfirmed'] = $ptrConfirmed->count();
+        $status['ptrRanking'] = $ptrRanking->count();
 
         $this->apiReturn($status);
     }
