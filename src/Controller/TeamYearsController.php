@@ -13,6 +13,7 @@ use Cake\I18n\DateTime;
  * TeamYears Controller
  *
  * @property \App\Model\Table\TeamYearsTable $TeamYears
+ * @property \App\Controller\Component\PtrRankingComponent $PtrRanking
  */
 class TeamYearsController extends AppController
 {
@@ -254,6 +255,9 @@ class TeamYearsController extends AppController
         $this->apiReturn($teamYears, $year_id);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function pdfEndRanking(): void
     {
         $postData = $this->request->getData();
@@ -264,13 +268,24 @@ class TeamYearsController extends AppController
                 'fields' => array('id', 'endRanking', 'team_id', 'canceled'),
                 'conditions' => array('year_id' => $year['id']),
                 'contain' => array('Teams' => array('fields' => array('team_name' => 'name'))),
-                'order' => array('endRanking' => 'ASC', 'team_name' => 'ASC')
+                'order' => array('endRanking' => 'DESC', 'team_name' => 'ASC')
             ))->toArray();
 
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('teamYears', $teamYears);
             $this->viewBuilder()->setVar('year', $year);
+
+            $settings = $this->getSettings();
+            if ($settings['usePushTokenRatings']) {
+                $this->loadComponent('PtrRanking');
+
+                $ptrRankingSingle = $this->PtrRanking->getPtrRanking('single', $year['id']);
+                $this->viewBuilder()->setVar('ptrRankingSingle', $ptrRankingSingle);
+
+                $ptrRankingTeams = $this->PtrRanking->getPtrRanking('teams', $year['id']);
+                $this->viewBuilder()->setVar('ptrRankingTeams', $ptrRankingTeams);
+            }
 
             $this->pdfReturn();
         } else {

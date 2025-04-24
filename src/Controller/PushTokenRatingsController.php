@@ -14,6 +14,7 @@ use Cake\I18n\DateTime;
  * PushTokenRatings Controller
  *
  * @property \App\Model\Table\PushTokenRatingsTable $PushTokenRatings
+ * @property \App\Controller\Component\PtrRankingComponent $PtrRanking
  */
 class PushTokenRatingsController extends AppController
 {
@@ -128,34 +129,13 @@ class PushTokenRatingsController extends AppController
         return $stmt->rowCount();
     }
 
+    /**
+     * @throws \Exception
+     */
     public function getPtrRanking(string $mode = 'single'): void
     {
-        $return = false;
-        $query = $this->fetchTable('PushTokens')->find('all', array(
-            'fields' => array('ptrRanking', 'ptrPoints', 'Teams.name'),
-            'conditions' => array('ptrRanking IS NOT' => null, 'my_year_id' => $this->getCurrentYearId()),
-            'contain' => array('Teams')
-        ));
-
-        if ($mode == 'single') {
-            $return = $query->orderBy(array('ptrRanking' => 'ASC'))->all();
-        } else if ($mode == 'teams') {
-            $teams = $query->select([
-                'count' => $query->func()->count('*'),
-                'ptrPoints' => $query->func()->sum('ptrPoints')
-            ])
-                ->groupBy('my_team_id')
-                ->orderBy(array('ptrPoints' => 'DESC'))
-                ->all();
-
-            $c = 0;
-            foreach ($teams as $t) {
-                $c++;
-                $t['ptrRanking'] = $c;
-            }
-
-            $return = $teams;
-        }
+        $this->loadComponent('PtrRanking');
+        $return = $this->PtrRanking->getPtrRanking($mode, $this->getCurrentYearId());
 
         $this->apiReturn($return);
     }

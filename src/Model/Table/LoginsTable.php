@@ -40,10 +40,6 @@ class LoginsTable extends Table
         $this->setTable('logins');
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
-
-        $this->hasMany('LoginRights', [
-            'foreignKey' => 'login_id',
-        ]);
     }
 
     /**
