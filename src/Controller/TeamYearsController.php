@@ -267,7 +267,7 @@ class TeamYearsController extends AppController
             $teamYears = $this->TeamYears->find('all', array(
                 'fields' => array('id', 'endRanking', 'team_id', 'canceled'),
                 'conditions' => array('year_id' => $year['id']),
-                'contain' => array('Teams' => array('fields' => array('team_name' => 'name'))),
+                'contain' => array('Teams' => array('fields' => array('team_name' => 'name', 'ctRanking' => 'calcTotalRanking'))),
                 'order' => array('endRanking' => 'DESC', 'team_name' => 'ASC')
             ))->toArray();
 
@@ -280,10 +280,10 @@ class TeamYearsController extends AppController
             if ($settings['usePushTokenRatings']) {
                 $this->loadComponent('PtrRanking');
 
-                $ptrRankingSingle = $this->PtrRanking->getPtrRanking('single', $year['id']);
+                $ptrRankingSingle = $this->PtrRanking->getPtrRanking('single', $year['id'], 3, 'DESC');
                 $this->viewBuilder()->setVar('ptrRankingSingle', $ptrRankingSingle);
 
-                $ptrRankingTeams = $this->PtrRanking->getPtrRanking('teams', $year['id']);
+                $ptrRankingTeams = $this->PtrRanking->getPtrRanking('teams', $year['id'], 3, 'DESC');
                 $this->viewBuilder()->setVar('ptrRankingTeams', $ptrRankingTeams);
             }
 

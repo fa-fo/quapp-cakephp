@@ -4,21 +4,15 @@ namespace App\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\Datasource\FactoryLocator;
-use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Query\SelectQuery;
 
 class PtrRankingComponent extends Component
 {
-    /**
-     * @param string $mode
-     * @param int $yearId
-     * @return ResultSetInterface|false
-     */
-    public function getPtrRanking(string $mode, int $yearId): ResultSetInterface|false
+    public function getPtrRanking(string $mode, int $yearId, int $limit = null, string $orderDir = 'ASC'): array|false
     {
         $return = false;
         $query = FactoryLocator::get('Table')->get('PushTokens')->find('all', array(
-            'fields' => array('ptrRanking', 'ptrPoints', 'Teams.name'),
+            'fields' => array('ptrRanking', 'ptrPoints', 'team_name' => 'Teams.name'),
             'conditions' => array('ptrRanking IS NOT' => null, 'my_year_id' => $yearId),
             'contain' => array('Teams')
         ));
@@ -27,7 +21,7 @@ class PtrRankingComponent extends Component
          * @var SelectQuery $query
          */
         if ($mode == 'single') {
-            $return = $query->orderBy(array('ptrRanking' => 'ASC'))->all();
+            $return = $query->orderBy(array('ptrRanking' => 'ASC'))->toArray();
         } else if ($mode == 'teams') {
             $teams = $query->select([
                 'count' => $query->func()->count('*'),
@@ -35,7 +29,7 @@ class PtrRankingComponent extends Component
             ])
                 ->groupBy('my_team_id')
                 ->orderBy(array('ptrPoints' => 'DESC'))
-                ->all();
+                ->toArray();
 
             $c = 0;
             foreach ($teams as $t) {
@@ -44,6 +38,15 @@ class PtrRankingComponent extends Component
             }
 
             $return = $teams;
+        }
+
+        if (is_array($return)) {
+            if ($limit) {
+                $return = array_slice($return, 0, $limit);
+            }
+            if ($orderDir == 'DESC') {
+                $return = array_reverse($return);
+            }
         }
 
         return $return;
