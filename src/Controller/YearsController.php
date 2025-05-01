@@ -218,10 +218,13 @@ class YearsController extends AppController
 
         $sumCalcMatches = 0;
         $sumMatchesByTeam = array();
-        $sumJobsByTeamByRound = array();
-        $maxJobsByTeamPerRound = array(0);
-        $sumJobsByTeamBy3Rounds = array();
-        $maxJobsByTeamPer3Rounds = array(0);
+        $sumMatchesByTeamPerOpponent = array();
+        $maxMatchesByTeamPerOpponent = array();
+        $sumMatchesByTeamPerSport = array();
+        $maxMatchesByTeamPerSport = array();
+        $minMatchesByTeamPerSport = array();
+        $sumJobsByTeamPerRound = array();
+        $maxJobsByTeamPerRound = array();
 
         $matchesRefChangeable = array();
         $matchesTeamsChangeable = array();
@@ -244,7 +247,7 @@ class YearsController extends AppController
                 if ($m->isRefereeCanceled && !$m->refereeName && !$m->canceled && $m->resultTrend === null) {
                     $missingRefereesCount++;
 
-                    // search for available refs from same sport with canceled match
+                    // search for available refs from the same sport with canceled match
                     $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id'], 'sport_id' => $m->sport_id, 'Matches.canceled >' => 0);
                     $matches1 = $this->getMatches($conditionsArray, 0, 3, 1); // sortBy 3: get midday matches first
                     if (is_array($matches1)) {
@@ -273,12 +276,12 @@ class YearsController extends AppController
                 if ($settings['currentDay_id'] == 2 && ($m->canceled == 1 || $m->canceled == 2) && $m->resultTrend === null) {
                     $matchesWith1CanceledCount++;
 
-                    // search for available teams from same group and same sport with canceled match
+                    // search for available teams from the same group and the same sport with canceled match
                     $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id'], 'group_id' => $m->group_id, 'sport_id' => $m->sport_id, 'Matches.canceled >' => 0, 'Matches.canceled <' => 3, 'Matches.id !=' => $m->id);
                     $matches1 = $this->getMatches($conditionsArray, 0, 0, 1);
                     if (is_array($matches1)) {
                         foreach ($matches1 as $m1) {
-                            // check if other team is already in play in same round with non-canceled match
+                            // check if other team is already in play in the same round with non-canceled match
                             $otherTeam = $m1->canceled == 1 ? $m1->team2_id : $m1->team1_id;
                             $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id'], 'round_id' => $m->round_id, 'Matches.canceled' => 0,
                                 'OR' => array(
@@ -300,28 +303,35 @@ class YearsController extends AppController
                 $matchResultCount += ($m->resultTrend !== null ? 1 : 0);
 
                 if ($m->team1_id && $m->team2_id && !$m->isPlayOff) {
-                    $acv1 = array_count_values(array($m->team1_id, $m->team2_id));
+                    $tArray = array($m->team1_id, $m->team2_id);
+                    $sumMatchesByTeamPerOpponent[min($tArray)][max($tArray)] ??= 0;
+                    $sumMatchesByTeamPerOpponent[min($tArray)][max($tArray)]++;
+
+                    $acv1 = array_count_values($tArray);
                     foreach ($acv1 as $k => $v) {
                         $sumMatchesByTeam[$k] ??= 0;
                         $sumMatchesByTeam[$k] += $v;
+                        $sumMatchesByTeamPerSport[$m->sport_id][$k] ??= 0;
+                        $sumMatchesByTeamPerSport[$m->sport_id][$k] += $v;
                     }
                     $acv2 = array_count_values(array_filter(array($m->team1_id, $m->team2_id, $m->refereeTeam_id, $m->refereeTeamSubst_id)));
                     foreach ($acv2 as $k => $v) {
-                        $sumJobsByTeamByRound[$m->round_id][$k] ??= 0;
-                        $sumJobsByTeamByRound[$m->round_id][$k] += $v;
-
-                        $sumJobsByTeamBy3Rounds[floor(($m->round_id - 1) / 3)][$k] ??= 0;
-                        $sumJobsByTeamBy3Rounds[floor(($m->round_id - 1) / 3)][$k] += $v;
+                        $sumJobsByTeamPerRound[$m->round_id][$k] ??= 0;
+                        $sumJobsByTeamPerRound[$m->round_id][$k] += $v;
                     }
                 }
             }
         }
 
-        foreach ($sumJobsByTeamByRound as $k => $v) {
-            $maxJobsByTeamPerRound[$k] = max($v);
+        foreach ($sumMatchesByTeamPerOpponent as $k => $v) {
+            $maxMatchesByTeamPerOpponent[$k] = max($v);
         }
-        foreach ($sumJobsByTeamBy3Rounds as $k => $v) {
-            $maxJobsByTeamPer3Rounds[$k] = max($v);
+        foreach ($sumMatchesByTeamPerSport as $k => $v) {
+            $maxMatchesByTeamPerSport[$k] = max($v);
+            $minMatchesByTeamPerSport[$k] = min($v);
+        }
+        foreach ($sumJobsByTeamPerRound as $k => $v) {
+            $maxJobsByTeamPerRound[$k] = max($v);
         }
 
         // roundsWithPossibleLogsDelete: select for possible logs delete
@@ -350,8 +360,10 @@ class YearsController extends AppController
         $status['matchResultCount'] = $matchResultCount;
         $status['minMatchesByTeam'] = !empty($sumMatchesByTeam) ? min($sumMatchesByTeam) : 0;
         $status['maxMatchesByTeam'] = !empty($sumMatchesByTeam) ? max($sumMatchesByTeam) : 0;
-        $status['maxJobsByTeamPerRound'] = max($maxJobsByTeamPerRound);
-        $status['maxJobsByTeamPer3Rounds'] = max($maxJobsByTeamPer3Rounds);
+        $status['maxMatchesByTeamPerOpponent'] = !empty($maxMatchesByTeamPerOpponent) ? max($maxMatchesByTeamPerOpponent) : 0;
+        $status['maxMatchesByTeamPerSport'] = !empty($maxMatchesByTeamPerSport) ? max($maxMatchesByTeamPerSport) : 0;
+        $status['minMatchesByTeamPerSport'] = !empty($minMatchesByTeamPerSport) ? min($minMatchesByTeamPerSport) : 0;
+        $status['maxJobsByTeamPerRound'] = !empty($maxJobsByTeamPerRound) ? max($maxJobsByTeamPerRound) : 0;
 
         $status['missingRefereesCount'] = $missingRefereesCount;
         $status['matchesRefChangeable'] = $matchesRefChangeable;
