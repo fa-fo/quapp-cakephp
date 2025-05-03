@@ -953,6 +953,7 @@ class AppController extends Controller
          */
         $conn->execute(file_get_contents(__DIR__ . "/sql/setnull_team_calcTotal.sql"));
         $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcTotal.sql"));
+        $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcPower.sql"), ['year_id' => $this->getCurrentYearId()]);
 
         // Add prev team names points:
         $conditionsArray = array('Teams.calcTotalRankingPoints IS NOT' => null, 'Teams.hidden' => 0);

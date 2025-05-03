@@ -117,6 +117,9 @@ class GroupsController extends AppController
                             case 'random':
                                 $orderArray = array('Teams.calcTotalPointsPerYear' => 'DESC');
                                 break;
+                            case 'power':
+                                $orderArray = array('Teams.calcPowerRankingPoints' => 'DESC');
+                                break;
                             case 'standard':
                             default:
                                 $orderArray = array('GroupTeams.id' => 'ASC'); // like originally inserted
@@ -146,6 +149,14 @@ class GroupsController extends AppController
                                 do {
                                     $number = random_int(0, $groupsCount - 1); // groups A...D..F
                                 } while ($groupFillArray[$number] >= $newPlacenumber);
+
+                            } else if ($mode == 'power') {
+                                if ($c % 8 < 4) {
+                                    $number = $c % 4;
+                                } else {
+                                    $number = 3 - $c % 4;
+                                }
+                                $newPlacenumber = floor($c / 4) + 1;
 
                             } else { // $mode == 'standard' -> simply numbered by counter
                                 $newPlacenumber = $c % $teamsCountPerGroup + 1;
