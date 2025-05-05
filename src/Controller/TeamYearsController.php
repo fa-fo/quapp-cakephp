@@ -350,7 +350,7 @@ class TeamYearsController extends AppController
             }
 
             // update all-time ranking
-            $rowsCount = $this->updateCalcTotal();
+            $rowsCount = $this->updateCalcTotal($settings['currentYear_id']);
         }
 
         $this->apiReturn($rowsCount);

@@ -915,7 +915,7 @@ class AppController extends Controller
                 }
 
                 // reset all time stats
-                $this->updateCalcTotal();
+                $this->updateCalcTotal($settings['currentYear_id'] - 1);
 
                 $this->apiReturn(array('rows affected' => $rc));
             }
@@ -945,7 +945,7 @@ class AppController extends Controller
         }
     }
 
-    protected function updateCalcTotal(): int
+    protected function updateCalcTotal(int $yearId): int
     {
         $conn = ConnectionManager::get('default');
         /**
@@ -953,7 +953,7 @@ class AppController extends Controller
          */
         $conn->execute(file_get_contents(__DIR__ . "/sql/setnull_team_calcTotal.sql"));
         $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcTotal.sql"));
-        $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcPower.sql"), ['year_id' => $this->getCurrentYearId()]);
+        $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcPower.sql"), ['year_id' => $yearId]);
 
         // Add prev team names points:
         $conditionsArray = array('Teams.calcTotalRankingPoints IS NOT' => null, 'Teams.hidden' => 0);
