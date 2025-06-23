@@ -464,12 +464,12 @@ class AppController extends Controller
          * @var Match4 $match3
          */
         if ($match2->resultTrend) {
-            $return[1] = $match2->resultTrend == 1 ? $match2->team1_id : ($match2->resultTrend == 2 ? $match2->team2_id : 0);
-            $return[2] = $match2->resultTrend == 1 ? $match2->team2_id : ($match2->resultTrend == 2 ? $match2->team1_id : 0);
+            $return[1] = in_array($match2->resultTrend, array(1, 3)) ? $match2->team1_id : $match2->team2_id;
+            $return[2] = in_array($match2->resultTrend, array(1, 3)) ? $match2->team2_id : $match2->team1_id;
 
             if ($match3->resultTrend) {
-                $return[3] = $match3->resultTrend == 1 ? $match3->team1_id : ($match3->resultTrend == 2 ? $match3->team2_id : 0);
-                $return[4] = $match3->resultTrend == 1 ? $match3->team2_id : ($match3->resultTrend == 2 ? $match3->team1_id : 0);
+                $return[3] = in_array($match3->resultTrend, array(1, 3)) ? $match3->team1_id : $match3->team2_id;
+                $return[4] = in_array($match3->resultTrend, array(1, 3)) ? $match3->team2_id : $match3->team1_id;
             }
         }
 
