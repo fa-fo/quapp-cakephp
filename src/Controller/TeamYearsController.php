@@ -365,7 +365,7 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
         $settings = $this->getSettings();
 
-        if (($settings['isTest'] ?? 0) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $teamNamesSplit = json_decode($postData['teamNamesSplit'], true);
             foreach ($teamNamesSplit as $team) {
                 $newTy = $this->TeamYears->newEmptyEntity();
