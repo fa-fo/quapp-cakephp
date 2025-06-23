@@ -10,7 +10,6 @@ use App\Model\Entity\PushToken;
 use App\Model\Entity\PushTokenRating;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\DateTime;
-use Thumber\Cake\Utility\ThumbCreator;
 
 /**
  * MatcheventLogs Controller
@@ -46,6 +45,10 @@ class MatcheventLogsController extends AppController
                         $newLog->set('datetime', DateTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
                         if ($this->MatcheventLogs->save($newLog)) {
+                            if (isset($postData['expoPushToken'])) {
+                                $this->setPushTokenRating($newLog->id, $postData['matchEventCode'], $postData['expoPushToken']);
+                            }
+
                             $logs = $this->getLogs($match_id);
 
                             if (is_array($logs)) {
@@ -334,24 +337,50 @@ class MatcheventLogsController extends AppController
         $data = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $photoDataBase64));
 
         $dir = $this->getPhotoDir();
-        $filename0 = $this->getPhotoFilename($dir . '/original', $match_id, $id);
         if (!file_exists($dir . '/original')) {
             mkdir($dir . '/original', 0755, true);
         }
+        if (!file_exists($dir . '/web')) {
+            mkdir($dir . '/web', 0755, true);
+        }
+        if (!file_exists($dir . '/thumbs')) {
+            mkdir($dir . '/thumbs', 0755, true);
+        }
+
+        $filename0 = $this->getPhotoFilename($dir . '/original', $match_id, $id);
         file_put_contents($filename0, $data);
 
         // create thumbnails
         $filename1 = $this->getPhotoFilename($dir . '/web', $match_id, $id);
         $filename2 = $this->getPhotoFilename($dir . '/thumbs', $match_id, $id);
 
-        $thumber = new ThumbCreator($filename0);
+        $this->makeThumb($filename0, $filename1, 1200);
+        $this->makeThumb($filename0, $filename2, 120);
+    }
 
-        $thumber->resize(1200, 900);
-        $thumber->save(array('target' => $filename1));
+    private function makeThumb(string $src, string $dest, int $desired_width): void
+    {
+        /* read the source image */
+        $source_image = imagecreatefromjpeg($src);
 
-        $thumber->resize(120, 90);
-        $thumber->save(array('target' => $filename2));
+        if ($source_image) {
+            $width = imagesx($source_image);
+            $height = imagesy($source_image);
 
+            /* find the "desired height" of this thumbnail, relative to the desired width  */
+            $desired_height = (int)floor($height * ($desired_width / $width));
+
+            if ($desired_height > 0) {
+                /* create a new, "virtual" image */
+                $virtual_image = imagecreatetruecolor($desired_width, $desired_height);
+
+                /* copy source image at a resized size */
+                imagecopyresampled($virtual_image, $source_image, 0, 0, 0, 0, $desired_width, $desired_height, $width, $height);
+
+                /* create the physical thumbnail image to its destination */
+                imagejpeg($virtual_image, $dest);
+            }
+        }
     }
 
     public function getPhotosToCheck(): void
