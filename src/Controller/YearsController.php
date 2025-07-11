@@ -379,4 +379,104 @@ class YearsController extends AppController
 
         $this->apiReturn($status);
     }
+
+    public function shufflePattern24toAvoidTripples(): void
+    {
+        $return = array();
+        $query = $this->fetchTable('MatchschedulingPattern24')->find('all');
+
+        $result = $query->select(['round_id', 'field1' => 'group_concat(placenumberTeam1)', 'field2' => 'group_concat(placenumberTeam2)'])
+            ->groupBy('round_id')->toArray();
+
+        do {
+            shuffle($result);
+            $c = 0;
+            $ra = array();
+            foreach ($result as $v) { // need! because shuffle keeps combi key => value
+                $ra[$c] = $v;
+                $c++;
+            }
+            $result = $ra;
+
+            $pn_array = array();
+            foreach ($result as $newRoundId => $r) {
+                $pn_array[$newRoundId] = array_merge(explode(',', $r['field1']), explode(',', $r['field2']));
+            }
+
+            $found = array();
+            for ($i = 1; $i <= 24; $i++) {
+                foreach ($pn_array as $newRoundId => $a) {
+                    if (in_array($i, $a)) {
+                        $found[$i][] = $newRoundId;
+                    }
+                }
+            }
+
+            $doubles = 0;
+            $tripples = 0;
+            foreach ($found as $pn => $a) {
+                for ($j = 1; $j < count($a); $j++) {
+                    if ($a[$j] == $a[$j - 1] + 1) {
+                        $doubles++;
+                    }
+                    if ($j >= 2 && $a[$j] == $a[$j - 1] + 1 && $a[$j] == $a[$j - 2] + 2) {
+                        $tripples++;
+                    }
+                }
+            }
+            //$return[] = $doubles;
+
+            if ($tripples == 0) {
+                //$return[] = $found;
+
+                $a1 = array();
+                foreach ($result as $r) {
+                    $a1[] = $r['round_id'];
+                }
+                $return[] = $a1;
+                break;
+            }
+        } while ($tripples > 0);
+
+        $this->apiReturn($return);
+    }
+
+    public function checkPattern24(): void
+    {
+        $return = array();
+        $query = $this->fetchTable('MatchschedulingPattern24')->find('all');
+
+        $result = $query->select(['round_id', 'field1' => 'group_concat(placenumberTeam1)', 'field2' => 'group_concat(placenumberTeam2)'])
+            ->groupBy('round_id')->toArray();
+
+        $pn_array = array();
+        foreach ($result as $r) {
+            $pn_array[$r['round_id']] = array_merge(explode(',', $r['field1']), explode(',', $r['field2']));
+        }
+
+        $found = array();
+        for ($i = 1; $i <= 24; $i++) {
+            foreach ($pn_array as $roundId => $a) {
+                if (in_array($i, $a)) {
+                    $found[$i][] = $roundId;
+                }
+            }
+        }
+
+        $doubles = 0;
+        $tripples = 0;
+        foreach ($found as $pn => $a) {
+            for ($j = 1; $j < count($a); $j++) {
+                if ($a[$j] == $a[$j - 1] + 1) {
+                    $doubles++;
+                }
+                if ($j >= 2 && $a[$j] == $a[$j - 1] + 1 && $a[$j] == $a[$j - 2] + 2) {
+                    $tripples++;
+                }
+            }
+        }
+        $return[] = $tripples;
+
+        $this->apiReturn($found);
+    }
 }
