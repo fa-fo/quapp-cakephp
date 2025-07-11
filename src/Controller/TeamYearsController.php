@@ -263,20 +263,27 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
             $year = $this->getCurrentYear()->toArray();
             $teamYears = $this->TeamYears->find('all', array(
-                'fields' => array('id', 'endRanking', 'team_id', 'canceled'),
+                'contain' => array('Teams'),
                 'conditions' => array('year_id' => $year['id']),
-                'contain' => array('Teams' => array('fields' => array('team_name' => 'name', 'ctRanking' => 'calcTotalRanking'))),
-                'order' => array('endRanking' => 'DESC', 'team_name' => 'ASC')
+                'order' => array('endRanking' => 'DESC')
             ))->toArray();
+
+            foreach ($teamYears as $ty) {
+                $ty['group_team'] = $this->fetchTable('GroupTeams')->find('all', array(
+                    'contain' => array('Groups' => array('fields' => array('name', 'year_id', 'day_id'))),
+                    'conditions' => array('team_id' => $ty['team_id'], 'Groups.year_id' => $year['id'], 'Groups.day_id' => $settings['currentDay_id']),
+                    'order' => array('GroupTeams.id' => 'DESC')
+                ))->first()->toArray();
+            }
 
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('teamYears', $teamYears);
             $this->viewBuilder()->setVar('year', $year);
 
-            $settings = $this->getSettings();
             if ($settings['usePushTokenRatings']) {
                 $this->loadComponent('PtrRanking');
 

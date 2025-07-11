@@ -1,5 +1,4 @@
 <?php
-
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 $mpdf = new \Mpdf\Mpdf();
@@ -45,6 +44,7 @@ try {
         $html .= '<p>Die besten, fleißigsten Protokollierenden:</p>';
         $html .= '<table border="0"  cellspacing="0" cellpadding="0" align="center" width="90%">';
         $html .= '<tr><td class="b0">';
+        /*
         $html .= '<p>Einzelwertung:</p>';
         $html .= '<table border="0"  cellspacing="0" cellpadding="1" align="left" width="90%">';
         foreach ($ptrRankingSingle as $ptr) {
@@ -55,6 +55,7 @@ try {
             $html .= '</tr>';
         }
         $html .= '</table>';
+        */
         $html .= '</td><td class="b0">';
 
         $html .= '<p>Teamwertung:</p>';
@@ -92,8 +93,9 @@ try {
         $c++;
         $html .= '<tr>';
         $html .= '<td width="50" align="right"><b>' . ($ty->endRanking ?? 0) . '</b></td>';
-        $html .= '<td>' . ($ty->canceled ? '<s>' : '') . $ty->team_name . ($ty->canceled ? '</s>' : '') . '</td>';
-        $html .= '<td width="50" align="right"><i>' . ($ty->ctRanking < 21 ? $ty->ctRanking . '.' : '') . '</i></td>';
+        $html .= '<td>' . ($ty->canceled ? '<s>' : '') . $ty->team->name . ' ' . ($ty->canceled ? '</s>' : '') . '</td>';
+        $html .= '<td width="50" align="center">' . ($ty['group_team']['calcRanking'] < 4 ? $ty['group_team']['calcPointsPlus'] . ':' . $ty['group_team']['calcPointsMinus'] : '') . '</td>';
+        $html .= '<td width="50" align="right"><i>' . ($ty->team->calcTotalRanking < 16 || $ty['group_team']['calcRanking'] < 4 ? $ty->team->calcTotalRanking . '.' : '') . '</i></td>';
         $html .= '</tr>';
         if (in_array($c, $endTableArray)) {
             $html .= '</table>';
