@@ -10,6 +10,7 @@ use Cake\ORM\Entity;
  *
  * @property int $id
  * @property string $name
+ * @property string $code
  * @property int $goalFactor
  * @property string|null $color
  * @property string|null $icon
@@ -28,6 +29,7 @@ class Sport extends Entity
      */
     protected array $_accessible = [
         'name' => true,
+        'code' => true,
         'goalFactor' => true,
         'color' => true,
         'icon' => true,
