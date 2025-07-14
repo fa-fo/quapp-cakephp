@@ -380,9 +380,10 @@ class MatchesController extends AppController
                         $newLog->set('matchEvent_id', $this->fetchTable('Matchevents')->find()->where(['code' => 'RESULT_CONFIRM'])->first()->get('id'));
                         $this->fetchTable('MatcheventLogs')->save($newLog);
 
+                        $return[$c] = $match->toArray();
+
                         if ($match->round->autoUpdateResults) {
                             $calcRanking = $this->getCalcRanking($match->team1_id, $match->team2_id, $c == $count);
-                            $return[$c] = $match->toArray();
                             $return['calcRanking'][$c] = $calcRanking;
                         }
                     }
