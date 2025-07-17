@@ -31,7 +31,6 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\I18n\DateTime;
-use Cake\I18n\Time;
 use Cake\View\JsonView;
 
 /**
@@ -1094,16 +1093,17 @@ class AppController extends Controller
             && ($dayId == 0 || $dayId == $settings['currentDay_id'])
             && ($settings['isTest'] == 1 || $now == $day)
         ) {
+            $time = DateTime::now();
+            $time = $time->addMinutes($offset);
+
             $cRound = $this->fetchTable('Rounds')->find('all', array(
-                'conditions' => array('timeStartDay' . $dayId . ' <=' => Time::now()),
+                'conditions' => array('timeStartDay' . $dayId . ' <=' => $time),
                 'order' => array('id' => 'DESC')
             ))->first();
 
             $return = $cRound ? $cRound->id : 1;
 
             if ($settings['isTest'] == 1 && !$cRound) {
-                $time = DateTime::now();
-                $time = $time->addMinutes($offset);
                 $time = $time->subHours($dayId == 2 ? 1 : 2);
                 $cycle = (int)floor($time->hour / 8);
 
