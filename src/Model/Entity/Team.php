@@ -18,6 +18,7 @@ use Cake\ORM\Entity;
  * @property int|null $prevTeam_id
  * @property int $hidden
  * @property int $testTeam
+ * @property int|null $calcPowerRankingPoints
  *
  * @property \App\Model\Entity\GroupTeam[] $group_teams
  * @property \App\Model\Entity\Match4[] $matches
@@ -49,5 +50,6 @@ class Team extends Entity
         'prevTeam' => true,
         'hidden' => true,
         'testTeam' => true,
+        'calcPowerRankingPoints' => true,
     ];
 }

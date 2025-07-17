@@ -681,35 +681,40 @@ class MatchesController extends AppController
                     'Groups.day_id' => $this->getCurrentDayId(),
                 );
 
-                $matches = $this->getMatches($conditionsArray, 1);
-                if (is_array($matches) && count($matches) > 0) {
-                    foreach ($matches as $m) {
-                        /**
-                         * @var Match4 $m
-                         */
-                        if ($m->team1_id && $m->team2_id) {
-                            if ($m->resultTrend === null || $m->resultGoals1 === null || $m->resultGoals2 === null) {
-                                $factor1 = ($m->teams1)->calcTotalPointsPerYear ? (int)(($m->teams1)->calcTotalPointsPerYear) / 7 : 1;
-                                $factor2 = ($m->teams2)->calcTotalPointsPerYear ? (int)(($m->teams2)->calcTotalPointsPerYear) / 7 : 1;
-                                $sportsFactor = $m->sport->goalFactor;
+                $matches = $this->fetchTable('Matches')->find('all', array(
+                    'contain' => array('Groups', 'Teams1', 'Teams2', 'Sports'),
+                    'conditions' => $conditionsArray
+                ))->toArray();
 
-                                $m->set('resultGoals1', (int)round(random_int(0, 44) / $sportsFactor * $factor1) * $sportsFactor);
-                                $m->set('resultGoals2', (int)round(random_int(0, 44) / $sportsFactor * $factor2) * $sportsFactor);
+                foreach ($matches as $m) {
+                    /**
+                     * @var Match4 $m
+                     */
+                    if ($m->resultTrend === null || $m->resultGoals1 === null || $m->resultGoals2 === null) {
+                        $sportsFactor = $m->sport->goalFactor;
+                        /*
+                        $factor1 = ($m->teams1)->calcTotalPointsPerYear ? (int)(($m->teams1)->calcTotalPointsPerYear) / 7 : 1;
+                        $factor2 = ($m->teams2)->calcTotalPointsPerYear ? (int)(($m->teams2)->calcTotalPointsPerYear) / 7 : 1;
 
-                                $diff = (int)($m->resultGoals1 - $m->resultGoals2);
-                                $m->set('resultTrend', $diff > 0 ? 1 : ($diff < 0 ? 2 : 0));
-                                $this->Matches->save($m);
-                            }
-                        }
+                        $m->set('resultGoals1', (int)round(random_int(0, 44) / $sportsFactor * $factor1) * $sportsFactor);
+                        $m->set('resultGoals2', (int)round(random_int(0, 44) / $sportsFactor * $factor2) * $sportsFactor);
+                        */
+
+                        $m->set('resultGoals1', (int)max((($m->teams1->calcPowerRankingPoints ?? 0) - ($m->teams2->calcPowerRankingPoints ?? 0)) / 2, 0) * $sportsFactor);
+                        $m->set('resultGoals2', (int)max((($m->teams2->calcPowerRankingPoints ?? 0) - ($m->teams1->calcPowerRankingPoints ?? 0)) / 2, 0) * $sportsFactor);
+
+                        $diff = (int)($m->resultGoals1 - $m->resultGoals2);
+                        $m->set('resultTrend', $diff > 0 ? 1 : ($diff < 0 ? 2 : 0));
+                        $this->Matches->save($m);
                     }
 
-                    $this->getCalcRanking();
                 }
+
+                $this->getCalcRanking();
             }
         }
 
-        $matchesCount = is_array($matches) ? count($matches) : false;
-        $this->apiReturn($matchesCount);
+        $this->apiReturn(count($matches));
     }
 
     private function getDayIdByGroupId(int $group_id): int|bool
