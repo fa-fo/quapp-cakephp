@@ -2,7 +2,7 @@
 
 use Cake\I18n\DateTime;
 
-function ellipsis(string $input, int $maxLength = 25): string
+function ellipsis(string $input, int $maxLength = 24): string
 {
     return strlen($input) > $maxLength ? mb_convert_encoding(substr($input, 0, $maxLength), 'UTF-8', 'UTF-8') . "..." : $input;
 }
