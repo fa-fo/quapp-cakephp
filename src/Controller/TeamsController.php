@@ -57,17 +57,17 @@ class TeamsController extends AppController
         $team = $this->getTeams($conditionsArray, array(
             'TeamYears' => array('fields' => array('id', 'team_id', 'year_id', 'endRanking', 'canceled'), 'sort' => array('year_id' => 'DESC')),
             'TeamYears.Years' => array('fields' => array('year_name' => 'name'),
-                'conditions' => array('TeamYears.canceled' => 0, 'year_id !=' => $settings['showEndRanking'] ? '' : $settings['currentYear_id'])
+                'conditions' => array('year_id !=' => $settings['showEndRanking'] ? '' : $settings['currentYear_id'])
             ),
             'PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships', 'prevTeam_id')),
             'PrevTeams.TeamYears' => array('fields' => array('id', 'team_id', 'year_id', 'endRanking', 'canceled'), 'sort' => array('year_id' => 'DESC')),
             'PrevTeams.TeamYears.Years' => array('fields' => array('year_name' => 'name'),
-                'conditions' => array('TeamYears.canceled' => 0)
+                'conditions' => array()
             ),
             'PrevTeams.PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships')),
             'PrevTeams.PrevTeams.TeamYears' => array('fields' => array('id', 'team_id', 'year_id', 'endRanking', 'canceled'), 'sort' => array('year_id' => 'DESC')),
             'PrevTeams.PrevTeams.TeamYears.Years' => array('fields' => array('year_name' => 'name'),
-                'conditions' => array('TeamYears.canceled' => 0)
+                'conditions' => array()
             ),
         ));
 

@@ -236,8 +236,8 @@ class TeamYearsController extends AppController
 
         $teamYears = $this->TeamYears->find('all', array(
             'fields' => array('id', 'endRanking', 'team_id'),
-            'conditions' => array('year_id' => $year_id, 'canceled' => 0),
             'contain' => array('Teams' => array('fields' => array('team_name' => 'name'))),
+            'conditions' => array('year_id' => $year_id, 'Teams.hidden' => 0),
             'order' => array('endRanking' => 'ASC', 'team_name' => 'ASC')
         ))->toArray();
 

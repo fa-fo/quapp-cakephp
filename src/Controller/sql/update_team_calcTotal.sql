@@ -4,7 +4,7 @@ UPDATE teams t1
         FROM (
                  SELECT max(t2.id) as id, count(ty.id) AS cc, sum(ty.endRanking = 1) AS ww, sum(rp.points) AS pp
                  FROM teams t2
-                          LEFT JOIN team_years ty ON (t2.id = ty.team_id AND ty.canceled = 0 AND ty.endRanking > 0 AND
+                          LEFT JOIN team_years ty ON (t2.id = ty.team_id AND t2.hidden = 0 AND ty.endRanking > 0 AND
                                                       ty.endRanking IS NOT NULL)
                           LEFT JOIN rankingpoints rp ON ty.endRanking = rp.endRanking
                  GROUP BY ty.team_id
