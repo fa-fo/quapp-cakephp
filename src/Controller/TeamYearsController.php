@@ -135,9 +135,12 @@ class TeamYearsController extends AppController
 
         if ($id && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $year_id = $this->getCurrentYearId();
+            $day_id = $this->getCurrentDayId();
+
             $teamYear = $this->TeamYears->find('all', array(
                 'conditions' => array('id' => $id, 'year_id' => $year_id)
             ))->first();
+
             if ($teamYear) {
                 /**
                  * @var TeamYear $teamYear
@@ -145,11 +148,9 @@ class TeamYearsController extends AppController
                 $teamYear->set('canceled', $undo ? 0 : 1);
                 $this->TeamYears->save($teamYear);
 
-                $day_id = $this->getCurrentDayId();
-
                 $groupTeam = $this->fetchTable('GroupTeams')->find('all', array(
                     'contain' => array('Groups' => array('fields' => array('year_id', 'day_id'))),
-                    'conditions' => array('team_id' => $teamYear->get('team_id'), 'Groups.year_id' => $year_id, 'Groups.day_id' => $day_id),
+                    'conditions' => array('team_id' => $teamYear->team_id, 'Groups.year_id' => $year_id, 'Groups.day_id' => $day_id),
                 ))->first();
 
                 if ($groupTeam) {
@@ -159,30 +160,33 @@ class TeamYearsController extends AppController
                     $groupTeam->set('canceled', $undo ? 0 : 1);
                     $this->fetchTable('GroupTeams')->save($groupTeam);
 
-                    $this->getCalcRanking($teamYear->get('team_id'));
+                    $this->getCalcRanking($teamYear->team_id);
                 }
 
                 // cancel matches:
                 $conditionsArray = array(
                     'resultTrend IS' => null,
-                    'Groups.year_id' => $teamYear->get('year_id'),
+                    'Groups.year_id' => $year_id,
                     'Groups.day_id' => $day_id,
                     'OR' => array(
-                        'team1_id' => $teamYear->get('team_id'),
-                        'team2_id' => $teamYear->get('team_id'),
+                        'team1_id' => $teamYear->team_id,
+                        'team2_id' => $teamYear->team_id,
                     )
                 );
+                $matches = $this->fetchTable('Matches')->find('all', array(
+                    'contain' => array('Groups'),
+                    'conditions' => $conditionsArray
+                ))->all();
 
-                $matches = $this->getMatches($conditionsArray);
-                if (is_array($matches)) {
-                    foreach ($matches as $m) {
-                        /**
-                         * @var Match4 $m
-                         */
-                        $a = $m->team1_id == $teamYear->get('team_id') ? 1 : 2;
-                        $m->set('canceled', $undo ? $m->canceled - $a : $a + $m->canceled);
-                        $this->fetchTable('Matches')->save($m);
-                    }
+                foreach ($matches as $m) {
+                    /**
+                     * @var Match4 $m
+                     */
+                    $a = $m->team1_id == $teamYear->team_id ? 1 : 2;
+                    $canceled = $undo && $m->canceled ? $m->canceled - $a : (!$undo ? $a + $m->canceled : $m->canceled);
+
+                    $m->set('canceled', $canceled);
+                    $this->fetchTable('Matches')->save($m);
                 }
             }
         }
