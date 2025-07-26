@@ -232,16 +232,15 @@ class MatchesController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['refereeTeamSubst_id']) && isset($postData['password']) && $this->checkUsernamePassword('supervisor', $postData['password'])) {
-            $conditionsArray = array('Matches.id' => $id);
-            $matches = $this->getMatches($conditionsArray, 1);
-            if (is_array($matches)) {
-                $match = $matches[0];
-                /**
-                 * @var Match4 $match
-                 */
-                $match->set('refereeTeamSubst_id', (int)$postData['refereeTeamSubst_id']);
-                $this->Matches->save($match);
-            }
+            $match = $this->fetchTable('Matches')->find('all', array(
+                'conditions' => array('id' => $id)
+            ))->first();
+
+            /**
+             * @var Match4 $match
+             */
+            $match->set('refereeTeamSubst_id', (int)$postData['refereeTeamSubst_id']);
+            $this->Matches->save($match);
         }
 
         $this->apiReturn($match);
