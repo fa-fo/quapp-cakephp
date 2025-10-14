@@ -13,6 +13,7 @@ use Cake\I18n\DateTime;
  * Matches Controller
  *
  * @property \App\Model\Table\MatchesTable $Matches
+ * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
  */
 class MatchesController extends AppController
 {
@@ -378,6 +379,10 @@ class MatchesController extends AppController
                         $newLog->set('datetime', DateTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
                         $newLog->set('matchEvent_id', $this->fetchTable('Matchevents')->find()->where(['code' => 'RESULT_CONFIRM'])->first()->get('id'));
                         $this->fetchTable('MatcheventLogs')->save($newLog);
+
+                        // create timeline image
+                        $this->loadComponent('MatchTimelineImage');
+                        $this->MatchTimelineImage->createMatchTimelineImage($match, $settings['currentYear_id']);
 
                         $return[$c] = $match->toArray();
 

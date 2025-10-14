@@ -15,6 +15,7 @@ use Cake\I18n\DateTime;
  * MatcheventLogs Controller
  *
  * @property \App\Model\Table\MatcheventLogsTable $MatcheventLogs
+ * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
  */
 class MatcheventLogsController extends AppController
 {
@@ -674,5 +675,30 @@ class MatcheventLogsController extends AppController
         }
 
         $this->apiReturn(array('rows affected' => $rc));
+    }
+
+    public function createAllTimelines(string $match_id = ''): void
+    {
+        $match_id = (int)$match_id;
+        $postData = $this->request->getData();
+        $settings = $this->getSettings();
+
+        $conditionsArray = $match_id > 0 ? array('Matches.id' => $match_id)
+            : array(
+                'Groups.year_id' => $settings['currentYear_id'],
+                'Groups.day_id' => $settings['currentDay_id'],
+            );
+
+        $matches = $this->fetchTable('Matches')->find('all', array(
+            'contain' => array('Groups', 'Teams1', 'Teams2', 'Sports'),
+            'conditions' => $conditionsArray
+        ))->all();
+
+        $this->loadComponent('MatchTimelineImage');
+        foreach ($matches as $match) {
+            $this->MatchTimelineImage->createMatchTimelineImage($match, $settings['currentYear_id']);
+        }
+
+        $this->apiReturn(count($matches));
     }
 }
