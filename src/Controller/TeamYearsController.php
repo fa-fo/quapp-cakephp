@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Setting;
@@ -96,7 +97,10 @@ class TeamYearsController extends AppController
             ))->toArray();
 
             foreach ($groups as $group) {
-                $group['rounds'] = $this->getMatchesByGroup($group);
+                /**
+                 * @var Group $group
+                 */
+                $group['rounds'] = $this->getMatchesByGroup($group->toArray());
             }
 
             $teamYears = $this->TeamYears->find('all', array(

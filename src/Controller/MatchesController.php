@@ -59,18 +59,16 @@ class MatchesController extends AppController
     public function byGroup(string $group_id = '', string $adminView = ''): void
     {
         $group = $this->getPrevAndNextGroup((int)$group_id);
-        /**
-         * @var Group|null $group
-         */
+
         if ($group) {
-            $showTime = $this->getScheduleShowTime($group->year_id, $group->day_id, (int)$adminView);
+            $showTime = $this->getScheduleShowTime($group['year_id'], $group['day_id'], (int)$adminView);
             if ($showTime !== 0) {
                 $group['showTime'] = $showTime;
             } else {
                 $group['rounds'] = $this->getMatchesByGroup($group);
-                $group['currentRoundId'] = $this->getCurrentRoundId($group->year_id, $group->day_id);
+                $group['currentRoundId'] = $this->getCurrentRoundId($group['year_id'], $group['day_id']);
             }
-            $this->apiReturn($group, $group->year_id, $group->day_id);
+            $this->apiReturn($group, $group['year_id'], $group['day_id']);
         }
 
         $this->apiReturn(array());
@@ -93,7 +91,10 @@ class MatchesController extends AppController
             $day = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
             foreach ($groups as $group) {
-                $group['rounds'] = $this->getMatchesByGroup($group);
+                /**
+                 * @var Group $group
+                 */
+                $group['rounds'] = $this->getMatchesByGroup($group->toArray());
                 $group['day'] = $day;
             }
 

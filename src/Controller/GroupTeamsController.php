@@ -24,41 +24,42 @@ class GroupTeamsController extends AppController
         $group_id = (int)$group_id;
         $adminView = (int)$adminView;
         $group = $this->getPrevAndNextGroup($group_id);
-        /**
-         * @var Group|null $group
-         */
 
         if ($group) {
             $group['showRanking'] = 1;
             $group['groupTeams'] = $this->getRanking($group);
             $settings = $this->getSettings();
 
-            if (!$adminView && $group->year_id == $settings['currentYear_id']) {
+            if (!$adminView && $group['year_id'] == $settings['currentYear_id']) {
                 $group['isTest'] = $settings['isTest'];
 
-                if ($group->day_id == 2 // was: && $settings['alwaysAutoUpdateResults'] == 1
-                    && $this->getCurrentRoundId($settings['currentYear_id'], $settings['currentDay_id'], 10) > 12) {
+                if ($group['day_id'] == 2
+                    && $this->getCurrentRoundId($settings['currentYear_id'], 2, 10) > 12) {
                     if ($settings['showEndRanking'] == 0) {
                         $group['groupTeams'] = null;
                         $group['showRanking'] = 0;
                     }
                 }
+
+                if ($group['day_id'] == $settings['currentDay_id']) {
+                    $group['currentRoundId'] = $this->getCurrentRoundId($group['year_id'], $group['day_id']);
+                }
             }
 
-            $this->apiReturn($group, $group->year_id, $group->day_id);
+            $this->apiReturn($group, $group['year_id'], $group['day_id']);
         }
 
         $this->apiReturn(array());
     }
 
-    private function getRanking(Group $group): array
+    private function getRanking(array $group): array
     {
         return $this->GroupTeams->find('all', array(
             'contain' => array(
                 'Groups' => array('fields' => array('group_id' => 'Groups.id', 'group_name' => 'Groups.name', 'year_id', 'day_id')),
                 'Teams' => array('fields' => array('name'))
             ),
-            'conditions' => array('GroupTeams.group_id' => $group->id, 'Groups.year_id' => $group->year_id, 'Groups.day_id' => $group->day_id, 'Teams.hidden' => 0),
+            'conditions' => array('GroupTeams.group_id' => $group['id'], 'Groups.year_id' => $group['year_id'], 'Groups.day_id' => $group['day_id'], 'Teams.hidden' => 0),
             'order' => array('Groups.id' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcRanking' => 'ASC', 'Teams.name' => 'ASC')
         ))->toArray();
     }
@@ -79,7 +80,10 @@ class GroupTeamsController extends AppController
             $day = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
             foreach ($groups as $group) {
-                $group['groupTeams'] = $this->getRanking($group);
+                /**
+                 * @var Group $group
+                 */
+                $group['groupTeams'] = $this->getRanking($group->toArray());
                 $group['day'] = $day;
             }
 

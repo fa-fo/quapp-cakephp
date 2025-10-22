@@ -28,7 +28,6 @@ use App\Model\Entity\Year;
 use App\View\PdfView;
 use Cake\Controller\Controller;
 use Cake\Datasource\ConnectionManager;
-use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\I18n\DateTime;
 use Cake\View\JsonView;
@@ -97,6 +96,10 @@ class AppController extends Controller
                 }
 
                 $return = array_merge($return, array('yearSelected' => $yearSelected));
+            }
+            
+            if (is_array($return['object']) && ($return['object']['currentRoundId'] ?? 0) > 0) {
+                $return['year']['secondsUntilReload'] = $this->getSecondsUntilReload($return['object']['currentRoundId'], $year['settings']);
             }
 
             $this->set($return);
@@ -181,7 +184,7 @@ class AppController extends Controller
         return $group;
     }
 
-    protected function getPrevAndNextGroup(int $group_id): array|EntityInterface|null
+    protected function getPrevAndNextGroup(int $group_id): array|null
     {
         $group_id = $group_id ?: $this->getCurrentGroupId(0);
 
@@ -195,6 +198,7 @@ class AppController extends Controller
                     'conditions' => array('year_id' => $group->year_id, 'day_id' => $group->day_id)
                 ))->count();
 
+                $group = $group->toArray();
                 $groupPosNumber = $this->getGroupPosNumber($group_id);
                 if ($groupPosNumber + 1 > 1) {
                     $group['prevGroup'] = $this->fetchTable('Groups')->find('all', array(
@@ -851,10 +855,10 @@ class AppController extends Controller
         return $alphabet[$number] ?? false;
     }
 
-    protected function getMatchesByGroup(Group $group): array
+    protected function getMatchesByGroup(array $group): array
     {
         $rounds = $this->fetchTable('Rounds')->find('all', array(
-            'fields' => array('id', 'timeStartDay' . $group->day_id, 'autoUpdateResults'),
+            'fields' => array('id', 'timeStartDay' . $group['day_id'], 'autoUpdateResults'),
             'order' => array('id' => 'ASC')
         ))->toArray();
 
@@ -864,8 +868,8 @@ class AppController extends Controller
                  * @var Round $round
                  */
                 $conditionsArray = array(
-                    'group_id' => $group->id,
-                    'round_id' => $round->id,
+                    'group_id' => $group['id'],
+                    'round_id' => $round['id'],
                 );
 
                 $round['matches'] = $this->getMatches($conditionsArray);
@@ -1081,7 +1085,7 @@ class AppController extends Controller
         return $refereeGroup;
     }
 
-    protected function getCurrentRoundId(int $yearId = 0, int $dayId = 0, int $offset = 0): float|int
+    protected function getCurrentRoundId(int $yearId = 0, int $dayId = 0, int $offset = 0): int
     {
         $return = 0;
         $settings = $this->getSettings();
@@ -1109,6 +1113,30 @@ class AppController extends Controller
 
                 if ($cycle != 1) {
                     $return = ($time->hour % 8 * 2 + 1) + (int)floor($time->minute / 30);
+                }
+            }
+        }
+
+        return $return;
+    }
+
+    private function getSecondsUntilReload(int $currentRoundId, array $settings): array
+    {
+        $return = array(0, 0);
+
+        if ($currentRoundId > 0) {
+            $cRound = $this->fetchTable('Rounds')->find()->where(['id' => $currentRoundId])->first();
+
+            $rStartTime = DateTime::createFromFormat('H:i:s', $cRound['timeStartDay' . $settings['currentDay_id']]->i18nFormat('HH:mm:ss'));
+            $reloadTime = $rStartTime->addMinutes($settings['time2ConfirmMinsAfterFrom'] + 1);
+            $return[0] = DateTime::now()->diffInSeconds($reloadTime, false);
+
+            if ($return[0] < 0) {
+                $nRound = $this->fetchTable('Rounds')->find()->where(['id' => $currentRoundId + 1])->first();
+                if ($nRound) {
+                    $rStartTime = DateTime::createFromFormat('H:i:s', $nRound['timeStartDay' . $settings['currentDay_id']]->i18nFormat('HH:mm:ss'));
+                    $reloadTime = $rStartTime->addMinutes(1);
+                    $return[1] = DateTime::now()->diffInSeconds($reloadTime, false);
                 }
             }
         }
