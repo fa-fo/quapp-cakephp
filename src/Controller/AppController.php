@@ -97,7 +97,7 @@ class AppController extends Controller
 
                 $return = array_merge($return, array('yearSelected' => $yearSelected));
             }
-            
+
             if (is_array($return['object']) && ($return['object']['currentRoundId'] ?? 0) > 0) {
                 $return['year']['secondsUntilReload'] = $this->getSecondsUntilReload($return['object']['currentRoundId'], $year['settings']);
             }
@@ -1125,19 +1125,19 @@ class AppController extends Controller
         $return = array(0, 0);
 
         if ($currentRoundId > 0) {
+            // current round result confirmation time
             $cRound = $this->fetchTable('Rounds')->find()->where(['id' => $currentRoundId])->first();
 
             $rStartTime = DateTime::createFromFormat('H:i:s', $cRound['timeStartDay' . $settings['currentDay_id']]->i18nFormat('HH:mm:ss'));
             $reloadTime = $rStartTime->addMinutes($settings['time2ConfirmMinsAfterFrom'] + 1);
-            $return[0] = DateTime::now()->diffInSeconds($reloadTime, false);
+            $return[0] = max(DateTime::now()->diffInSeconds($reloadTime, false), 0);
 
-            if ($return[0] < 0) {
-                $nRound = $this->fetchTable('Rounds')->find()->where(['id' => $currentRoundId + 1])->first();
-                if ($nRound) {
-                    $rStartTime = DateTime::createFromFormat('H:i:s', $nRound['timeStartDay' . $settings['currentDay_id']]->i18nFormat('HH:mm:ss'));
-                    $reloadTime = $rStartTime->addMinutes(1);
-                    $return[1] = DateTime::now()->diffInSeconds($reloadTime, false);
-                }
+            // next round start time
+            $nRound = $this->fetchTable('Rounds')->find()->where(['id' => $currentRoundId + 1])->first();
+            if ($nRound) {
+                $rStartTime = DateTime::createFromFormat('H:i:s', $nRound['timeStartDay' . $settings['currentDay_id']]->i18nFormat('HH:mm:ss'));
+                $reloadTime = $rStartTime->addMinutes(1);
+                $return[1] = max(DateTime::now()->diffInSeconds($reloadTime, false), 0);
             }
         }
 
