@@ -99,7 +99,7 @@ class AppController extends Controller
             }
 
             if (is_array($return['object']) && ($return['object']['currentRoundId'] ?? 0) > 0) {
-                $return['year']['secondsUntilReload'] = $this->getSecondsUntilReload($return['object']['currentRoundId'], $year['settings']);
+                $return['object']['secondsUntilReload'] = $this->getSecondsUntilReload($return['object']['currentRoundId'], $year['settings']);
             }
 
             $this->set($return);
