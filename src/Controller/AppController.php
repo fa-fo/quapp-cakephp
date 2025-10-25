@@ -1090,29 +1090,26 @@ class AppController extends Controller
         $return = 0;
         $settings = $this->getSettings();
         $currentYear = $this->getCurrentYear()->toArray();
-        $day = $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd');
-        $now = DateTime::now()->i18nFormat('yyyy-MM-dd');
+        $day = $currentYear['day' . $settings['currentDay_id']];
+        $time = $this->getQTime($settings);
 
         if (($yearId == 0 || $yearId == $settings['currentYear_id'])
             && ($dayId == 0 || $dayId == $settings['currentDay_id'])
-            && ($settings['isTest'] == 1 || $now == $day)
+            && ($settings['isTest'] == 1 || $time->i18nFormat('yyyy-MM-dd') == $day->i18nFormat('yyyy-MM-dd'))
         ) {
-            $time = DateTime::now();
             $time = $time->addMinutes($offset);
 
             $cRound = $this->fetchTable('Rounds')->find('all', array(
-                'conditions' => array('timeStartDay' . $dayId . ' <=' => $time),
+                'conditions' => array('OR' => array('timeStartDay' . $dayId . ' <=' => $time, 'id' => 1)),
                 'order' => array('id' => 'DESC')
-            ))->first();
+            ))->first()->toArray();
 
-            $return = $cRound ? $cRound->id : 1;
-
-            if ($settings['isTest'] == 1 && !$cRound) {
-                $time = $time->subHours($dayId == 2 ? 1 : 2);
-                $cycle = (int)floor($time->hour / 8);
-
-                if ($cycle != 1) {
-                    $return = ($time->hour % 8 * 2 + 1) + (int)floor($time->minute / 30);
+            if ($cRound) {
+                $return = $cRound['id'];
+                $time = $time->subMinutes($offset); // return to orig
+                $ct = DateTime::createFromFormat('H:i:s', $cRound['timeStartDay' . $dayId]->i18nFormat('HH:mm:ss'));
+                if ($ct->diffInMinutes($time) > 40) {
+                    $return = 0;
                 }
             }
         }
@@ -1125,22 +1122,50 @@ class AppController extends Controller
         $return = array(0, 0);
 
         if ($currentRoundId > 0) {
-            // current round result confirmation time
-            $cRound = $this->fetchTable('Rounds')->find()->where(['id' => $currentRoundId])->first();
+            $time = $this->getQTime($settings);
+            $reloadOffset0 = $settings['time2ConfirmMinsAfterFrom'] + 1;
+            $reloadOffset1 = 1;
 
-            $rStartTime = DateTime::createFromFormat('H:i:s', $cRound['timeStartDay' . $settings['currentDay_id']]->i18nFormat('HH:mm:ss'));
-            $reloadTime = $rStartTime->addMinutes($settings['time2ConfirmMinsAfterFrom'] + 1);
-            $return[0] = max(DateTime::now()->diffInSeconds($reloadTime, false), 0);
+            // next confirmation time
+            $cRound = $this->fetchTable('Rounds')->find('all', array(
+                'conditions' => array('timeStartDay' . $settings['currentDay_id'] . ' >=' => $time->subMinutes($reloadOffset0)),
+                'order' => array('id' => 'ASC')
+            ))->first();
+
+            if ($cRound) {
+                $rs = DateTime::createFromFormat('H:i:s', $cRound['timeStartDay' . $settings['currentDay_id']]->i18nFormat('HH:mm:ss'));
+                $rTime0 = $rs->addMinutes($reloadOffset0);
+                $return[0] = max($time->diffInSeconds($rTime0, false), 0);
+            }
 
             // next round start time
             $nRound = $this->fetchTable('Rounds')->find()->where(['id' => $currentRoundId + 1])->first();
             if ($nRound) {
-                $rStartTime = DateTime::createFromFormat('H:i:s', $nRound['timeStartDay' . $settings['currentDay_id']]->i18nFormat('HH:mm:ss'));
-                $reloadTime = $rStartTime->addMinutes(1);
-                $return[1] = max(DateTime::now()->diffInSeconds($reloadTime, false), 0);
+                $ns = DateTime::createFromFormat('H:i:s', $nRound['timeStartDay' . $settings['currentDay_id']]->i18nFormat('HH:mm:ss'));
+                $rTime1 = $ns->addMinutes($reloadOffset1);
+                $return[1] = max($time->diffInSeconds($rTime1, false), 0);
             }
         }
 
         return $return;
+    }
+
+    private function getQTime(array $settings): DateTime
+    {
+        $now = DateTime::now();
+        $qTime = DateTime::now();
+
+        if ($settings['isTest'] == 1) {
+            $qTime = $qTime->subHours($settings['currentDay_id'] == 2 ? 1 : 2);
+
+            $cycle = 1 - (int)floor($qTime->hour / 8);
+            // cycle => -1 or 0 or +1
+            $qTime = $qTime->addHours($cycle * 8);
+
+            $qTime = $qTime->addHours($settings['currentDay_id'] == 2 ? 1 : 2);
+            $qTime = $qTime->setDate($now->year, $now->month, $now->day); // if day-1 change: go back to today
+        }
+
+        return $qTime;
     }
 }
