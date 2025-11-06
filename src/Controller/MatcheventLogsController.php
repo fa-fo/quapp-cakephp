@@ -556,91 +556,92 @@ class MatcheventLogsController extends AppController
                 $conditionsArray = array(
                     'Groups.year_id' => $settings['currentYear_id'],
                     'Groups.day_id' => $settings['currentDay_id'],
+                    'resultTrend IS' => null,
+                    'canceled' => 0
                 );
 
-                $matches = $this->getMatches($conditionsArray, 1);
-                if (is_array($matches) && count($matches) > 0) {
-                    foreach ($matches as $m) {
-                        /**
-                         * @var Match4 $m
-                         */
-                        if ($m->resultTrend === null) {
-                            $pt = $this->fetchTable('PushTokens')->find('all')
-                                ->where(['my_year_id >=' => $settings['currentYear_id'] - 1])
-                                ->orderBy('rand()')->first();
+                $matches = $this->fetchTable('Matches')->find('all', array(
+                    'contain' => array('Groups'),
+                    'conditions' => $conditionsArray
+                ))->all();
 
-                            // LOGIN
-                            $newLog = $this->MatcheventLogs->newEmptyEntity();
-                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'LOGIN'])->first();
-                            $newLog->set('matchEvent_id', $event->get('id'));
-                            $newLog->set('match_id', $m->id);
-                            $this->MatcheventLogs->save($newLog);
+                foreach ($matches as $m) {
+                    /**
+                     * @var Match4 $m
+                     */
+                    $pt = $this->fetchTable('PushTokens')->find('all')
+                        ->where(['my_year_id >=' => $settings['currentYear_id'] - 1])
+                        ->orderBy('rand()')->first();
 
-                            $ptr = $this->fetchTable('PushTokenRatings')->newEmptyEntity();
-                            $ptr->set('push_token_id', $pt->id);
-                            $ptr->set('matchevent_log_id', $newLog->id);
-                            $ptr->set('points', $this->getPushTokenRatingPoints('LOGIN'));
-                            $this->fetchTable('PushTokenRatings')->save($ptr);
+                    // LOGIN
+                    $newLog = $this->MatcheventLogs->newEmptyEntity();
+                    $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'LOGIN'])->first();
+                    $newLog->set('matchEvent_id', $event->get('id'));
+                    $newLog->set('match_id', $m->id);
+                    $this->MatcheventLogs->save($newLog);
+
+                    $ptr = $this->fetchTable('PushTokenRatings')->newEmptyEntity();
+                    $ptr->set('push_token_id', $pt->id);
+                    $ptr->set('matchevent_log_id', $newLog->id);
+                    $ptr->set('points', $this->getPushTokenRatingPoints('LOGIN'));
+                    $this->fetchTable('PushTokenRatings')->save($ptr);
 
 
-                            // MATCH_START
-                            $newLog = $this->MatcheventLogs->newEmptyEntity();
-                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'MATCH_START'])->first();
-                            $newLog->set('matchEvent_id', $event->get('id'));
-                            $newLog->set('match_id', $m->id);
-                            $this->MatcheventLogs->save($newLog);
+                    // MATCH_START
+                    $newLog = $this->MatcheventLogs->newEmptyEntity();
+                    $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'MATCH_START'])->first();
+                    $newLog->set('matchEvent_id', $event->get('id'));
+                    $newLog->set('match_id', $m->id);
+                    $this->MatcheventLogs->save($newLog);
 
-                            for ($i = 0; $i < 2; $i++) {
-                                // GOAL_1POINT
-                                $newLog = $this->MatcheventLogs->newEmptyEntity();
-                                $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'GOAL_1POINT'])->first();
-                                $newLog->set('matchEvent_id', $event->get('id'));
-                                $newLog->set('match_id', $m->id);
-                                $newLog->set('team_id', random_int(0, 1) ? $m->team1_id : $m->team2_id);
-                                $this->MatcheventLogs->save($newLog);
-                            }
-
-                            // MATCH_END
-                            $newLog = $this->MatcheventLogs->newEmptyEntity();
-                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'MATCH_END'])->first();
-                            $newLog->set('matchEvent_id', $event->get('id'));
-                            $newLog->set('match_id', $m->id);
-                            $this->MatcheventLogs->save($newLog);
-
-                            // RESULT_WIN_?
-                            $newLog = $this->MatcheventLogs->newEmptyEntity();
-                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'RESULT_WIN_TEAM1'])->first();
-                            $newLog->set('matchEvent_id', $event->get('id'));
-                            $newLog->set('match_id', $m->id);
-                            $this->MatcheventLogs->save($newLog);
-
-                            // MATCH_CONCLUDE
-                            $newLog = $this->MatcheventLogs->newEmptyEntity();
-                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'MATCH_CONCLUDE'])->first();
-                            $newLog->set('matchEvent_id', $event->get('id'));
-                            $newLog->set('match_id', $m->id);
-                            $this->MatcheventLogs->save($newLog);
-
-                            $ptr = $this->fetchTable('PushTokenRatings')->newEmptyEntity();
-                            $ptr->set('push_token_id', $pt->id);
-                            $ptr->set('matchevent_log_id', $newLog->id);
-                            $ptr->set('points', $this->getPushTokenRatingPoints('MATCH_CONCLUDE'));
-                            $this->fetchTable('PushTokenRatings')->save($ptr);
-
-                            // LOGOUT
-                            $newLog = $this->MatcheventLogs->newEmptyEntity();
-                            $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'LOGOUT'])->first();
-                            $newLog->set('matchEvent_id', $event->get('id'));
-                            $newLog->set('match_id', $m->id);
-                            $this->MatcheventLogs->save($newLog);
-                        }
+                    for ($i = 0; $i < 2; $i++) {
+                        // GOAL_1POINT
+                        $newLog = $this->MatcheventLogs->newEmptyEntity();
+                        $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'GOAL_1POINT'])->first();
+                        $newLog->set('matchEvent_id', $event->get('id'));
+                        $newLog->set('match_id', $m->id);
+                        $newLog->set('team_id', random_int(0, 1) ? $m->team1_id : $m->team2_id);
+                        $this->MatcheventLogs->save($newLog);
                     }
+
+                    // MATCH_END
+                    $newLog = $this->MatcheventLogs->newEmptyEntity();
+                    $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'MATCH_END'])->first();
+                    $newLog->set('matchEvent_id', $event->get('id'));
+                    $newLog->set('match_id', $m->id);
+                    $this->MatcheventLogs->save($newLog);
+
+                    // RESULT_WIN_?
+                    $newLog = $this->MatcheventLogs->newEmptyEntity();
+                    $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'RESULT_WIN_TEAM1'])->first();
+                    $newLog->set('matchEvent_id', $event->get('id'));
+                    $newLog->set('match_id', $m->id);
+                    $this->MatcheventLogs->save($newLog);
+
+                    // MATCH_CONCLUDE
+                    $newLog = $this->MatcheventLogs->newEmptyEntity();
+                    $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'MATCH_CONCLUDE'])->first();
+                    $newLog->set('matchEvent_id', $event->get('id'));
+                    $newLog->set('match_id', $m->id);
+                    $this->MatcheventLogs->save($newLog);
+
+                    $ptr = $this->fetchTable('PushTokenRatings')->newEmptyEntity();
+                    $ptr->set('push_token_id', $pt->id);
+                    $ptr->set('matchevent_log_id', $newLog->id);
+                    $ptr->set('points', $this->getPushTokenRatingPoints('MATCH_CONCLUDE'));
+                    $this->fetchTable('PushTokenRatings')->save($ptr);
+
+                    // LOGOUT
+                    $newLog = $this->MatcheventLogs->newEmptyEntity();
+                    $event = $this->fetchTable('Matchevents')->find()->where(['code' => 'LOGOUT'])->first();
+                    $newLog->set('matchEvent_id', $event->get('id'));
+                    $newLog->set('match_id', $m->id);
+                    $this->MatcheventLogs->save($newLog);
                 }
             }
         }
 
-        $matchesCount = is_array($matches) ? count($matches) : false;
-        $this->apiReturn($matchesCount);
+        $this->apiReturn(count($matches));
     }
 
     public function clearByRound(string $round_id = ''): void
