@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use Cake\Cache\Cache;
+
 /**
  * Settings Controller
  *
@@ -21,6 +23,8 @@ class SettingsController extends AppController
             $setting = $this->Settings->find('all')->where(['name' => $name])->first();
             $setting->set('value', $value);
             $this->Settings->save($setting);
+
+            Cache::clear('app:settings');
         }
 
         $this->apiReturn($setting);

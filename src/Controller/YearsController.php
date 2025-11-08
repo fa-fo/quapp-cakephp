@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Model\Entity\Match4;
 use App\Model\Entity\Setting;
+use Cake\Cache\Cache;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\DateTime;
 
@@ -78,6 +79,8 @@ class YearsController extends AppController
                  */
                 $alwaysAutoUpdateResults->set('value', 0);
                 $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
+
+                Cache::clear('app:settings');
             }
         }
 
@@ -97,7 +100,10 @@ class YearsController extends AppController
             $alwaysAutoUpdateResults->set('value', 1);
             $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
 
+            Cache::clear('app:settings');
+
             $this->getCalcRanking();
+
         }
 
         $this->apiReturn($alwaysAutoUpdateResults);
@@ -115,6 +121,8 @@ class YearsController extends AppController
              */
             $showEndRanking->set('value', (int)$show);
             $this->fetchTable('Settings')->save($showEndRanking);
+
+            Cache::clear('app:settings');
 
             $this->getCalcRanking();
         }
@@ -172,6 +180,8 @@ class YearsController extends AppController
                  */
                 $showEndRanking->set('value', 0);
                 $this->fetchTable('Settings')->save($showEndRanking);
+
+                Cache::clear('app:settings');
 
                 $conn = ConnectionManager::get('default');
                 /**

@@ -26,6 +26,7 @@ use App\Model\Entity\Team;
 use App\Model\Entity\TeamYear;
 use App\Model\Entity\Year;
 use App\View\PdfView;
+use Cake\Cache\Cache;
 use Cake\Controller\Controller;
 use Cake\Datasource\ConnectionManager;
 use Cake\Event\EventInterface;
@@ -126,10 +127,11 @@ class AppController extends Controller
 
     protected function getSettings(): array
     {
-        return $this->fetchTable('Settings')->find('list', [
-            'keyField' => 'name',
-            'valueField' => 'value'
-        ])->toArray();
+        return Cache::remember('app:settings', function () {
+            return $this->fetchTable('Settings')->find('list', [
+                'keyField' => 'name', 'valueField' => 'value'
+            ])->toArray();
+        });
     }
 
     protected function getCurrentYear(): Year
@@ -1152,7 +1154,6 @@ class AppController extends Controller
 
     private function getQTime(array $settings): DateTime
     {
-        $now = DateTime::now();
         $qTime = DateTime::now();
 
         if ($settings['isTest'] == 1) {
@@ -1163,6 +1164,8 @@ class AppController extends Controller
             $qTime = $qTime->addHours($cycle * 8);
 
             $qTime = $qTime->addHours($settings['currentDay_id'] == 2 ? 1 : 2);
+
+            $now = DateTime::now();
             $qTime = $qTime->setDate($now->year, $now->month, $now->day); // if day-1 change: go back to today
         }
 
