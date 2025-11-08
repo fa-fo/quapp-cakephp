@@ -18,6 +18,12 @@ use Cake\I18n\DateTime;
  */
 class PushTokenRatingsController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('PtrRanking');
+    }
+
     public function checkAll(): void
     {
         $rowCount = 0;
@@ -134,7 +140,6 @@ class PushTokenRatingsController extends AppController
      */
     public function getPtrRanking(string $mode = 'single'): void
     {
-        $this->loadComponent('PtrRanking');
         $return = $this->PtrRanking->getPtrRanking($mode, $this->getCurrentYearId());
 
         $this->apiReturn($return);
