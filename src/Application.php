@@ -16,15 +16,19 @@ declare(strict_types=1);
  */
 namespace App;
 
+use Cake\Controller\Exception\MissingActionException;
 use Cake\Core\Configure;
 use Cake\Core\ContainerInterface;
 use Cake\Datasource\FactoryLocator;
 use Cake\Error\Middleware\ErrorHandlerMiddleware;
 use Cake\Http\BaseApplication;
+use Cake\Http\Exception\MissingControllerException;
+use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Middleware\BodyParserMiddleware;
 use Cake\Http\Middleware\CsrfProtectionMiddleware;
 use Cake\Http\MiddlewareQueue;
 use Cake\ORM\Locator\TableLocator;
+use Cake\Routing\Exception\MissingRouteException;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
 
@@ -74,6 +78,18 @@ class Application extends BaseApplication
                 'cacheTime' => Configure::read('Asset.cacheTime'),
             ]))
 
+            ->add(new ErrorHandlerMiddleware([
+                'exceptionRenderer' => function ($exception) {
+                    if (
+                        $exception instanceof MissingActionException ||
+                        $exception instanceof MissingControllerException ||
+                        $exception instanceof MissingRouteException
+                    ) {
+                        return new NotFoundException('Page not found');
+                    }
+                    throw $exception;
+                },
+            ]))
             // Add routing middleware.
             // If you have a large number of routes connected, turning on routes
             // caching in production could improve performance.
