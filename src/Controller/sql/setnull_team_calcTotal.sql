@@ -5,3 +5,4 @@ SET calcTotalYears         = NULL,
     calcTotalChampionships = NULL,
     calcTotalRanking       = NULL
 
+WHERE 1;

@@ -474,6 +474,9 @@ class MatchesController extends AppController
                     ));
 
                     foreach ($groups as $group) {
+                        /**
+                         * @var Group $group
+                         */
                         if ($group->name != 'Endrunde') {
                             foreach ($matchschedulings as $matchscheduling) {
                                 /**
