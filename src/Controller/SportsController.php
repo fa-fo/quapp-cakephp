@@ -13,12 +13,6 @@ use Cake\Http\Client;
  */
 class SportsController extends AppController
 {
-    public function initialize(): void
-    {
-        parent::initialize();
-        $this->loadComponent('MatchGet');
-    }
-
     public function getResourceContent(string $id): void
     {
         $id = (int)$id;

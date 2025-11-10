@@ -17,12 +17,6 @@ use Cake\I18n\DateTime;
  */
 class YearsController extends AppController
 {
-    public function initialize(): void
-    {
-        parent::initialize();
-        $this->loadComponent('MatchGet');
-    }
-
     public function getCurrent(): void
     {
         $year = $this->getCurrentYear()->toArray();

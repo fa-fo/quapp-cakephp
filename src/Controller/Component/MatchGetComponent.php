@@ -11,6 +11,8 @@ use Cake\I18n\DateTime;
 
 class MatchGetComponent extends Component
 {
+    protected PlayOffComponent $PlayOff;
+
     public function getMatchesByGroup(array $group): array
     {
         $rounds = FactoryLocator::get('Table')->get('Rounds')->find('all', array(
@@ -197,7 +199,7 @@ class MatchGetComponent extends Component
                     }
 
                     if ($row['isPlayOff'] > 0) {
-                        $row['playOffName'] = $this->getPlayOffName($row['isPlayOff']);
+                        $row['playOffName'] = $this->PlayOff->getPlayOffName($row['isPlayOff']);
                     }
 
                     return $row;
@@ -467,15 +469,5 @@ class MatchGetComponent extends Component
             return 0; // show Schedule
         }
         return $showTime; // do not show schedule
-    }
-
-    private function getPlayOffName(int $isPlayOff): string
-    {
-        return match ($isPlayOff % 10) {
-            4 => 'Halbfinale',
-            3 => 'Spiel um Platz 3',
-            2 => 'Finale',
-            default => '',
-        };
     }
 }

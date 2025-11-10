@@ -21,7 +21,6 @@ use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Login;
 use App\Model\Entity\Match4;
-use App\Model\Entity\Round;
 use App\Model\Entity\Team;
 use App\Model\Entity\Year;
 use App\View\PdfView;
@@ -54,7 +53,10 @@ class AppController extends Controller
     public function initialize(): void
     {
         parent::initialize();
+
         $this->loadComponent('MatchGet');
+        $this->loadComponent('PlayOff');
+        $this->loadComponent('PtrRanking');
     }
 
     public function viewClasses(): array
@@ -219,46 +221,6 @@ class AppController extends Controller
         }
 
         return $group ?? null;
-    }
-
-    protected function getPlayOffRanking(Year $year): array
-    {
-        $return = array();
-        $match2 = $this->fetchTable('Matches')->find()->where(['isPlayOff' => (int)($year->id . '2')])->first(); // Finale
-        $match3 = $this->fetchTable('Matches')->find()->where(['isPlayOff' => (int)($year->id . '3')])->first(); // 3rd-Place-Match
-        /**
-         * @var Match4 $match2
-         * @var Match4 $match3
-         */
-        if ($match2->resultTrend) {
-            $return[1] = in_array($match2->resultTrend, array(1, 3)) ? $match2->team1_id : $match2->team2_id;
-            $return[2] = in_array($match2->resultTrend, array(1, 3)) ? $match2->team2_id : $match2->team1_id;
-
-            if ($match3->resultTrend) {
-                $return[3] = in_array($match3->resultTrend, array(1, 3)) ? $match3->team1_id : $match3->team2_id;
-                $return[4] = in_array($match3->resultTrend, array(1, 3)) ? $match3->team2_id : $match3->team1_id;
-            }
-        }
-
-        return $return;
-    }
-
-    protected function getPlayOffWinLose(Year $year): array
-    {
-        $return = array();
-        $matches = $this->MatchGet->getMatches(array('isPlayOff' => (int)($year->id . '4'))); // Semi-Finales
-
-        if (is_array($matches)) {
-            foreach ($matches as $m) {
-                /**
-                 * @var Match4 $m
-                 */
-                $return['winners'][] = in_array($m->resultTrend, array(1, 3)) ? $m->team1_id : (in_array($m->resultTrend, array(2, 4)) ? $m->team2_id : 0);
-                $return['losers'][] = in_array($m->resultTrend, array(1, 3)) ? $m->team2_id : (in_array($m->resultTrend, array(2, 4)) ? $m->team1_id : 0);
-            }
-        }
-
-        return $return;
     }
 
     public function reCalcRanking(string $team1_id = '', string $team2_id = ''): void

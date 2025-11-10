@@ -13,12 +13,6 @@ use App\Model\Entity\Team;
  */
 class TeamsController extends AppController
 {
-    public function initialize(): void
-    {
-        parent::initialize();
-        $this->loadComponent('MatchGet');
-    }
-
     public function index(): void
     {
         $teams = false;

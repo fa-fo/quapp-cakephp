@@ -15,16 +15,11 @@ use Cake\I18n\DateTime;
  *
  * @property \App\Model\Table\TeamYearsTable $TeamYears
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
+ * @property \App\Controller\Component\PlayOffComponent $PlayOff
  * @property \App\Controller\Component\PtrRankingComponent $PtrRanking
  */
 class TeamYearsController extends AppController
 {
-    public function initialize(): void
-    {
-        parent::initialize();
-        $this->loadComponent('MatchGet');
-    }
-
     // getCurrentTeams
     public function all(): void
     {
@@ -302,8 +297,6 @@ class TeamYearsController extends AppController
             $this->viewBuilder()->setVar('year', $year);
 
             if ($settings['usePushTokenRatings']) {
-                $this->loadComponent('PtrRanking');
-
                 $ptrRankingSingle = $this->PtrRanking->getPtrRanking('single', $year['id'], 3, 'DESC');
                 $this->viewBuilder()->setVar('ptrRankingSingle', $ptrRankingSingle);
 
@@ -340,7 +333,7 @@ class TeamYearsController extends AppController
                         $this->TeamYears->save($ty);
                     }
 
-                    $poArray = $settings['usePlayOff'] > 0 ? $this->getPlayOffRanking($year) : array();
+                    $poArray = $settings['usePlayOff'] > 0 ? $this->PlayOff->getPlayOffRanking($year) : array();
 
                     $gtArray = $this->fetchTable('GroupTeams')->find('all', array(
                         'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),

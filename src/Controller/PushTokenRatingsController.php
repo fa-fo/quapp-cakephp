@@ -19,13 +19,6 @@ use Cake\I18n\DateTime;
  */
 class PushTokenRatingsController extends AppController
 {
-    public function initialize(): void
-    {
-        parent::initialize();
-        $this->loadComponent('MatchGet');
-        $this->loadComponent('PtrRanking');
-    }
-
     public function checkAll(): void
     {
         $rowCount = 0;

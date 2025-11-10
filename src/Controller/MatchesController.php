@@ -14,16 +14,11 @@ use Cake\I18n\DateTime;
  *
  * @property \App\Model\Table\MatchesTable $Matches
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
+ * @property \App\Controller\Component\PlayOffComponent $PlayOff
  * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
  */
 class MatchesController extends AppController
 {
-    public function initialize(): void
-    {
-        parent::initialize();
-        $this->loadComponent('MatchGet');
-    }
-
     public function byId(string $id = ''): void
     {
         $conditionsArray = array('Matches.id' => (int)$id);
@@ -158,7 +153,7 @@ class MatchesController extends AppController
 
                     if ($isPlayOffRound && $includeLogs) {
                         $year = $this->getCurrentYear();
-                        $group['playOffTeams'] = $this->getPlayOffWinLose($year);
+                        $group['playOffTeams'] = $this->PlayOff->getPlayOffWinLose($year);
 
                         $group['playOffTeams']['all'] = $this->fetchTable('GroupTeams')->find('all', array(
                             'contain' => array(
@@ -535,7 +530,7 @@ class MatchesController extends AppController
                                     $match->set('group_id', $group->id);
                                     $match->set('round_id', $this->fetchTable('Rounds')->find('all')->count()); // last Round
                                     $match->set('sport_id', 5); // sport=multi
-                                    $match->set('isPlayOff', $this->getPlayOffNumber($i, $settings['usePlayOff'], $year->id));
+                                    $match->set('isPlayOff', $this->PlayOff->getPlayOffNumber($i, $settings['usePlayOff'], $year->id));
 
                                     if ($this->Matches->save($match)) {
                                         $matches[] = $match;
@@ -553,23 +548,6 @@ class MatchesController extends AppController
         );
 
         $this->apiReturn($checkings);
-    }
-
-    private function getPlayOffNumber(int $i, int $use, int $year_id): int
-    {
-        $number = 0;
-
-        if ($i < $use / 2) { // Quarter-Finale
-            $number = $use; // 4
-        }
-        if ($i == $use - 2) { // Third-Place-Match
-            $number = 3;
-        }
-        if ($i == $use - 1) { // Finale
-            $number = 2;
-        }
-
-        return (int)($year_id . $number);
     }
 
     /**

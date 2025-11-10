@@ -19,12 +19,6 @@ use Cake\I18n\DateTime;
  */
 class GroupTeamsController extends AppController
 {
-    public function initialize(): void
-    {
-        parent::initialize();
-        $this->loadComponent('MatchGet');
-    }
-
     // getRanking
     public function all(string $group_id = '', string $adminView = ''): void
     {

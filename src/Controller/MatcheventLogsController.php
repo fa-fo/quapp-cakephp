@@ -20,12 +20,6 @@ use Cake\I18n\DateTime;
  */
 class MatcheventLogsController extends AppController
 {
-    public function initialize(): void
-    {
-        parent::initialize();
-        $this->loadComponent('MatchGet');
-    }
-
 
     public function login(string $match_id = ''): void
     {

@@ -14,12 +14,6 @@ use App\Model\Entity\Year;
  */
 class GroupsController extends AppController
 {
-    public function initialize(): void
-    {
-        parent::initialize();
-        $this->loadComponent('MatchGet');
-    }
-
     public function all(string $year_id = '', string $day_id = ''): void
     {
         $settings = $this->getSettings();

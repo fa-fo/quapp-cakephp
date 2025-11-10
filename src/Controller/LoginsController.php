@@ -12,7 +12,6 @@ use App\Model\Entity\Login;
  */
 class LoginsController extends AppController
 {
-
     public function check(): void
     {
         $return = false;
