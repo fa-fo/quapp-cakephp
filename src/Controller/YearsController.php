@@ -13,9 +13,16 @@ use Cake\I18n\DateTime;
  * Years Controller
  *
  * @property \App\Model\Table\YearsTable $Years
+ * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class YearsController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('MatchGet');
+    }
+
     public function getCurrent(): void
     {
         $year = $this->getCurrentYear()->toArray();
@@ -222,8 +229,8 @@ class YearsController extends AppController
             'conditions' => $conditionsArray,
         ))->toArray();
 
-        $matches = $this->getMatches($conditionsArray, 0, 2, 1); // sortBy 2: get non-midday matches first
-        $matchesPins = $this->getMatches(array_merge($conditionsArray, array('refereePIN IS NOT' => null)), 0, 0, 0);
+        $matches = $this->MatchGet->getMatches($conditionsArray, 0, 2, 1); // sortBy 2: get non-midday matches first
+        $matchesPins = $this->MatchGet->getMatches(array_merge($conditionsArray, array('refereePIN IS NOT' => null)), 0, 0, 0);
         $matchesPlayOff = $this->fetchTable('Matches')->find('all', conditions: ['isPlayOff >' => (int)($settings['currentYear_id'] . '0')]);
 
         $sumCalcMatches = 0;
@@ -259,7 +266,7 @@ class YearsController extends AppController
 
                     // search for available refs from the same sport with canceled match
                     $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id'], 'sport_id' => $m->sport_id, 'Matches.canceled >' => 0);
-                    $matches1 = $this->getMatches($conditionsArray, 0, 3, 1); // sortBy 3: get midday matches first
+                    $matches1 = $this->MatchGet->getMatches($conditionsArray, 0, 3, 1); // sortBy 3: get midday matches first
                     if (is_array($matches1)) {
                         foreach ($matches1 as $m1) {
                             if (!$m1->isRefereeCanceled) {
@@ -272,7 +279,7 @@ class YearsController extends AppController
                                         'refereeTeamSubst_id' => $m1->refereeTeam_id,
                                     )
                                 );
-                                $matches2 = $this->getMatches($conditionsArray, 0, 0, 0);
+                                $matches2 = $this->MatchGet->getMatches($conditionsArray, 0, 0, 0);
                                 if (!$matches2) {
                                     $matchesRefChangeable[] = array($m, $m1);
                                     break;
@@ -288,7 +295,7 @@ class YearsController extends AppController
 
                     // search for available teams from the same group and the same sport with canceled match
                     $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id'], 'group_id' => $m->group_id, 'sport_id' => $m->sport_id, 'Matches.canceled >' => 0, 'Matches.canceled <' => 3, 'Matches.id !=' => $m->id);
-                    $matches1 = $this->getMatches($conditionsArray, 0, 0, 1);
+                    $matches1 = $this->MatchGet->getMatches($conditionsArray, 0, 0, 1);
                     if (is_array($matches1)) {
                         foreach ($matches1 as $m1) {
                             // check if other team is already in play in the same round with non-canceled match
@@ -301,7 +308,7 @@ class YearsController extends AppController
                                     'refereeTeamSubst_id' => $otherTeam,
                                 )
                             );
-                            $matches2 = $this->getMatches($conditionsArray, 0, 0, 0);
+                            $matches2 = $this->MatchGet->getMatches($conditionsArray, 0, 0, 0);
                             if (!$matches2) {
                                 $matchesTeamsChangeable[] = array($m, $m1);
                                 break;

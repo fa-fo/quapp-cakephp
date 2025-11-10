@@ -9,9 +9,16 @@ use App\Model\Entity\Team;
  * Teams Controller
  *
  * @property \App\Model\Table\TeamsTable $Teams
+ * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class TeamsController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('MatchGet');
+    }
+
     public function index(): void
     {
         $teams = false;
@@ -107,7 +114,7 @@ class TeamsController extends AppController
             ),
         );
 
-        $matches = $id ? $this->getMatches($conditionsArray) : false;
+        $matches = $id ? $this->MatchGet->getMatches($conditionsArray) : false;
 
         if (is_array($matches)) {
             foreach ($matches as $m) {
@@ -146,7 +153,7 @@ class TeamsController extends AppController
             ),
         );
 
-        $matches = $id && $sport_id ? $this->getMatches($conditionsArray) : false;
+        $matches = $id && $sport_id ? $this->MatchGet->getMatches($conditionsArray) : false;
 
         $this->apiReturn($matches);
     }

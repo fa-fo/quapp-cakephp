@@ -14,10 +14,16 @@ use Cake\I18n\DateTime;
  * TeamYears Controller
  *
  * @property \App\Model\Table\TeamYearsTable $TeamYears
+ * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PtrRankingComponent $PtrRanking
  */
 class TeamYearsController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('MatchGet');
+    }
 
     // getCurrentTeams
     public function all(): void
@@ -67,7 +73,7 @@ class TeamYearsController extends AppController
             ))->toArray();
 
             foreach ($teamYears as $ty) {
-                $ty['infos'] = $this->getMatchesByTeam($ty['team_id'], $settings['currentYear_id'], $settings['currentDay_id'], 1);
+                $ty['infos'] = $this->MatchGet->getMatchesByTeam($ty['team_id'], $settings['currentYear_id'], $settings['currentDay_id'], 1);
             }
 
             $this->viewBuilder()->setTemplatePath('pdf');
@@ -100,7 +106,7 @@ class TeamYearsController extends AppController
                 /**
                  * @var Group $group
                  */
-                $group['rounds'] = $this->getMatchesByGroup($group->toArray());
+                $group['rounds'] = $this->MatchGet->getMatchesByGroup($group->toArray());
             }
 
             $teamYears = $this->TeamYears->find('all', array(
@@ -111,10 +117,13 @@ class TeamYearsController extends AppController
             ))->offset($offset * 32)->limit(32); // set limit because of execution timeout
 
             foreach ($teamYears as $ty) {
+                /**
+                 * @var TeamYear $ty
+                 */
                 $g = $this->getGroupByTeamId($ty->team_id, $settings['currentYear_id'], $settings['currentDay_id']);
                 $gN = $this->getGroupPosNumber($g->id);
 
-                $ty['infos'] = $this->getMatchesByTeam($ty->team_id, $settings['currentYear_id'], $settings['currentDay_id'], 1);
+                $ty['infos'] = $this->MatchGet->getMatchesByTeam($ty->team_id, $settings['currentYear_id'], $settings['currentDay_id'], 1);
                 $ty['day'] = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
                 $ty['group'] = $groups[$gN];
             }
@@ -222,7 +231,7 @@ class TeamYearsController extends AppController
                     )
                 );
 
-                $matches = $this->getMatches($conditionsArray, 0, 1, 1);
+                $matches = $this->MatchGet->getMatches($conditionsArray, 0, 1, 1);
 
                 if (is_array($matches)) {
                     $return['matches'] = array_merge($return['matches'], $matches);

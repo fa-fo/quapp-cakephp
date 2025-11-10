@@ -9,13 +9,14 @@ use Cake\Http\Client;
  * Sports Controller
  *
  * @property \App\Model\Table\SportsTable $Sports
+ * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class SportsController extends AppController
 {
-    public function getRules(): void
+    public function initialize(): void
     {
-        $this->getResourceContent('16');
-        // todo: deprecated: after V3.0.0 complete rollout: function not needed anymore
+        parent::initialize();
+        $this->loadComponent('MatchGet');
     }
 
     public function getResourceContent(string $id): void
@@ -100,7 +101,7 @@ class SportsController extends AppController
                         'Sports.id' => $sport['id'],
                     );
 
-                    $sport['fields'][$group['name']]['matches'] = $this->getMatches($conditionsArray);
+                    $sport['fields'][$group['name']]['matches'] = $this->MatchGet->getMatches($conditionsArray);
                 }
             }
 

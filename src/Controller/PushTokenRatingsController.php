@@ -14,6 +14,7 @@ use Cake\I18n\DateTime;
  * PushTokenRatings Controller
  *
  * @property \App\Model\Table\PushTokenRatingsTable $PushTokenRatings
+ * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PtrRankingComponent $PtrRanking
  */
 class PushTokenRatingsController extends AppController
@@ -21,6 +22,7 @@ class PushTokenRatingsController extends AppController
     public function initialize(): void
     {
         parent::initialize();
+        $this->loadComponent('MatchGet');
         $this->loadComponent('PtrRanking');
     }
 
@@ -37,7 +39,7 @@ class PushTokenRatingsController extends AppController
                 'Groups.day_id' => $settings['currentDay_id'],
             );
 
-            $matches = $this->getMatches($conditionsArray, 1, 0, 1);
+            $matches = $this->MatchGet->getMatches($conditionsArray, 1, 0, 1);
 
             if (is_array($matches)) {
                 foreach ($matches as $match) {

@@ -15,10 +15,17 @@ use Cake\I18n\DateTime;
  * MatcheventLogs Controller
  *
  * @property \App\Model\Table\MatcheventLogsTable $MatcheventLogs
+ * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
  */
 class MatcheventLogsController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('MatchGet');
+    }
+
 
     public function login(string $match_id = ''): void
     {
@@ -50,7 +57,7 @@ class MatcheventLogsController extends AppController
                                 $this->setPushTokenRating($newLog->id, $postData['matchEventCode'], $postData['expoPushToken']);
                             }
 
-                            $logs = $this->getLogs($match_id);
+                            $logs = $this->MatchGet->getLogs($match_id);
 
                             if (is_array($logs)) {
                                 $match['logsCalc'] = $logs['calc'];
@@ -105,7 +112,7 @@ class MatcheventLogsController extends AppController
 
                             $isMatchLive = $match['logsCalc']['isMatchLive'] ?? 0;
 
-                            $logs = $this->getLogs($match_id);
+                            $logs = $this->MatchGet->getLogs($match_id);
                             if (is_array($logs)) {
                                 $calc = $logs['calc'];
 
@@ -189,7 +196,7 @@ class MatcheventLogsController extends AppController
 
                             if ($this->MatcheventLogs->save($log)) {
                                 $isMatchLive = $match['logsCalc']['isMatchLive'] ?? 0;
-                                $logs = $this->getLogs($match_id);
+                                $logs = $this->MatchGet->getLogs($match_id);
 
                                 if (is_array($logs)) {
                                     $calc = $logs['calc'];
@@ -266,7 +273,7 @@ class MatcheventLogsController extends AppController
     {
         $match = null;
         $conditionsArray = array('Matches.id' => $match_id);
-        $match_array = $this->getMatches($conditionsArray, $includeLogs);
+        $match_array = $this->MatchGet->getMatches($conditionsArray, $includeLogs);
 
         if (is_array($match_array)) {
             $match = $match_array[0]->toArray();
@@ -423,7 +430,7 @@ class MatcheventLogsController extends AppController
                     'Matches.id' => $log->match_id,
                 );
 
-                $a = $this->getMatches($conditionsArray);
+                $a = $this->MatchGet->getMatches($conditionsArray);
                 $log['match'] = is_array($a) ? $a[0] : null;
             }
         }

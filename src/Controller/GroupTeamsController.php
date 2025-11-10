@@ -15,9 +15,16 @@ use Cake\I18n\DateTime;
  * GroupTeams Controller
  *
  * @property \App\Model\Table\GroupTeamsTable $GroupTeams
+ * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class GroupTeamsController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('MatchGet');
+    }
+
     // getRanking
     public function all(string $group_id = '', string $adminView = ''): void
     {
@@ -221,7 +228,7 @@ class GroupTeamsController extends AppController
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $year = $this->getCurrentYear();
             $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
-            $existingMatches = $this->getMatches($conditionsArray);
+            $existingMatches = $this->MatchGet->getMatches($conditionsArray);
 
             if (!$existingMatches) {
                 $groups = $this->fetchTable('Groups')->find('all', array(
@@ -383,7 +390,7 @@ class GroupTeamsController extends AppController
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $year = $this->getCurrentYear();
             $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
-            $existingMatches = $this->getMatches($conditionsArray);
+            $existingMatches = $this->MatchGet->getMatches($conditionsArray);
 
             if (!$existingMatches) {
                 $groups = $this->fetchTable('Groups')->find('all', array(
@@ -585,13 +592,13 @@ class GroupTeamsController extends AppController
                                 'team1_id' => $opponentGroupteam->team_id,
                                 'team2_id' => $opponentGroupteam->team_id
                             )));
-                    $prevYearsMatches = $this->getMatches($conditionsArray);
+                    $prevYearsMatches = $this->MatchGet->getMatches($conditionsArray);
                     $countPrevYearsMatches += (is_array($prevYearsMatches) ? count($prevYearsMatches) : 0);
 
-                    $prevYearsMatchesSameSport = $this->getMatches(array_merge($conditionsArray, array('sport_id' => $msc->sport_id)));
+                    $prevYearsMatchesSameSport = $this->MatchGet->getMatches(array_merge($conditionsArray, array('sport_id' => $msc->sport_id)));
                     $countPrevYearsMatchesSameSport += (is_array($prevYearsMatchesSameSport) ? count($prevYearsMatchesSameSport) : 0);
 
-                    $prevLastYearMatchesSameSport = $this->getMatches(array_merge($conditionsArray, array('sport_id' => $msc->sport_id, 'Groups.year_id' => $year->id - 1)));
+                    $prevLastYearMatchesSameSport = $this->MatchGet->getMatches(array_merge($conditionsArray, array('sport_id' => $msc->sport_id, 'Groups.year_id' => $year->id - 1)));
                     $countPrevLastYearMatchesSameSport += (is_array($prevLastYearMatchesSameSport) ? count($prevLastYearMatchesSameSport) : 0);
                 }
             }

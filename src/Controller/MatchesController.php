@@ -13,14 +13,21 @@ use Cake\I18n\DateTime;
  * Matches Controller
  *
  * @property \App\Model\Table\MatchesTable $Matches
+ * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
  */
 class MatchesController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('MatchGet');
+    }
+
     public function byId(string $id = ''): void
     {
         $conditionsArray = array('Matches.id' => (int)$id);
-        $match = $this->getMatches($conditionsArray, 1);
+        $match = $this->MatchGet->getMatches($conditionsArray, 1);
 
         $this->apiReturn($match);
     }
@@ -31,7 +38,7 @@ class MatchesController extends AppController
         $year_id = (int)$year_id ?: $settings['currentYear_id'];
         $day_id = (int)$day_id ?: $settings['currentDay_id'];
 
-        $return = $this->getMatchesByTeam((int)$team_id, $year_id, $day_id, (int)$adminView);
+        $return = $this->MatchGet->getMatchesByTeam((int)$team_id, $year_id, $day_id, (int)$adminView);
 
         $return['currentRoundId'] = $this->getCurrentRoundId($year_id, $day_id);
 
@@ -50,7 +57,7 @@ class MatchesController extends AppController
                 'Groups.day_id' => $this->getCurrentDayId(),
             );
 
-            $return['matches'] = $this->getMatches($conditionsArray, 0, 0, 1);
+            $return['matches'] = $this->MatchGet->getMatches($conditionsArray, 0, 0, 1);
         }
 
         $this->apiReturn($return);
@@ -61,11 +68,11 @@ class MatchesController extends AppController
         $group = $this->getPrevAndNextGroup((int)$group_id);
 
         if ($group) {
-            $showTime = $this->getScheduleShowTime($group['year_id'], $group['day_id'], (int)$adminView);
+            $showTime = $this->MatchGet->getScheduleShowTime($group['year_id'], $group['day_id'], (int)$adminView);
             if ($showTime !== 0) {
                 $group['showTime'] = $showTime;
             } else {
-                $group['rounds'] = $this->getMatchesByGroup($group);
+                $group['rounds'] = $this->MatchGet->getMatchesByGroup($group);
                 $group['currentRoundId'] = $this->getCurrentRoundId($group['year_id'], $group['day_id']);
             }
             $this->apiReturn($group, $group['year_id'], $group['day_id']);
@@ -94,7 +101,7 @@ class MatchesController extends AppController
                 /**
                  * @var Group $group
                  */
-                $group['rounds'] = $this->getMatchesByGroup($group->toArray());
+                $group['rounds'] = $this->MatchGet->getMatchesByGroup($group->toArray());
                 $group['day'] = $day;
             }
 
@@ -120,7 +127,7 @@ class MatchesController extends AppController
 
         $adminView = $includeLogs; // sic! for admin and supervisor
 
-        $showTime = $this->getScheduleShowTime($year_id, $day_id, $adminView);
+        $showTime = $this->MatchGet->getScheduleShowTime($year_id, $day_id, $adminView);
         if ($showTime !== 0) {
             $return['showTime'] = $showTime;
         } else {
@@ -147,7 +154,7 @@ class MatchesController extends AppController
                     );
 
                     // use parameter for same sort as Excel: $sortBySportId=!$includeLogs
-                    $group['matches'] = $this->getMatches($conditionsArray, $includeLogs, 1, $adminView);
+                    $group['matches'] = $this->MatchGet->getMatches($conditionsArray, $includeLogs, 1, $adminView);
 
                     if ($isPlayOffRound && $includeLogs) {
                         $year = $this->getCurrentYear();
@@ -175,7 +182,7 @@ class MatchesController extends AppController
                     'remarks IS NOT' => null,
                 );
 
-                $return['remarks'] = $this->getMatches($conditionsArray, 0, 4, 1); // sortBy 4: get last matches first
+                $return['remarks'] = $this->MatchGet->getMatches($conditionsArray, 0, 4, 1); // sortBy 4: get last matches first
             }
         }
 
@@ -190,7 +197,7 @@ class MatchesController extends AppController
 
         if (isset($postData['team1_id']) && isset($postData['team2_id']) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $conditionsArray = array('Matches.id' => $id);
-            $matches = $this->getMatches($conditionsArray, 1);
+            $matches = $this->MatchGet->getMatches($conditionsArray, 1);
             if (is_array($matches)) {
                 $match = $matches[0];
                 /**
@@ -213,7 +220,7 @@ class MatchesController extends AppController
 
         if (isset($postData['refereeName']) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $conditionsArray = array('Matches.id' => $id);
-            $matches = $this->getMatches($conditionsArray, 1);
+            $matches = $this->MatchGet->getMatches($conditionsArray, 1);
             if (is_array($matches)) {
                 $match = $matches[0];
                 /**
@@ -287,7 +294,7 @@ class MatchesController extends AppController
 
         if (isset($postData['password']) && $this->checkUsernamePassword('supervisor', $postData['password'])) {
             $conditionsArray = array('Matches.id' => $id);
-            $matches = $this->getMatches($conditionsArray, 1);
+            $matches = $this->MatchGet->getMatches($conditionsArray, 1);
             if (is_array($matches)) {
                 $match = $matches[0];
                 /**
@@ -321,7 +328,7 @@ class MatchesController extends AppController
                     $c++;
                     $id = (int)$m['id'];
                     $mode = (int)$m['mode'];
-                    $a = $id ? $this->getMatches(array('Matches.id' => $id), 1) : false;
+                    $a = $id ? $this->MatchGet->getMatches(array('Matches.id' => $id), 1) : false;
                     $a = is_array($a) ? $a : false;
                     $match = $a ? $a[0] : false;
 
@@ -442,7 +449,7 @@ class MatchesController extends AppController
             $year = $this->getCurrentYear();
 
             $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
-            $existingMatches = $this->getMatches($conditionsArray);
+            $existingMatches = $this->MatchGet->getMatches($conditionsArray);
 
             if (!$existingMatches) {
                 $teamYears = $this->fetchTable('TeamYears')->find('all', array(
@@ -602,7 +609,7 @@ class MatchesController extends AppController
                 'Groups.day_id' => $this->getCurrentDayId(),
             );
 
-            $matches = $this->getMatches($conditionsArray, 0, 0, 1);
+            $matches = $this->MatchGet->getMatches($conditionsArray, 0, 0, 1);
 
             if (is_array($matches)) {
                 foreach ($matches as $m) {
@@ -623,7 +630,7 @@ class MatchesController extends AppController
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $conditionsArray = array('Matches.id' => $id1);
-            $m = $this->getMatches($conditionsArray, 0, 0, 1); // needed to access adminView field 'isRefereeCanceled'
+            $m = $this->MatchGet->getMatches($conditionsArray, 0, 0, 1); // needed to access adminView field 'isRefereeCanceled'
             if (is_array($m)) {
                 $match1 = $m[0];
                 $match2 = $this->Matches->find()->where(['id' => $id2])->first();

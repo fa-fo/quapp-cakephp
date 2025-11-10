@@ -10,9 +10,16 @@ use App\Model\Entity\Year;
  * Groups Controller
  *
  * @property \App\Model\Table\GroupsTable $Groups
+ * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class GroupsController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('MatchGet');
+    }
+
     public function all(string $year_id = '', string $day_id = ''): void
     {
         $settings = $this->getSettings();
@@ -99,7 +106,7 @@ class GroupsController extends AppController
 
             if ($this->getCurrentDayId() == 1) {
                 $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
-                $existingMatches = $this->getMatches($conditionsArray);
+                $existingMatches = $this->MatchGet->getMatches($conditionsArray);
 
                 if (!$existingMatches) {
                     $groups = $this->Groups->find('all', array(
