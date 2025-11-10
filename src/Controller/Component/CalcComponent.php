@@ -6,6 +6,7 @@ use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Team;
 use App\Model\Entity\Year;
+use Cake\Cache\Cache;
 use Cake\Controller\Component;
 use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\FactoryLocator;
@@ -195,6 +196,8 @@ class CalcComponent extends Component
 
             FactoryLocator::get('Table')->get('Teams')->save($t);
         }
+
+        Cache::delete('app_calc_total');
 
         return $c;
     }

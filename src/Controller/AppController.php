@@ -17,10 +17,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Login;
-use App\Model\Entity\Match4;
-use App\Model\Entity\Team;
 use App\Model\Entity\Year;
 use App\View\PdfView;
 use Cake\Controller\Controller;
