@@ -11,7 +11,7 @@ class CacheComponent extends Component
 {
     public function getSettings(): array
     {
-        return Cache::remember('app:settings', function () {
+        return Cache::remember('app_settings', function () {
             return FactoryLocator::get('Table')->get('Settings')->find('list', [
                 'keyField' => 'name', 'valueField' => 'value'
             ])->toArray();
@@ -20,7 +20,7 @@ class CacheComponent extends Component
 
     public function getCurrentYear(): Year
     {
-        $year = Cache::remember('app:year', function () {
+        $year = Cache::remember('app_year', function () {
             $settings = $this->getSettings();
 
             return FactoryLocator::get('Table')->get('Years')->find('all', [

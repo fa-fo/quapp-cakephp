@@ -43,7 +43,7 @@ class YearsController extends AppController
          */
         $stmt = $conn->execute(file_get_contents(__DIR__ . "/sql/update_years_teamsCount.sql"));
 
-        Cache::clear('app:year');
+        Cache::delete('app_year');
 
         $this->apiReturn($stmt->rowCount());
     }
@@ -87,7 +87,7 @@ class YearsController extends AppController
                 $alwaysAutoUpdateResults->set('value', 0);
                 $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
 
-                Cache::clear('app:settings');
+                Cache::delete('app_settings');
             }
         }
 
@@ -107,10 +107,9 @@ class YearsController extends AppController
             $alwaysAutoUpdateResults->set('value', 1);
             $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
 
-            Cache::clear('app:settings');
+            Cache::delete('app_settings');
 
             $this->Calc->getCalcRanking();
-
         }
 
         $this->apiReturn($alwaysAutoUpdateResults);
@@ -129,7 +128,7 @@ class YearsController extends AppController
             $showEndRanking->set('value', (int)$show);
             $this->fetchTable('Settings')->save($showEndRanking);
 
-            Cache::clear('app:settings');
+            Cache::delete('app_settings');
 
             $this->Calc->getCalcRanking();
         }
@@ -200,8 +199,8 @@ class YearsController extends AppController
                 $showEndRanking->set('value', 0);
                 $this->fetchTable('Settings')->save($showEndRanking);
 
-                Cache::clear('app:settings');
-                Cache::clear('app:year');
+                Cache::delete('app_settings');
+                Cache::delete('app_year');
 
                 $conn = ConnectionManager::get('default');
                 /**

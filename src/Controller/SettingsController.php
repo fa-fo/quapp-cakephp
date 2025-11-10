@@ -24,7 +24,7 @@ class SettingsController extends AppController
             $setting->set('value', $value);
             $this->Settings->save($setting);
 
-            Cache::clear('app:settings');
+            Cache::delete('app_settings');
         }
 
         $this->apiReturn($setting);
