@@ -47,10 +47,12 @@ class MatchesController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['refereeName'])) {
+            $settings = $this->getSettings();
+
             $conditionsArray = array(
                 'refereeName LIKE' => '%' . $postData['refereeName'] . '%',
-                'Groups.year_id' => $this->getCurrentYearId(),
-                'Groups.day_id' => $this->getCurrentDayId(),
+                'Groups.year_id' => $settings['currentYear_id'],
+                'Groups.day_id' => $settings['currentDay_id'],
             );
 
             $return['matches'] = $this->MatchGet->getMatches($conditionsArray, 0, 0, 1);
@@ -253,14 +255,16 @@ class MatchesController extends AppController
 
     public function getRankingRefereeSubst(): void
     {
+        $settings = $this->getSettings();
+
         $query = $this->Matches->find('all', array(
             'contain' => array(
                 'Teams4' => array('fields' => array('name')),
                 'Groups'
             ),
             'conditions' => array(
-                'Groups.year_id' => $this->getCurrentYearId(),
-                'Groups.day_id' => $this->getCurrentDayId(),
+                'Groups.year_id' => $settings['currentYear_id'],
+                'Groups.day_id' => $settings['currentDay_id'],
                 'Matches.refereeTeamSubst_id IS NOT' => null
             ),
         ));
@@ -442,9 +446,10 @@ class MatchesController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
             $year = $this->getCurrentYear();
 
-            $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
+            $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']);
             $existingMatches = $this->MatchGet->getMatches($conditionsArray);
 
             if (!$existingMatches) {
@@ -556,10 +561,11 @@ class MatchesController extends AppController
      */
     private function createUniquePIN(int $sportId, int $groupId, int $roundId): int
     {
+        $settings = $this->getSettings();
         $str1 = (9 - $sportId) - 4 * random_int(0, 1);
         $str2 = 9 - $this->GroupGet->getGroupPosNumber($groupId);
         $str34 = str_pad((string)($roundId + 16 * random_int(0, 5)), 2, "0", STR_PAD_LEFT);
-        $str5 = ($this->getCurrentDayId() - 1) + 2 * random_int(0, 4);
+        $str5 = ($settings['currentDay_id'] - 1) + 2 * random_int(0, 4);
 
         return (int)($str1 . $str2 . $str34 . $str5);
     }
@@ -581,11 +587,13 @@ class MatchesController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('supervisor', $postData['password'])) {
+            $settings = $this->getSettings();
+
             $conditionsArray = array(
                 'resultTrend IS' => null,
                 'canceled' => 0,
-                'Groups.year_id' => $this->getCurrentYearId(),
-                'Groups.day_id' => $this->getCurrentDayId(),
+                'Groups.year_id' => $settings['currentYear_id'],
+                'Groups.day_id' => $settings['currentDay_id'],
             );
 
             $matches = $this->MatchGet->getMatches($conditionsArray, 0, 0, 1);
@@ -671,8 +679,8 @@ class MatchesController extends AppController
 
             if ($settings['isTest'] ?? 0) {
                 $conditionsArray = array(
-                    'Groups.year_id' => $this->getCurrentYearId(),
-                    'Groups.day_id' => $this->getCurrentDayId(),
+                    'Groups.year_id' => $settings['currentYear_id'],
+                    'Groups.day_id' => $settings['currentDay_id'],
                 );
 
                 $matches = $this->fetchTable('Matches')->find('all', array(

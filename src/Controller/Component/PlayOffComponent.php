@@ -8,7 +8,7 @@ use Cake\Controller\Component;
 use Cake\Datasource\FactoryLocator;
 
 /**
- * @property \App\Controller\Component\MatchGetComponent $MatchGet
+ * @property MatchGetComponent $MatchGet
  */
 class PlayOffComponent extends Component
 {

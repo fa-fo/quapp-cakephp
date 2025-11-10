@@ -66,12 +66,14 @@ class YearsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            if ($this->getCurrentDayId() < $year->daysCount) {
+            $settings = $this->getSettings();
+
+            if ($settings['currentDay_id'] < $year->daysCount) {
                 $currentDay_id = $this->fetchTable('Settings')->find('all')->where(['name' => 'currentDay_id'])->first();
                 /**
                  * @var Setting $currentDay_id
                  */
-                $currentDay_id->set('value', $this->getCurrentDayId() + 1);
+                $currentDay_id->set('value', $settings['currentDay_id'] + 1);
                 $this->fetchTable('Settings')->save($currentDay_id);
 
                 $alwaysAutoUpdateResults = $this->fetchTable('Settings')->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();

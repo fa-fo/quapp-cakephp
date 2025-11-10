@@ -143,8 +143,9 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
 
         if ($id && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $year_id = $this->getCurrentYearId();
-            $day_id = $this->getCurrentDayId();
+            $settings = $this->getSettings();
+            $year_id = $settings['currentYear_id'];
+            $day_id = $settings['currentDay_id'];
 
             $teamYear = $this->TeamYears->find('all', array(
                 'conditions' => array('id' => $id, 'year_id' => $year_id)
@@ -206,15 +207,16 @@ class TeamYearsController extends AppController
     // deprecated! use instead:  matches/refereeCanceledMatches
     public function refereeCanceledTeamsMatches(): void
     {
+        $settings = $this->getSettings();
         $return['matches'] = array();
 
         $teamYears = $this->TeamYears->find('all', array(
-            'conditions' => array('canceled' => 1, 'year_id' => $this->getCurrentYearId())
+            'conditions' => array('canceled' => 1, 'year_id' => $settings['currentYear_id'])
         ))->toArray();
 
         if ($teamYears) {
             foreach ($teamYears as $ty) {
-                $day_id = $this->getCurrentDayId();
+                $day_id = $settings['currentDay_id'];
 
                 $conditionsArray = array(
                     'resultTrend IS' => null,
@@ -244,7 +246,8 @@ class TeamYearsController extends AppController
 
     public function getEndRanking(string $year_id = '', string $adminView = ''): void
     {
-        $year_id = (int)$year_id ?: $this->getCurrentYearId();
+        $settings = $this->getSettings();
+        $year_id = (int)$year_id ?: $settings['currentYear_id'];
         $adminView = (int)$adminView;
 
         $teamYears = $this->TeamYears->find('all', array(
@@ -254,7 +257,7 @@ class TeamYearsController extends AppController
             'order' => array('endRanking' => 'ASC', 'team_name' => 'ASC')
         ))->toArray();
 
-        if (!$adminView && $year_id == $this->getCurrentYearId()) {
+        if (!$adminView && $year_id == $settings['currentYear_id']) {
             $showEndRanking = $this->fetchTable('Settings')->find('all')->where(['name' => 'showEndRanking'])->first();
             /**
              * @var Setting $showEndRanking

@@ -71,13 +71,14 @@ class GroupTeamsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
+
             $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id', 'teamsCount'),
-                'conditions' => array('year_id' => $this->getCurrentYearId(), 'day_id' => $this->getCurrentDayId(), 'name !=' => 'Endrunde'),
+                'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'name !=' => 'Endrunde'),
                 'order' => array('name' => 'ASC')
             ));
 
-            $settings = $this->getSettings();
             $year = $this->getCurrentYear()->toArray();
             $day = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
@@ -178,6 +179,7 @@ class GroupTeamsController extends AppController
 
     private function addFromPrevDayRanking(Year $year, Group $group, int $countGroup): array
     {
+        $settings = $this->getSettings();
         $groupTeams = array();
         $orderArray = array('GroupTeams.calcRanking' => 'ASC', 'GroupTeams.group_id' => 'ASC'); // standard for 64 teams
 
@@ -187,7 +189,7 @@ class GroupTeamsController extends AppController
 
         $prevGroupTeams = $this->GroupTeams->find('all', array(
             'contain' => array('Groups' => array('fields' => array('year_id', 'day_id'))),
-            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => ($this->getCurrentDayId() - 1)),
+            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => ($settings['currentDay_id'] - 1)),
             'order' => $orderArray
         ))->offset($group->teamsCount * $countGroup)->limit($group->teamsCount);
 
@@ -221,13 +223,15 @@ class GroupTeamsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
             $year = $this->getCurrentYear();
-            $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
+
+            $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']);
             $existingMatches = $this->MatchGet->getMatches($conditionsArray);
 
             if (!$existingMatches) {
                 $groups = $this->fetchTable('Groups')->find('all', array(
-                    'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
+                    'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
                     'order' => array('id' => 'ASC')
                 ));
 
@@ -281,12 +285,12 @@ class GroupTeamsController extends AppController
                             }
                         }
 
-                        $options = array('sortmode' => $mode, 'rgMode' => $rgMode, 'year_id' => $year->id, 'currentDay_id' => $this->getCurrentDayId(),
+                        $options = array('sortmode' => $mode, 'rgMode' => $rgMode, 'year_id' => $year->id, 'currentDay_id' => $settings['currentDay_id'],
                             'rand4_array' => $rand4_array, 'rand2_array' => $rand2_array, 'groupsCount' => $groupsCount, 'teamsCountPerGroup' => $teamsCountPerGroup);
 
                         $groupTeams = $this->GroupTeams->find('all', array(
                             'contain' => array('Groups', 'Teams'),
-                            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
+                            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']),
                             'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.id' => 'ASC')
                         ))->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($options) {
                             return $results->map(function ($row, $counter = 0) use ($options) {
@@ -383,13 +387,15 @@ class GroupTeamsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
             $year = $this->getCurrentYear();
-            $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
+
+            $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']);
             $existingMatches = $this->MatchGet->getMatches($conditionsArray);
 
             if (!$existingMatches) {
                 $groups = $this->fetchTable('Groups')->find('all', array(
-                    'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
+                    'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
                     'order' => array('id' => 'ASC')
                 ));
 
@@ -397,12 +403,12 @@ class GroupTeamsController extends AppController
                 if ($groupsCount > 0) {
                     $groupTeams = $this->GroupTeams->find('all', array(
                         'contain' => array('Groups', 'Teams'),
-                        'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
+                        'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']),
                         'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.id' => 'ASC')
                     ))->all();
 
                     // check has to be after all set
-                    $checkings = $this->getCountCheckings($groupTeams, $groupsCount, $this->getCurrentDayId(), 1);
+                    $checkings = $this->getCountCheckings($groupTeams, $groupsCount, $settings['currentDay_id'], 1);
                 }
             }
         }

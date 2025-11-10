@@ -281,8 +281,10 @@ class MatcheventLogsController extends AppController
             return false;
         }
 
-        $refereePIN = $this->fetchTable('TeamYears')->find()->where(['team_id' => $match['refereeTeam_id'], 'year_id' => $this->getCurrentYearId()])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
         $settings = $this->getSettings();
+
+        $refereePIN = $this->fetchTable('TeamYears')->find()
+            ->where(['team_id' => $match['refereeTeam_id'], 'year_id' => $settings['currentYear_id']])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
 
         if ($settings['isTest'] ?? 0) {
             if ($refereePIN === null || $refereePIN < 1 || (int)$postData['refereePIN'] !== 12345) {
@@ -298,12 +300,13 @@ class MatcheventLogsController extends AppController
                     return false;
                 }
 
-                if ((int)$postData['refereePIN'] != $refereePIN) {  // check 3nd PIN possiblity (ref subst team pin)
+                if ((int)$postData['refereePIN'] != $refereePIN) {  // check 3rd PIN possibility (ref subst team pin)
                     if ($match['refereeTeamSubst_id'] === null) {
                         return false;
                     }
 
-                    $refereePIN = $this->fetchTable('TeamYears')->find()->where(['team_id' => $match['refereeTeamSubst_id'], 'year_id' => $this->getCurrentYearId()])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
+                    $refereePIN = $this->fetchTable('TeamYears')->find()
+                        ->where(['team_id' => $match['refereeTeamSubst_id'], 'year_id' => $settings['currentYear_id']])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
                     if ($refereePIN === null || $refereePIN < 1) {
                         return false;
                     }

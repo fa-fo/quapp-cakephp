@@ -111,6 +111,7 @@ class GroupGetComponent extends Component
 
     public function getCurrentGroupId(int $number): int|false
     {
+        $settings = $this->getController()->getSettings();
         $year = $this->getController()->getCurrentYear();
         /**
          * @var Year $year
@@ -118,7 +119,7 @@ class GroupGetComponent extends Component
         $name = chr(ord('A') + $number);
 
         $group = FactoryLocator::get('Table')->get('Groups')->find('all', array(
-            'conditions' => array('name' => $name, 'year_id' => $year->id, 'day_id' => $this->getController()->getCurrentDayId()),
+            'conditions' => array('name' => $name, 'year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
             'order' => array('id' => 'ASC')
         ))->first();
         /**

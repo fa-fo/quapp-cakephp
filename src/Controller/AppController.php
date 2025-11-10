@@ -140,7 +140,7 @@ class AppController extends Controller
     public function getCurrentYear(): Year
     {
         $settings = $this->getSettings();
-        // todo: put currentYear_id inside return
+
         $year = $this->fetchTable('Years')->find('all', array(
             'conditions' => array('id' => $settings['currentYear_id']),
         ))->first();
@@ -148,16 +148,6 @@ class AppController extends Controller
          * @var Year $year
          */
         return $year;
-    }
-
-    protected function getCurrentYearId(): int
-    {
-        return ($this->getSettings())['currentYear_id'];
-    }
-
-    public function getCurrentDayId(): int
-    {
-        return ($this->getSettings())['currentDay_id'];
     }
 
     public function reCalcRanking(string $team1_id = '', string $team2_id = ''): void
@@ -174,6 +164,7 @@ class AppController extends Controller
 
     protected function getCalcRanking(int $team1_id = 0, int $team2_id = 0, bool $doSetRanking = true): array
     {
+        $settings = $this->getSettings();
         $year = $this->getCurrentYear();
         /**
          * @var Year $year
@@ -181,7 +172,7 @@ class AppController extends Controller
         $condGtArray = $team1_id ? ($team2_id ? array('GroupTeams.team_id IN' => array($team1_id, $team2_id)) : array('GroupTeams.team_id' => $team1_id)) : array();
         $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
             'contain' => array('Groups' => array('fields' => array('name', 'year_id', 'day_id'))),
-            'conditions' => array_merge($condGtArray, array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId())),
+            'conditions' => array_merge($condGtArray, array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id'])),
             'order' => array('GroupTeams.id' => 'ASC')
         ));
 
@@ -253,9 +244,10 @@ class AppController extends Controller
 
     protected function setRanking(Year $year): void
     {
+        $settings = $this->getSettings();
         $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
             'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
-            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
+            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']),
             'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcPointsPlus' => 'DESC', 'GroupTeams.calcGoalsDiff' => 'DESC', 'GroupTeams.calcGoalsScored' => 'DESC')
         ));
 

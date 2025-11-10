@@ -94,18 +94,19 @@ class GroupsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->getSettings();
             $year = $this->getCurrentYear();
             /**
              * @var Year $year
              */
 
-            if ($this->getCurrentDayId() == 1) {
-                $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId());
+            if ($settings['currentDay_id'] == 1) {
+                $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']);
                 $existingMatches = $this->MatchGet->getMatches($conditionsArray);
 
                 if (!$existingMatches) {
                     $groups = $this->Groups->find('all', array(
-                        'conditions' => array('year_id' => $year->id, 'day_id' => $this->getCurrentDayId()),
+                        'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
                         'order' => array('id' => 'ASC')
                     ));
 
@@ -137,7 +138,7 @@ class GroupsController extends AppController
                                 'Groups' => array('fields' => array('name', 'year_id', 'day_id')),
                                 'Teams' => array('fields' => array('calcTotalPointsPerYear')),
                             ),
-                            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $this->getCurrentDayId()),
+                            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']),
                             'order' => $orderArray
                         ))->all();
 

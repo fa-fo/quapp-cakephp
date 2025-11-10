@@ -10,8 +10,8 @@ use Cake\Datasource\FactoryLocator;
 use Cake\I18n\DateTime;
 
 /**
- * @property \App\Controller\Component\GroupGetComponent $GroupGet
- * @property \App\Controller\Component\PlayOffComponent $PlayOff
+ * @property GroupGetComponent $GroupGet
+ * @property PlayOffComponent $PlayOff
  */
 class MatchGetComponent extends Component
 {

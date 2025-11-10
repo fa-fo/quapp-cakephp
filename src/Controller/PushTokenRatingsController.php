@@ -135,7 +135,8 @@ class PushTokenRatingsController extends AppController
      */
     public function getPtrRanking(string $mode = 'single'): void
     {
-        $return = $this->PtrRanking->getPtrRanking($mode, $this->getCurrentYearId());
+        $settings = $this->getSettings();
+        $return = $this->PtrRanking->getPtrRanking($mode, $settings['currentYear_id']);
 
         $this->apiReturn($return);
     }
