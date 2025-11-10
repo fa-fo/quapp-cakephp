@@ -38,7 +38,6 @@ use Cake\View\JsonView;
  * @link https://book.cakephp.org/4/en/controllers.html#the-app-controller
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\CalcComponent $Calc
- * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class AppController extends Controller
 {
@@ -170,7 +169,7 @@ class AppController extends Controller
                 }
 
                 // reset all time stats
-                $this->updateCalcTotal($settings['currentYear_id'] - 1);
+                $this->Calc->updateCalcTotal($settings['currentYear_id'] - 1);
 
                 $this->apiReturn(array('rows affected' => $rc));
             }
@@ -198,83 +197,6 @@ class AppController extends Controller
                 $this->apiReturn(array('rows affected' => $rc));
             }
         }
-    }
-
-    protected function updateCalcTotal(int $yearId): int
-    {
-        $conn = ConnectionManager::get('default');
-        /**
-         * @var \Cake\Database\Connection $conn
-         */
-        $conn->execute(file_get_contents(__DIR__ . "/sql/setnull_team_calcTotal.sql"));
-        $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcTotal.sql"));
-        $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcPower.sql"), ['year_id' => $yearId]);
-
-        // Add prev team names points:
-        $conditionsArray = array('Teams.calcTotalRankingPoints IS NOT' => null, 'Teams.hidden' => 0);
-
-        $teams = $this->getTeams($conditionsArray, array(
-            'PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships', 'prevTeam_id')),
-            'PrevTeams.PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships')),
-        ))->toArray();
-
-        $prevTeamIds = array();
-        foreach ($teams as $team) {
-            $prevTeamIds[] = $this->addFromPrevNames($team, $team['prev_team']);
-        }
-
-        usort($teams, function ($a, $b) {
-            return $b['calcTotalRankingPoints'] <=> $a['calcTotalRankingPoints'];
-        });
-
-        $c = 0;
-        // set new ranking with points from prev team_names
-        foreach ($teams as $team) {
-            $t = $this->fetchTable('Teams')->find()->where(['id' => $team['id']])->first();
-            /**
-             * @var Team $t
-             */
-            if (in_array($team['team_id'], $prevTeamIds)) {
-                $t->set('calcTotalRanking', null);
-            } else {
-                $c++;
-                $t->set('calcTotalRanking', $c);
-                if ($team['prev_team']) {
-                    $t->set('calcTotalYears', $team['calcTotalYears']);
-                    $t->set('calcTotalRankingPoints', $team['calcTotalRankingPoints']);
-                    $t->set('calcTotalChampionships', $team['calcTotalChampionships']);
-                    $t->set('calcTotalPointsPerYear', floor(100 * ($team['calcTotalRankingPoints'] / $team['calcTotalYears'])) / 100);
-                }
-            }
-
-            $this->fetchTable('Teams')->save($t);
-        }
-
-        return $c;
-    }
-
-    private function addFromPrevNames(Team $team, Team|null $prevTeam): bool|int
-    {
-        $oldNameId = false;
-        if ($prevTeam) {
-            $oldNameId = $prevTeam['id'];
-            $team['calcTotalYears'] += $prevTeam['calcTotalYears'];
-            $team['calcTotalRankingPoints'] += $prevTeam['calcTotalRankingPoints'];
-            $team['calcTotalChampionships'] += $prevTeam['calcTotalChampionships'];
-
-            $this->addFromPrevNames($team, $prevTeam['prev_team']);
-        }
-        return $oldNameId;
-    }
-
-    protected function getTeams(array $conditionsArray, array $containArray = array()): \Cake\ORM\Query
-    {
-        return $this->fetchTable('Teams')->find('all', array(
-            'fields' => array('id', 'team_id' => 'Teams.id', 'team_name' => 'Teams.name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalPointsPerYear', 'calcTotalChampionships', 'calcTotalRanking'),
-            'contain' => $containArray,
-            'conditions' => $conditionsArray,
-            'order' => array('Teams.calcTotalRanking' => 'ASC')
-        ));
     }
 
     protected function checkUsernamePassword(string $name, string $password): int|bool

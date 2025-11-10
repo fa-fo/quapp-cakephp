@@ -4,8 +4,10 @@ namespace App\Controller\Component;
 
 use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4;
+use App\Model\Entity\Team;
 use App\Model\Entity\Year;
 use Cake\Controller\Component;
+use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\FactoryLocator;
 
 /**
@@ -99,7 +101,7 @@ class CalcComponent extends Component
         return array('countMatches' => $countMatches, 'countGroupTeams' => $groupTeams->count(), 'doSetRanking' => $doSetRanking);
     }
 
-    public function setRanking(Year $year): void
+    private function setRanking(Year $year): void
     {
         $settings = $this->Cache->getSettings();
         $groupTeams = FactoryLocator::get('Table')->get('GroupTeams')->find('all', array(
@@ -143,4 +145,72 @@ class CalcComponent extends Component
 
         return $gmp;
     }
+
+    public function updateCalcTotal(int $yearId): int
+    {
+        $conn = ConnectionManager::get('default');
+        /**
+         * @var \Cake\Database\Connection $conn
+         */
+        $conn->execute(file_get_contents(__DIR__ . "/sql/setnull_team_calcTotal.sql"));
+        $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcTotal.sql"));
+        $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcPower.sql"), ['year_id' => $yearId]);
+
+        // Add prev team names points:
+        $conditionsArray = array('Teams.calcTotalRankingPoints IS NOT' => null, 'Teams.hidden' => 0);
+
+        $teams = $this->Cache->getTeams($conditionsArray, array(
+            'PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships', 'prevTeam_id')),
+            'PrevTeams.PrevTeams' => array('fields' => array('id', 'name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalChampionships')),
+        ))->toArray();
+
+        $prevTeamIds = array();
+        foreach ($teams as $team) {
+            $prevTeamIds[] = $this->addFromPrevNames($team, $team['prev_team']);
+        }
+
+        usort($teams, function ($a, $b) {
+            return $b['calcTotalRankingPoints'] <=> $a['calcTotalRankingPoints'];
+        });
+
+        $c = 0;
+        // set new ranking with points from prev team_names
+        foreach ($teams as $team) {
+            $t = FactoryLocator::get('Table')->get('Teams')->find()->where(['id' => $team['id']])->first();
+            /**
+             * @var Team $t
+             */
+            if (in_array($team['team_id'], $prevTeamIds)) {
+                $t->set('calcTotalRanking', null);
+            } else {
+                $c++;
+                $t->set('calcTotalRanking', $c);
+                if ($team['prev_team']) {
+                    $t->set('calcTotalYears', $team['calcTotalYears']);
+                    $t->set('calcTotalRankingPoints', $team['calcTotalRankingPoints']);
+                    $t->set('calcTotalChampionships', $team['calcTotalChampionships']);
+                    $t->set('calcTotalPointsPerYear', floor(100 * ($team['calcTotalRankingPoints'] / $team['calcTotalYears'])) / 100);
+                }
+            }
+
+            FactoryLocator::get('Table')->get('Teams')->save($t);
+        }
+
+        return $c;
+    }
+
+    private function addFromPrevNames(Team $team, Team|null $prevTeam): bool|int
+    {
+        $oldNameId = false;
+        if ($prevTeam) {
+            $oldNameId = $prevTeam['id'];
+            $team['calcTotalYears'] += $prevTeam['calcTotalYears'];
+            $team['calcTotalRankingPoints'] += $prevTeam['calcTotalRankingPoints'];
+            $team['calcTotalChampionships'] += $prevTeam['calcTotalChampionships'];
+
+            $this->addFromPrevNames($team, $prevTeam['prev_team']);
+        }
+        return $oldNameId;
+    }
+
 }
