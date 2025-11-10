@@ -8,6 +8,7 @@ use App\Model\Entity\TeamYear;
 use Cake\Controller\Component;
 use Cake\Datasource\FactoryLocator;
 use Cake\I18n\DateTime;
+use Cake\ORM\Query\SelectQuery;
 
 /**
  * @property CacheComponent $Cache
@@ -74,7 +75,7 @@ class MatchGetComponent extends Component
                 $return['group']['group_id'] = $group->get('id');
                 $return['group']['group_name'] = $group->get('name');
                 $refGroup = $this->GroupGet->getRefereeGroup($group);
-                $return['referee_group_name'] = $refGroup ? $refGroup->get('name') : null;
+                $return['referee_group_name'] = $refGroup?->get('name');
             }
         }
 
@@ -97,6 +98,9 @@ class MatchGetComponent extends Component
             'conditions' => $conditionsArray,
             'order' => array('Rounds.id' => 'ASC', ($sortBy ? 'Sports.id' : 'Matches.id') => 'ASC', 'Matches.id' => 'ASC')
         ));
+        /**
+         * @var SelectQuery $query
+         */
 
         $count = $query->count();
 
