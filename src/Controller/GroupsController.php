@@ -10,6 +10,7 @@ use App\Model\Entity\Year;
  * Groups Controller
  *
  * @property \App\Model\Table\GroupsTable $Groups
+ * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class GroupsController extends AppController
@@ -165,7 +166,7 @@ class GroupsController extends AppController
                             }
 
                             $groupFillArray[$number]++;
-                            $newGroupId = $this->getCurrentGroupId((int)$number);
+                            $newGroupId = $this->GroupGet->getCurrentGroupId((int)$number);
 
                             $gt->set('group_id', $newGroupId);
                             $gt->set('calcRanking', null); // because of unique value per group

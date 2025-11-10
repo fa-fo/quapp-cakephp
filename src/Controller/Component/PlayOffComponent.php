@@ -7,9 +7,12 @@ use App\Model\Entity\Year;
 use Cake\Controller\Component;
 use Cake\Datasource\FactoryLocator;
 
+/**
+ * @property \App\Controller\Component\MatchGetComponent $MatchGet
+ */
 class PlayOffComponent extends Component
 {
-    protected MatchGetComponent $MatchGet;
+    protected array $components = ['MatchGet'];
 
     public function getPlayOffName(int $isPlayOff): string
     {

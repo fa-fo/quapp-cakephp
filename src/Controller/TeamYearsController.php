@@ -14,6 +14,7 @@ use Cake\I18n\DateTime;
  * TeamYears Controller
  *
  * @property \App\Model\Table\TeamYearsTable $TeamYears
+ * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PlayOffComponent $PlayOff
  * @property \App\Controller\Component\PtrRankingComponent $PtrRanking
@@ -115,8 +116,8 @@ class TeamYearsController extends AppController
                 /**
                  * @var TeamYear $ty
                  */
-                $g = $this->getGroupByTeamId($ty->team_id, $settings['currentYear_id'], $settings['currentDay_id']);
-                $gN = $this->getGroupPosNumber($g->id);
+                $g = $this->GroupGet->getGroupByTeamId($ty->team_id, $settings['currentYear_id'], $settings['currentDay_id']);
+                $gN = $this->GroupGet->getGroupPosNumber($g->id);
 
                 $ty['infos'] = $this->MatchGet->getMatchesByTeam($ty->team_id, $settings['currentYear_id'], $settings['currentDay_id'], 1);
                 $ty['day'] = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
@@ -355,7 +356,7 @@ class TeamYearsController extends AppController
 
                         /*  was:
                             $groupCountTeams = ($groupteam->group)->teamsCount;
-                            $endRanking = $this->getGroupPosNumber($groupteam->group_id) * $groupCountTeams + $groupteam->calcRanking;
+                            $endRanking = $this->GroupGet->getGroupPosNumber($groupteam->group_id) * $groupCountTeams + $groupteam->calcRanking;
                         */
 
                         if ($endRanking) {

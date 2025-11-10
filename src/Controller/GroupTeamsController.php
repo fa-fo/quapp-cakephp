@@ -15,6 +15,7 @@ use Cake\I18n\DateTime;
  * GroupTeams Controller
  *
  * @property \App\Model\Table\GroupTeamsTable $GroupTeams
+ * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class GroupTeamsController extends AppController
@@ -24,7 +25,7 @@ class GroupTeamsController extends AppController
     {
         $group_id = (int)$group_id;
         $adminView = (int)$adminView;
-        $group = $this->getPrevAndNextGroup($group_id);
+        $group = $this->GroupGet->getPrevAndNextGroup($group_id);
 
         if ($group) {
             $group['showRanking'] = 1;
@@ -307,11 +308,11 @@ class GroupTeamsController extends AppController
 
                                     if ($options['groupsCount'] <= 4) { // not compatible with 96 teams modus
                                         $prevRankingInTeam = ($prevGroupteam->calcRanking - 1) % 4;
-                                        $prevGroupPosNumber = $this->getGroupPosNumber($prevGroupteam->group_id) % 4;
+                                        $prevGroupPosNumber = $this->GroupGet->getGroupPosNumber($prevGroupteam->group_id) % 4;
                                     }
                                 }
 
-                                $groupPosNumber = $this->getGroupPosNumber($row['group_id']);
+                                $groupPosNumber = $this->GroupGet->getGroupPosNumber($row['group_id']);
                                 $row['groupPosNumber'] = $groupPosNumber;
 
                                 switch ($options['sortmode']) {
@@ -435,7 +436,7 @@ class GroupTeamsController extends AppController
         }
 
         for ($g = 0; $g < $groupsCount; $g++) {
-            $groupName = $this->getGroupName($g);
+            $groupName = $this->GroupGet->getGroupName($g);
 
             foreach ($matchschedulings as $msc) {
                 /**

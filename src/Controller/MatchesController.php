@@ -13,6 +13,7 @@ use Cake\I18n\DateTime;
  * Matches Controller
  *
  * @property \App\Model\Table\MatchesTable $Matches
+ * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PlayOffComponent $PlayOff
  * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
@@ -60,7 +61,7 @@ class MatchesController extends AppController
 
     public function byGroup(string $group_id = '', string $adminView = ''): void
     {
-        $group = $this->getPrevAndNextGroup((int)$group_id);
+        $group = $this->GroupGet->getPrevAndNextGroup((int)$group_id);
 
         if ($group) {
             $showTime = $this->MatchGet->getScheduleShowTime($group['year_id'], $group['day_id'], (int)$adminView);
@@ -404,7 +405,7 @@ class MatchesController extends AppController
     private function isConfirmable(\Cake\ORM\Entity $match, array $logsCalc, int $mode): bool
     {
         $settings = $this->getSettings();
-        $group = $this->getGroupByMatchId($match->id);
+        $group = $this->GroupGet->getGroupByMatchId($match->id);
 
         // only current Day
         if ($settings['currentYear_id'] == $group->year_id && $settings['currentDay_id'] == $group->day_id) {
@@ -494,7 +495,7 @@ class MatchesController extends AppController
                                 ))->first();
 
                                 $groupteam3 = $matchscheduling->placenumberRefereeTeam ? $this->fetchTable('GroupTeams')->find('all', array(
-                                    'conditions' => array('group_id' => $this->getRefereeGroup($group)->id, 'placeNumber' => $matchscheduling->placenumberRefereeTeam)
+                                    'conditions' => array('group_id' => $this->GroupGet->getRefereeGroup($group)->id, 'placeNumber' => $matchscheduling->placenumberRefereeTeam)
                                 ))->first() : null;
 
                                 /**
@@ -556,7 +557,7 @@ class MatchesController extends AppController
     private function createUniquePIN(int $sportId, int $groupId, int $roundId): int
     {
         $str1 = (9 - $sportId) - 4 * random_int(0, 1);
-        $str2 = 9 - $this->getGroupPosNumber($groupId);
+        $str2 = 9 - $this->GroupGet->getGroupPosNumber($groupId);
         $str34 = str_pad((string)($roundId + 16 * random_int(0, 5)), 2, "0", STR_PAD_LEFT);
         $str5 = ($this->getCurrentDayId() - 1) + 2 * random_int(0, 4);
 

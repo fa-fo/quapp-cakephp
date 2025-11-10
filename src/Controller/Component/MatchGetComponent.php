@@ -9,9 +9,13 @@ use Cake\Controller\Component;
 use Cake\Datasource\FactoryLocator;
 use Cake\I18n\DateTime;
 
+/**
+ * @property \App\Controller\Component\GroupGetComponent $GroupGet
+ * @property \App\Controller\Component\PlayOffComponent $PlayOff
+ */
 class MatchGetComponent extends Component
 {
-    protected PlayOffComponent $PlayOff;
+    protected array $components = ['GroupGet', 'PlayOff'];
 
     public function getMatchesByGroup(array $group): array
     {
@@ -68,7 +72,7 @@ class MatchGetComponent extends Component
                  */
                 $return['group']['group_id'] = $group->get('id');
                 $return['group']['group_name'] = $group->get('name');
-                $refGroup = $this->getController()->getRefereeGroup($group);
+                $refGroup = $this->GroupGet->getRefereeGroup($group);
                 $return['referee_group_name'] = $refGroup ? $refGroup->get('name') : null;
             }
         }
