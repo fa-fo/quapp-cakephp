@@ -56,7 +56,7 @@ class TeamsController extends AppController
         $settings = $this->Cache->getSettings();
         $conditionsArray = array('Teams.id' => (int)$id);
 
-        $team = $this->getTeams($conditionsArray, array(
+        $team = $this->Cache->getTeams($conditionsArray, array(
             'TeamYears' => array('fields' => array('id', 'team_id', 'year_id', 'endRanking', 'canceled'), 'sort' => array('year_id' => 'DESC')),
             'TeamYears.Years' => array('fields' => array('year_name' => 'name'),
                 'conditions' => array('year_id !=' => $settings['showEndRanking'] ? '' : $settings['currentYear_id'])
@@ -87,7 +87,7 @@ class TeamsController extends AppController
         } else {
             $conditionsArray = array('Teams.calcTotalRanking IS NOT' => null, 'Teams.calcTotalRankingPoints IS NOT' => null, 'Teams.hidden' => 0, 'Teams.testTeam' => 0);
 
-            $teams = $this->getTeams($conditionsArray);
+            $teams = $this->Cache->getTeams($conditionsArray, array(), 'app_calc_total');
         }
 
         $this->apiReturn($teams);

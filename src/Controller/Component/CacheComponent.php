@@ -33,4 +33,26 @@ class CacheComponent extends Component
          */
         return $year;
     }
+
+    public function getTeams(array $conditionsArray, array $containArray = array(), string $cacheKey = ''): \Cake\Datasource\ResultSetInterface
+    {
+        if ($cacheKey != '') {
+            $teams = Cache::remember($cacheKey, function () use ($conditionsArray, $containArray) {
+                return $this->getTeamsResultSet($conditionsArray, $containArray);
+            });
+        } else {
+            $teams = $this->getTeamsResultSet($conditionsArray, $containArray);
+        }
+        return $teams;
+    }
+
+    private function getTeamsResultSet(array $conditionsArray, array $containArray): \Cake\Datasource\ResultSetInterface
+    {
+        return FactoryLocator::get('Table')->get('Teams')->find('all', array(
+            'fields' => array('id', 'team_id' => 'Teams.id', 'team_name' => 'Teams.name', 'calcTotalYears', 'calcTotalRankingPoints', 'calcTotalPointsPerYear', 'calcTotalChampionships', 'calcTotalRanking'),
+            'conditions' => $conditionsArray,
+            'contain' => $containArray,
+            'order' => array('Teams.calcTotalRanking' => 'ASC')
+        ))->all();
+    }
 }
