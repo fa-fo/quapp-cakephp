@@ -15,6 +15,7 @@ use Cake\I18n\DateTime;
  *
  * @property \App\Model\Table\TeamYearsTable $TeamYears
  * @property \App\Controller\Component\CacheComponent $Cache
+ * @property \App\Controller\Component\CalcComponent $Calc
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PlayOffComponent $PlayOff
@@ -171,7 +172,7 @@ class TeamYearsController extends AppController
                     $groupTeam->set('canceled', $undo ? 0 : 1);
                     $this->fetchTable('GroupTeams')->save($groupTeam);
 
-                    $this->getCalcRanking($teamYear->team_id);
+                    $this->Calc->getCalcRanking($teamYear->team_id);
                 }
 
                 // cancel matches:

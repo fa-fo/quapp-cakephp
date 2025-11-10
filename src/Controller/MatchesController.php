@@ -14,6 +14,7 @@ use Cake\I18n\DateTime;
  *
  * @property \App\Model\Table\MatchesTable $Matches
  * @property \App\Controller\Component\CacheComponent $Cache
+ * @property \App\Controller\Component\CalcComponent $Calc
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PlayOffComponent $PlayOff
@@ -359,12 +360,12 @@ class MatchesController extends AppController
                             $score1 = $s1;
                             $score2 = $s2;
                         } else if ($mode == 3) { // X:0-Wertung
-                            $score1 = $this->getFactorsLeastCommonMultiple() / $factor;
+                            $score1 = $this->Calc->getFactorsLeastCommonMultiple() / $factor;
                             $score2 = 0;
                             $rTrend = 3;
                         } else if ($mode == 4) { // 0:X-Wertung
                             $score1 = 0;
-                            $score2 = $this->getFactorsLeastCommonMultiple() / $factor;
+                            $score2 = $this->Calc->getFactorsLeastCommonMultiple() / $factor;
                             $rTrend = 4;
                         } else if ($mode == 5) { // X:X-Wertung
                             $score1 = 0;
@@ -396,7 +397,7 @@ class MatchesController extends AppController
                         $return[$c] = $match->toArray();
 
                         if ($match->round->autoUpdateResults) {
-                            $calcRanking = $this->getCalcRanking($match->team1_id, $match->team2_id, $c == $count);
+                            $calcRanking = $this->Calc->getCalcRanking($match->team1_id, $match->team2_id, $c == $count);
                             $return['calcRanking'][$c] = $calcRanking;
                         }
                     }
@@ -713,7 +714,7 @@ class MatchesController extends AppController
 
                 }
 
-                $this->getCalcRanking();
+                $this->Calc->getCalcRanking();
             }
         }
 

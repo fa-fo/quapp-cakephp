@@ -14,6 +14,7 @@ use Cake\I18n\DateTime;
  *
  * @property \App\Model\Table\YearsTable $Years
  * @property \App\Controller\Component\CacheComponent $Cache
+ * @property \App\Controller\Component\CalcComponent $Calc
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class YearsController extends AppController
@@ -108,7 +109,7 @@ class YearsController extends AppController
 
             Cache::clear('app:settings');
 
-            $this->getCalcRanking();
+            $this->Calc->getCalcRanking();
 
         }
 
@@ -130,10 +131,22 @@ class YearsController extends AppController
 
             Cache::clear('app:settings');
 
-            $this->getCalcRanking();
+            $this->Calc->getCalcRanking();
         }
 
         $this->apiReturn($showEndRanking);
+    }
+
+    public function reCalcRanking(string $team1_id = '', string $team2_id = ''): void
+    {
+        $return = array();
+        $postData = $this->request->getData();
+
+        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            $return = $this->Calc->getCalcRanking((int)$team1_id, (int)$team2_id);
+        }
+
+        $this->apiReturn($return);
     }
 
     public function new(): void
