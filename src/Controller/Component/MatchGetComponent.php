@@ -10,12 +10,13 @@ use Cake\Datasource\FactoryLocator;
 use Cake\I18n\DateTime;
 
 /**
+ * @property CacheComponent $Cache
  * @property GroupGetComponent $GroupGet
  * @property PlayOffComponent $PlayOff
  */
 class MatchGetComponent extends Component
 {
-    protected array $components = ['GroupGet', 'PlayOff'];
+    protected array $components = ['Cache', 'GroupGet', 'PlayOff'];
 
     public function getMatchesByGroup(array $group): array
     {
@@ -100,7 +101,7 @@ class MatchGetComponent extends Component
         $count = $query->count();
 
         if ($count > 0) {
-            $settings = $this->getController()->getSettings();
+            $settings = $this->Cache->getSettings();
             $matches = $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($conditionsArray, $includeLogs, $adminView, $settings) {
                 return $results->map(function ($row) use ($conditionsArray, $includeLogs, $adminView, $settings) {
                     //Adding Calculated Fields
@@ -421,7 +422,7 @@ class MatchGetComponent extends Component
         }
 
         if ($lastAliveTime !== null) {
-            $setting = $this->getController()->getSettings();
+            $setting = $this->Cache->getSettings();
             $aliveDiff = $lastAliveTime->diffInSeconds(DateTime::now());
             $calc['isLoggedIn'] = (int)($aliveDiff < ($setting['autoLogoutSecsAfter'] ?? 60)) * (int)($calc['isLoggedIn'] ?? 0);
         }
@@ -458,13 +459,13 @@ class MatchGetComponent extends Component
 
     public function getScheduleShowTime(int $year_id, int $day_id, int $adminView = 0): int|DateTime
     {
-        $settings = $this->getController()->getSettings();
+        $settings = $this->Cache->getSettings();
 
         if ($settings['showScheduleHoursBefore'] == 0) {
             return 0; // show Schedule
         }
 
-        $currentYear = $this->getController()->getCurrentYear()->toArray();
+        $currentYear = $this->Cache->getCurrentYear()->toArray();
         $stime = DateTime::createFromFormat('Y-m-d H:i:s', $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
         $showTime = $stime->subHours($settings['showScheduleHoursBefore']);
         $now = DateTime::now();

@@ -14,6 +14,7 @@ use Cake\I18n\DateTime;
  * TeamYears Controller
  *
  * @property \App\Model\Table\TeamYearsTable $TeamYears
+ * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PlayOffComponent $PlayOff
@@ -24,7 +25,7 @@ class TeamYearsController extends AppController
     // getCurrentTeams
     public function all(): void
     {
-        $year = $this->getCurrentYear();
+        $year = $this->Cache->getCurrentYear();
 
         $teamYears = $this->TeamYears->find('all', array(
             'fields' => array('id', 'team_id', 'canceled'),
@@ -38,7 +39,7 @@ class TeamYearsController extends AppController
 
     public function allWithPushTokenCount(): void
     {
-        $year = $this->getCurrentYear();
+        $year = $this->Cache->getCurrentYear();
 
         $teamYears = $this->TeamYears->find('all', array(
             'fields' => array('id', 'team_id', 'canceled'),
@@ -59,7 +60,7 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             $teamYears = $this->TeamYears->find('all', array(
                 'fields' => array('id', 'team_id', 'year_id', 'refereePIN', 'canceled'),
@@ -89,8 +90,8 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
-            $year = $this->getCurrentYear()->toArray();
+            $settings = $this->Cache->getSettings();
+            $year = $this->Cache->getCurrentYear()->toArray();
 
             $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id'),
@@ -143,7 +144,7 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
 
         if ($id && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
             $year_id = $settings['currentYear_id'];
             $day_id = $settings['currentDay_id'];
 
@@ -207,7 +208,7 @@ class TeamYearsController extends AppController
     // deprecated! use instead:  matches/refereeCanceledMatches
     public function refereeCanceledTeamsMatches(): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $return['matches'] = array();
 
         $teamYears = $this->TeamYears->find('all', array(
@@ -246,7 +247,7 @@ class TeamYearsController extends AppController
 
     public function getEndRanking(string $year_id = '', string $adminView = ''): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $year_id = (int)$year_id ?: $settings['currentYear_id'];
         $adminView = (int)$adminView;
 
@@ -279,8 +280,8 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
-            $year = $this->getCurrentYear()->toArray();
+            $settings = $this->Cache->getSettings();
+            $year = $this->Cache->getCurrentYear()->toArray();
             $teamYears = $this->TeamYears->find('all', array(
                 'contain' => array('Teams'),
                 'conditions' => array('year_id' => $year['id']),
@@ -320,8 +321,8 @@ class TeamYearsController extends AppController
         $rowsCount = 0;
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
-            $year = $this->getCurrentYear();
+            $settings = $this->Cache->getSettings();
+            $year = $this->Cache->getCurrentYear();
 
             if ($settings['currentDay_id'] === $year->daysCount) {
                 $teamYears = $this->TeamYears->find('all', array(
@@ -384,7 +385,7 @@ class TeamYearsController extends AppController
     {
         $return = array();
         $postData = $this->request->getData();
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $teamNamesSplit = json_decode($postData['teamNamesSplit'], true);

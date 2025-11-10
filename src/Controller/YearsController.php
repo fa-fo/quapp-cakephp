@@ -13,15 +13,16 @@ use Cake\I18n\DateTime;
  * Years Controller
  *
  * @property \App\Model\Table\YearsTable $Years
+ * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class YearsController extends AppController
 {
     public function getCurrent(): void
     {
-        $year = $this->getCurrentYear()->toArray();
+        $year = $this->Cache->getCurrentYear()->toArray();
 
-        $year['settings'] = $this->getSettings();
+        $year['settings'] = $this->Cache->getSettings();
 
         $year['currentDay_id'] = $year['settings']['currentDay_id'];
         $year['day'] = $year['settings']['currentDay_id'] == 1 ? $year['day1'] : $year['day2'];
@@ -41,12 +42,14 @@ class YearsController extends AppController
          */
         $stmt = $conn->execute(file_get_contents(__DIR__ . "/sql/update_years_teamsCount.sql"));
 
+        Cache::clear('app:year');
+
         $this->apiReturn($stmt->rowCount());
     }
 
     public function all(): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
 
         $years = $this->Years->find('all', array(
             'fields' => array('id', 'year_id' => 'id', 'year_name' => 'name'),
@@ -62,11 +65,11 @@ class YearsController extends AppController
 
     public function setCurrentDayIncrement(): void
     {
-        $year = $this->getCurrentYear();
+        $year = $this->Cache->getCurrentYear();
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             if ($settings['currentDay_id'] < $year->daysCount) {
                 $currentDay_id = $this->fetchTable('Settings')->find('all')->where(['name' => 'currentDay_id'])->first();
@@ -136,11 +139,11 @@ class YearsController extends AppController
     public function new(): void
     {
         $postData = $this->request->getData();
-        $year = $this->getCurrentYear()->toArray();
+        $year = $this->Cache->getCurrentYear()->toArray();
         $newYear = false;
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
             $ytime = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $year['daysCount']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
             $ytime = $ytime->addHours(24); // start of next day after last day of the tournament
             $now = DateTime::now();
@@ -185,6 +188,7 @@ class YearsController extends AppController
                 $this->fetchTable('Settings')->save($showEndRanking);
 
                 Cache::clear('app:settings');
+                Cache::clear('app:year');
 
                 $conn = ConnectionManager::get('default');
                 /**
@@ -201,7 +205,7 @@ class YearsController extends AppController
     // get Status of current Day
     public function getStatus(): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']);
 
         $teamYears = $this->fetchTable('TeamYears')->find('all', array(

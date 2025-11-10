@@ -9,17 +9,18 @@ use App\Model\Entity\Round;
  * Rounds Controller
  *
  * @property \App\Model\Table\RoundsTable $Rounds
+ * @property \App\Controller\Component\CacheComponent $Cache
  */
 class RoundsController extends AppController
 {
     public function all(string $adminView = '', string $offset = '0'): void
     {
         // only current day !!!
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $year_id = $settings['currentYear_id'];
         $day_id = $settings['currentDay_id'];
 
-        $currentYear = $this->getCurrentYear()->toArray();
+        $currentYear = $this->Cache->getCurrentYear()->toArray();
         $day = $currentYear['day' . $day_id]->i18nFormat('yyyy-MM-dd');
         $adminView = (int)$adminView;
 

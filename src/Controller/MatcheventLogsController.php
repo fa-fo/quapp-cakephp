@@ -15,6 +15,7 @@ use Cake\I18n\DateTime;
  * MatcheventLogs Controller
  *
  * @property \App\Model\Table\MatcheventLogsTable $MatcheventLogs
+ * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
  */
@@ -281,7 +282,7 @@ class MatcheventLogsController extends AppController
             return false;
         }
 
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
 
         $refereePIN = $this->fetchTable('TeamYears')->find()
             ->where(['team_id' => $match['refereeTeam_id'], 'year_id' => $settings['currentYear_id']])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
@@ -392,7 +393,7 @@ class MatcheventLogsController extends AppController
     {
         $photos = array(); // initial
         $postData = $this->request->getData();
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             $conditionsArray = array('Matchevents.code' => 'PHOTO_UPLOAD', 'year_id' => $settings['currentYear_id']);
@@ -466,7 +467,7 @@ class MatcheventLogsController extends AppController
         $return = array();
         $myPhotos = array();
         $myTeamId = (int)$myTeamId;
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $year_id = (int)$year_id ?: $settings['currentYear_id'];
 
         $photos = $this->MatcheventLogs->find('all', array(
@@ -506,7 +507,7 @@ class MatcheventLogsController extends AppController
 
     private function getPhotoDir(): string
     {
-        $year = $this->getCurrentYear();
+        $year = $this->Cache->getCurrentYear();
         return __DIR__ . '/../../webroot/img/' . $year->name;
     }
 
@@ -517,7 +518,7 @@ class MatcheventLogsController extends AppController
 
     private function setPushTokenRating(int $id, string $matchEventCode, string $expoPushToken): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
 
         if ($settings['usePushTokenRatings'] && $expoPushToken != '') {
             $pt = $this->fetchTable('PushTokens')->find()->where(['expoPushToken' => $expoPushToken])->first();
@@ -554,7 +555,7 @@ class MatcheventLogsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             if ($settings['isTest'] ?? 0) {
                 $conditionsArray = array(
@@ -656,7 +657,7 @@ class MatcheventLogsController extends AppController
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
             if ($round_id > 0) {
-                $settings = $this->getSettings();
+                $settings = $this->Cache->getSettings();
                 $conn = ConnectionManager::get('default');
                 /**
                  * @var \Cake\Database\Connection $conn
@@ -686,7 +687,7 @@ class MatcheventLogsController extends AppController
     {
         $match_id = (int)$match_id;
         $postData = $this->request->getData();
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
 
         $conditionsArray = $match_id > 0 ? array('Matches.id' => $match_id)
             : array(

@@ -15,6 +15,7 @@ use Cake\I18n\DateTime;
  * GroupTeams Controller
  *
  * @property \App\Model\Table\GroupTeamsTable $GroupTeams
+ * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
@@ -30,7 +31,7 @@ class GroupTeamsController extends AppController
         if ($group) {
             $group['showRanking'] = 1;
             $group['groupTeams'] = $this->getRanking($group);
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             if (!$adminView && $group['year_id'] == $settings['currentYear_id']) {
                 $group['isTest'] = $settings['isTest'];
@@ -71,7 +72,7 @@ class GroupTeamsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id', 'teamsCount'),
@@ -79,7 +80,7 @@ class GroupTeamsController extends AppController
                 'order' => array('name' => 'ASC')
             ));
 
-            $year = $this->getCurrentYear()->toArray();
+            $year = $this->Cache->getCurrentYear()->toArray();
             $day = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
             foreach ($groups as $group) {
@@ -107,8 +108,8 @@ class GroupTeamsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
-            $year = $this->getCurrentYear();
+            $settings = $this->Cache->getSettings();
+            $year = $this->Cache->getCurrentYear();
 
             $oldGroupTeams = $this->GroupTeams->find('all', array(
                 'contain' => array('Groups' => array('fields' => array('name', 'year_id', 'day_id'))),
@@ -179,7 +180,7 @@ class GroupTeamsController extends AppController
 
     private function addFromPrevDayRanking(Year $year, Group $group, int $countGroup): array
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $groupTeams = array();
         $orderArray = array('GroupTeams.calcRanking' => 'ASC', 'GroupTeams.group_id' => 'ASC'); // standard for 64 teams
 
@@ -223,8 +224,8 @@ class GroupTeamsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
-            $year = $this->getCurrentYear();
+            $settings = $this->Cache->getSettings();
+            $year = $this->Cache->getCurrentYear();
 
             $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']);
             $existingMatches = $this->MatchGet->getMatches($conditionsArray);
@@ -387,8 +388,8 @@ class GroupTeamsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
-            $year = $this->getCurrentYear();
+            $settings = $this->Cache->getSettings();
+            $year = $this->Cache->getCurrentYear();
 
             $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']);
             $existingMatches = $this->MatchGet->getMatches($conditionsArray);
@@ -418,7 +419,7 @@ class GroupTeamsController extends AppController
 
     private function getCountCheckings(ResultSetInterface $groupTeams, int $groupsCount, int $currentDay_id, int $mode = 1): array
     {
-        $year = $this->getCurrentYear();
+        $year = $this->Cache->getCurrentYear();
         $countPrevYearsMatches = 0;
         $countPrevYearsMatchesSameSport = 0;
         $countPrevLastYearMatchesSameSport = array_pad(array(), $groupsCount, 0);
@@ -556,7 +557,7 @@ class GroupTeamsController extends AppController
 
     private function getCountCheckings2_deprecated(GroupTeam $groupteam, int $currentDay_id): array
     {
-        $year = $this->getCurrentYear();
+        $year = $this->Cache->getCurrentYear();
         $countPrevYearsMatches = 0;
         $countPrevYearsMatchesSameSport = 0;
         $countPrevLastYearMatchesSameSport = 0;

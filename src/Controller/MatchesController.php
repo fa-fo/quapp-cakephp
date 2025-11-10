@@ -13,6 +13,7 @@ use Cake\I18n\DateTime;
  * Matches Controller
  *
  * @property \App\Model\Table\MatchesTable $Matches
+ * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PlayOffComponent $PlayOff
@@ -30,7 +31,7 @@ class MatchesController extends AppController
 
     public function byTeam(string $team_id = '', string $year_id = '', string $day_id = '', string $adminView = ''): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $year_id = (int)$year_id ?: $settings['currentYear_id'];
         $day_id = (int)$day_id ?: $settings['currentDay_id'];
 
@@ -47,7 +48,7 @@ class MatchesController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['refereeName'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             $conditionsArray = array(
                 'refereeName LIKE' => '%' . $postData['refereeName'] . '%',
@@ -84,7 +85,7 @@ class MatchesController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id'),
@@ -92,7 +93,7 @@ class MatchesController extends AppController
                 'order' => array('name' => 'ASC')
             ));
 
-            $year = $this->getCurrentYear()->toArray();
+            $year = $this->Cache->getCurrentYear()->toArray();
             $day = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
             foreach ($groups as $group) {
@@ -119,7 +120,7 @@ class MatchesController extends AppController
         $round_id = (int)$round_id;
         $includeLogs = (int)$includeLogs;
 
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $year_id = (int)$year_id ?: $settings['currentYear_id'];
         $day_id = (int)$day_id ?: $settings['currentDay_id'];
 
@@ -155,7 +156,7 @@ class MatchesController extends AppController
                     $group['matches'] = $this->MatchGet->getMatches($conditionsArray, $includeLogs, 1, $adminView);
 
                     if ($isPlayOffRound && $includeLogs) {
-                        $year = $this->getCurrentYear();
+                        $year = $this->Cache->getCurrentYear();
                         $group['playOffTeams'] = $this->PlayOff->getPlayOffWinLose($year);
 
                         $group['playOffTeams']['all'] = $this->fetchTable('GroupTeams')->find('all', array(
@@ -255,7 +256,7 @@ class MatchesController extends AppController
 
     public function getRankingRefereeSubst(): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
 
         $query = $this->Matches->find('all', array(
             'contain' => array(
@@ -322,7 +323,7 @@ class MatchesController extends AppController
 
             if ($count > 0) {
                 $c = 0;
-                $settings = $this->getSettings();
+                $settings = $this->Cache->getSettings();
 
                 foreach ($matches as $m) {
                     $c++;
@@ -408,7 +409,7 @@ class MatchesController extends AppController
 
     private function isConfirmable(\Cake\ORM\Entity $match, array $logsCalc, int $mode): bool
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $group = $this->GroupGet->getGroupByMatchId($match->id);
 
         // only current Day
@@ -446,8 +447,8 @@ class MatchesController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
-            $year = $this->getCurrentYear();
+            $settings = $this->Cache->getSettings();
+            $year = $this->Cache->getCurrentYear();
 
             $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']);
             $existingMatches = $this->MatchGet->getMatches($conditionsArray);
@@ -461,7 +462,7 @@ class MatchesController extends AppController
                 ))->toArray();
 
                 if (count($teamYears) == $year->teamsCount) {
-                    $settings = $this->getSettings();
+                    $settings = $this->Cache->getSettings();
 
                     $canceledTeamsArray = array();
                     if ($teamYearsCanceled) {
@@ -561,7 +562,7 @@ class MatchesController extends AppController
      */
     private function createUniquePIN(int $sportId, int $groupId, int $roundId): int
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $str1 = (9 - $sportId) - 4 * random_int(0, 1);
         $str2 = 9 - $this->GroupGet->getGroupPosNumber($groupId);
         $str34 = str_pad((string)($roundId + 16 * random_int(0, 5)), 2, "0", STR_PAD_LEFT);
@@ -587,7 +588,7 @@ class MatchesController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('supervisor', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             $conditionsArray = array(
                 'resultTrend IS' => null,
@@ -675,7 +676,7 @@ class MatchesController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             if ($settings['isTest'] ?? 0) {
                 $conditionsArray = array(

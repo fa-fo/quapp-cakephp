@@ -9,6 +9,7 @@ use App\Model\Entity\Team;
  * Teams Controller
  *
  * @property \App\Model\Table\TeamsTable $Teams
+ * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class TeamsController extends AppController
@@ -52,7 +53,7 @@ class TeamsController extends AppController
 
     public function byId(string $id = ''): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $conditionsArray = array('Teams.id' => (int)$id);
 
         $team = $this->getTeams($conditionsArray, array(
@@ -78,7 +79,7 @@ class TeamsController extends AppController
     // Ewige Tabelle
     public function all(): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
 
         if ($settings['currentDay_id'] == 2 && $settings['alwaysAutoUpdateResults'] == 1 && $settings['showEndRanking'] == 0) {
             $teams = null;
@@ -96,7 +97,7 @@ class TeamsController extends AppController
     {
         $id = (int)$id;
         $return = array();
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
 
         $conditionsArray = array(
             'Years.id !=' => $settings['alwaysAutoUpdateResults'] && !$settings['isTest'] ? 0 : $settings['currentYear_id'],
@@ -135,7 +136,7 @@ class TeamsController extends AppController
     {
         $id = (int)$id;
         $sport_id = (int)$sport_id;
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $conditionsArray = array(
             'Years.id !=' => $settings['alwaysAutoUpdateResults'] && !$settings['isTest'] ? 0 : $settings['currentYear_id'],
             'canceled' => 0,
@@ -155,7 +156,7 @@ class TeamsController extends AppController
     public function getTestTeamNames(): void
     {
         $return['teamNames'] = '';
-        $year = $this->getCurrentYear();
+        $year = $this->Cache->getCurrentYear();
 
         $teams = $this->Teams->find('all', array(
             'conditions' => array('hidden' => 0),

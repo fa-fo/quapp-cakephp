@@ -10,6 +10,7 @@ use App\Model\Entity\Year;
  * Groups Controller
  *
  * @property \App\Model\Table\GroupsTable $Groups
+ * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
@@ -17,7 +18,7 @@ class GroupsController extends AppController
 {
     public function all(string $year_id = '', string $day_id = ''): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $year_id = (int)$year_id ?: $settings['currentYear_id'];
         $day_id = (int)$day_id ?: $settings['currentDay_id'];
 
@@ -38,8 +39,8 @@ class GroupsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
-            $year = $this->getCurrentYear();
+            $settings = $this->Cache->getSettings();
+            $year = $this->Cache->getCurrentYear();
 
             $existingGroups = $this->Groups->find('all', array(
                 'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
@@ -94,8 +95,8 @@ class GroupsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
-            $year = $this->getCurrentYear();
+            $settings = $this->Cache->getSettings();
+            $year = $this->Cache->getCurrentYear();
             /**
              * @var Year $year
              */
@@ -203,7 +204,7 @@ class GroupsController extends AppController
     public function getRankingPointsPerYear(string $id = '', string $year_id = '', string $day_id = ''): void
     {
         $id = (int)$id;
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $year_id = (int)$year_id ?: $settings['currentYear_id'];
         $day_id = (int)$day_id ?: $settings['currentDay_id'];
 

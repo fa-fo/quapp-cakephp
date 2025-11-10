@@ -14,6 +14,7 @@ use Cake\I18n\DateTime;
  * PushTokenRatings Controller
  *
  * @property \App\Model\Table\PushTokenRatingsTable $PushTokenRatings
+ * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PtrRankingComponent $PtrRanking
  */
@@ -25,7 +26,7 @@ class PushTokenRatingsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             $conditionsArray = array(
                 'Groups.year_id' => $settings['currentYear_id'],
@@ -135,7 +136,7 @@ class PushTokenRatingsController extends AppController
      */
     public function getPtrRanking(string $mode = 'single'): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $return = $this->PtrRanking->getPtrRanking($mode, $settings['currentYear_id']);
 
         $this->apiReturn($return);

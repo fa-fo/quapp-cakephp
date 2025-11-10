@@ -23,7 +23,6 @@ use App\Model\Entity\Match4;
 use App\Model\Entity\Team;
 use App\Model\Entity\Year;
 use App\View\PdfView;
-use Cake\Cache\Cache;
 use Cake\Controller\Controller;
 use Cake\Datasource\ConnectionManager;
 use Cake\Event\EventInterface;
@@ -37,6 +36,7 @@ use Cake\View\JsonView;
  * will inherit them.
  *
  * @link https://book.cakephp.org/4/en/controllers.html#the-app-controller
+ * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class AppController extends Controller
@@ -53,6 +53,7 @@ class AppController extends Controller
     {
         parent::initialize();
 
+        $this->loadComponent('Cache');
         $this->loadComponent('GroupGet');
         $this->loadComponent('MatchGet');
         $this->loadComponent('PlayOff');
@@ -67,8 +68,8 @@ class AppController extends Controller
     public function apiReturn(mixed $object, int $year_id = 0, int $day_id = 0): \Cake\Http\Response
     {
         if ($object) {
-            $year = $this->getCurrentYear()->toArray();
-            $year['settings'] = $this->getSettings();
+            $year = $this->Cache->getCurrentYear()->toArray();
+            $year['settings'] = $this->Cache->getSettings();
 
             // todo: delete after V3.0 complete rollout:
             $year['isTest'] = $year['settings']['isTest'];
@@ -128,28 +129,6 @@ class AppController extends Controller
         $this->viewBuilder()->setOption('serialize', true);
     }
 
-    public function getSettings(): array
-    {
-        return Cache::remember('app:settings', function () {
-            return $this->fetchTable('Settings')->find('list', [
-                'keyField' => 'name', 'valueField' => 'value'
-            ])->toArray();
-        });
-    }
-
-    public function getCurrentYear(): Year
-    {
-        $settings = $this->getSettings();
-
-        $year = $this->fetchTable('Years')->find('all', array(
-            'conditions' => array('id' => $settings['currentYear_id']),
-        ))->first();
-        /**
-         * @var Year $year
-         */
-        return $year;
-    }
-
     public function reCalcRanking(string $team1_id = '', string $team2_id = ''): void
     {
         $return = array();
@@ -164,8 +143,8 @@ class AppController extends Controller
 
     protected function getCalcRanking(int $team1_id = 0, int $team2_id = 0, bool $doSetRanking = true): array
     {
-        $settings = $this->getSettings();
-        $year = $this->getCurrentYear();
+        $settings = $this->Cache->getSettings();
+        $year = $this->Cache->getCurrentYear();
         /**
          * @var Year $year
          */
@@ -244,7 +223,7 @@ class AppController extends Controller
 
     protected function setRanking(Year $year): void
     {
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
         $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
             'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
             'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']),
@@ -279,7 +258,7 @@ class AppController extends Controller
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             if ($settings['isTest'] ?? 0) {
                 $rc = 0;
@@ -325,7 +304,7 @@ class AppController extends Controller
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
+            $settings = $this->Cache->getSettings();
 
             if ($settings['isTest'] ?? 0) {
                 $rc = 0;
@@ -465,8 +444,8 @@ class AppController extends Controller
     protected function getCurrentRoundId(int $yearId = 0, int $dayId = 0, int $offset = 0): int
     {
         $return = 0;
-        $settings = $this->getSettings();
-        $currentYear = $this->getCurrentYear()->toArray();
+        $settings = $this->Cache->getSettings();
+        $currentYear = $this->Cache->getCurrentYear()->toArray();
         $day = $currentYear['day' . $settings['currentDay_id']];
         $time = $this->getQTime($settings);
 

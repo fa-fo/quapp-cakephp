@@ -9,6 +9,7 @@ use Cake\Http\Client;
  * Sports Controller
  *
  * @property \App\Model\Table\SportsTable $Sports
+ * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  */
 class SportsController extends AppController
@@ -17,7 +18,7 @@ class SportsController extends AppController
     {
         $id = (int)$id;
         $return = array();
-        $settings = $this->getSettings();
+        $settings = $this->Cache->getSettings();
 
         if ($settings['useResourceContentApi']) {
             $http = new Client([
@@ -73,8 +74,8 @@ class SportsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->getSettings();
-            $year = $this->getCurrentYear()->toArray();
+            $settings = $this->Cache->getSettings();
+            $year = $this->Cache->getCurrentYear()->toArray();
 
             $sports = $this->Sports->find('all', array(
                 'conditions' => array('name !=' => 'Multi'),

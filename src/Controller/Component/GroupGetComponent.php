@@ -9,8 +9,13 @@ use App\Model\Entity\Year;
 use Cake\Controller\Component;
 use Cake\Datasource\FactoryLocator;
 
+/**
+ * @property CacheComponent $Cache
+ */
 class GroupGetComponent extends Component
 {
+    protected array $components = ['Cache'];
+
     public function getGroupName(int $number): string|bool
     {
         $alphabet = range('A', 'Z');
@@ -111,8 +116,8 @@ class GroupGetComponent extends Component
 
     public function getCurrentGroupId(int $number): int|false
     {
-        $settings = $this->getController()->getSettings();
-        $year = $this->getController()->getCurrentYear();
+        $settings = $this->Cache->getSettings();
+        $year = $this->Cache->getCurrentYear();
         /**
          * @var Year $year
          */
