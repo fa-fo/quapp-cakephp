@@ -21,7 +21,6 @@ use Cake\I18n\DateTime;
  */
 class MatcheventLogsController extends AppController
 {
-
     public function login(string $match_id = ''): void
     {
         $match_id = (int)$match_id;
@@ -266,14 +265,10 @@ class MatcheventLogsController extends AppController
 
     private function getMatchAndLogs(int $match_id, int $includeLogs): array|null
     {
-        $match = null;
         $conditionsArray = array('Matches.id' => $match_id);
         $match_array = $this->MatchGet->getMatches($conditionsArray, $includeLogs);
 
-        if (is_array($match_array)) {
-            $match = $match_array[0]->toArray();
-        }
-        return $match;
+        return is_array($match_array) ? $match_array[0]->toArray() : null;
     }
 
     private function checkPostData(array $match, array $postData, \Cake\ORM\Entity|null $matchEvent, bool $cancel = false): bool
@@ -335,9 +330,6 @@ class MatcheventLogsController extends AppController
         return true;
     }
 
-    /**
-     * @throws \ErrorException
-     */
     private function savePhoto(string $photoDataBase64, int $match_id, int $id): void
     {
         $data = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $photoDataBase64));
@@ -376,7 +368,7 @@ class MatcheventLogsController extends AppController
             /* find the "desired height" of this thumbnail, relative to the desired width  */
             $desired_height = (int)floor($height * ($desired_width / $width));
 
-            if ($desired_height > 0) {
+            if ($desired_width > 0 && $desired_height > 0) {
                 /* create a new, "virtual" image */
                 $virtual_image = imagecreatetruecolor($desired_width, $desired_height);
 
@@ -424,6 +416,9 @@ class MatcheventLogsController extends AppController
             ))->limit(32);
 
             foreach ($photos['lastChecked'] as $log) {
+                /**
+                 * @var Match4eventLog $log
+                 */
                 $conditionsArray = array(
                     'Matches.id' => $log->match_id,
                 );
@@ -488,10 +483,11 @@ class MatcheventLogsController extends AppController
                 'Matches.Teams3' => array('fields' => array('team3_name' => 'Teams3.name')),
             ),
             'order' => array('MatcheventLogs.id' => 'DESC')
-        ));
+        ))->all();
 
         $c = -1;
         foreach ($photos as $ph) {
+            /** @var Match4eventLog{team1_id:int, team2_id:int} $ph */
             $c++;
             if ($myTeamId == $ph->team1_id || $myTeamId == $ph->team2_id) {
                 $myPhotos[] = $c;
