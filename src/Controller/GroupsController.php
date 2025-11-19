@@ -13,6 +13,7 @@ use App\Model\Entity\Year;
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class GroupsController extends AppController
 {
@@ -38,7 +39,7 @@ class GroupsController extends AppController
         $groups = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year = $this->Cache->getCurrentYear();
 
@@ -94,7 +95,7 @@ class GroupsController extends AppController
         $return = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year = $this->Cache->getCurrentYear();
             /**

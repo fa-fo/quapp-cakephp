@@ -7,6 +7,7 @@ namespace App\Controller;
  * PushTokens Controller
  *
  * @property \App\Model\Table\PushTokensTable $PushTokens
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class PushTokensController extends AppController
 {
@@ -37,7 +38,7 @@ class PushTokensController extends AppController
             $team_id = (int)$team_id;
             $postData = $this->request->getData();
 
-            if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+            if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
                 $pushTokens = $this->PushTokens->find('all', array(
                     'conditions' => $team_id ? array('my_team_id' => $team_id) : array()
                 ));

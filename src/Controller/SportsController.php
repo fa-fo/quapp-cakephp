@@ -11,6 +11,7 @@ use Cake\Http\Client;
  * @property \App\Model\Table\SportsTable $Sports
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class SportsController extends AppController
 {
@@ -44,7 +45,7 @@ class SportsController extends AppController
         $postData = $this->request->getData();
         $return = array();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             if (isset($postData['content'])) {
                 $dir = $this->getResourceDir();
                 $filename = $this->getResourceFilename($dir, $id);
@@ -73,7 +74,7 @@ class SportsController extends AppController
     {
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year = $this->Cache->getCurrentYear()->toArray();
 

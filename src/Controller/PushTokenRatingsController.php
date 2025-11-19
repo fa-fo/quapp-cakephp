@@ -17,6 +17,7 @@ use Cake\I18n\DateTime;
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PtrRankingComponent $PtrRanking
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class PushTokenRatingsController extends AppController
 {
@@ -25,7 +26,7 @@ class PushTokenRatingsController extends AppController
         $rowCount = 0;
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
 
             $conditionsArray = array(

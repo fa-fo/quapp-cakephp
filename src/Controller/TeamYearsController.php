@@ -20,6 +20,7 @@ use Cake\I18n\DateTime;
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PlayOffComponent $PlayOff
  * @property \App\Controller\Component\PtrRankingComponent $PtrRanking
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class TeamYearsController extends AppController
 {
@@ -60,7 +61,7 @@ class TeamYearsController extends AppController
     {
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
 
             $teamYears = $this->TeamYears->find('all', array(
@@ -90,7 +91,7 @@ class TeamYearsController extends AppController
         $offset = (int)$offset;
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year = $this->Cache->getCurrentYear()->toArray();
 
@@ -144,7 +145,7 @@ class TeamYearsController extends AppController
         $teamYear = false;
         $postData = $this->request->getData();
 
-        if ($id && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if ($id && isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year_id = $settings['currentYear_id'];
             $day_id = $settings['currentDay_id'];
@@ -280,7 +281,7 @@ class TeamYearsController extends AppController
     {
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year = $this->Cache->getCurrentYear()->toArray();
             $teamYears = $this->TeamYears->find('all', array(
@@ -321,7 +322,7 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
         $rowsCount = 0;
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year = $this->Cache->getCurrentYear();
 
@@ -388,7 +389,7 @@ class TeamYearsController extends AppController
         $postData = $this->request->getData();
         $settings = $this->Cache->getSettings();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $teamNamesSplit = json_decode($postData['teamNamesSplit'], true);
             foreach ($teamNamesSplit as $team) {
                 $newTy = $this->TeamYears->newEmptyEntity();

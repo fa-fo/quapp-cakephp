@@ -17,11 +17,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Model\Entity\Login;
 use App\Model\Entity\Year;
 use App\View\PdfView;
 use Cake\Controller\Controller;
-use Cake\Datasource\ConnectionManager;
 use Cake\Event\EventInterface;
 use Cake\I18n\DateTime;
 use Cake\View\JsonView;
@@ -34,7 +32,6 @@ use Cake\View\JsonView;
  *
  * @link https://book.cakephp.org/4/en/controllers.html#the-app-controller
  * @property \App\Controller\Component\CacheComponent $Cache
- * @property \App\Controller\Component\CalcComponent $Calc
  */
 class AppController extends Controller
 {
@@ -56,6 +53,7 @@ class AppController extends Controller
         $this->loadComponent('MatchGet');
         $this->loadComponent('PlayOff');
         $this->loadComponent('PtrRanking');
+        $this->loadComponent('Security');
     }
 
     public function viewClasses(): array
@@ -125,100 +123,6 @@ class AppController extends Controller
     public function beforeRender(EventInterface $event): void
     {
         $this->viewBuilder()->setOption('serialize', true);
-    }
-
-    public function clearTest(): void
-    {
-        $postData = $this->request->getData();
-
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->Cache->getSettings();
-
-            if ($settings['isTest'] ?? 0) {
-                $rc = 0;
-
-                $conn = ConnectionManager::get('default');
-                /**
-                 * @var \Cake\Database\Connection $conn
-                 */
-                $rc += $conn->execute("DELETE ptr FROM push_token_ratings ptr WHERE 1")->rowCount();
-                $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("DELETE m FROM `matches` m LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("DELETE gt FROM group_teams gt LEFT JOIN `groups` g ON gt.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("DELETE g FROM `groups` g LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("DELETE ty FROM team_years ty LEFT JOIN years y ON ty.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("DELETE FROM teams WHERE testTeam=1")->rowCount();
-                $rc += $conn->execute("UPDATE settings SET value=1 WHERE name = 'currentDay_id'")->rowCount();
-                $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'showEndRanking'")->rowCount();
-                $rc += $conn->execute("UPDATE push_tokens SET ptrPoints=0 WHERE 1")->rowCount();
-                $rc += $conn->execute("UPDATE push_tokens SET ptrRanking=NULL WHERE 1")->rowCount();
-                if ($settings['usePlayOff'] == 0) {
-                    $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'alwaysAutoUpdateResults'")->rowCount();
-                }
-
-                if ($_SERVER['SERVER_NAME'] == 'localhost') {
-                    //$conn->execute("CALL reset_autoincrement('matchevent_logs')");
-                    //$conn->execute("CALL reset_autoincrement('matches')");
-                    //$conn->execute("CALL reset_autoincrement('group_teams')");
-                    //$conn->execute("CALL reset_autoincrement('groups')");
-                    //$conn->execute("CALL reset_autoincrement('team_years')");
-                    //$conn->execute("CALL reset_autoincrement('years')");
-                }
-
-                // reset all time stats
-                $this->Calc->updateCalcTotal($settings['currentYear_id'] - 1);
-
-                $this->apiReturn(array('rows affected' => $rc));
-            }
-        }
-    }
-
-    public function clearMatchesAndLogs(): void
-    {
-        $postData = $this->request->getData();
-
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->Cache->getSettings();
-
-            if ($settings['isTest'] ?? 0) {
-                $rc = 0;
-                $conn = ConnectionManager::get('default');
-                /**
-                 * @var \Cake\Database\Connection $conn
-                 */
-                $rc += $conn->execute("DELETE ptr FROM push_token_ratings ptr WHERE 1")->rowCount();
-                $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("DELETE m FROM `matches` m LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("UPDATE push_tokens SET ptrPoints=0 WHERE 1")->rowCount();
-                $rc += $conn->execute("UPDATE push_tokens SET ptrRanking=NULL WHERE 1")->rowCount();
-                $this->apiReturn(array('rows affected' => $rc));
-            }
-        }
-    }
-
-    protected function checkUsernamePassword(string $name, string $password): int|bool
-    {
-        $return = false;
-
-        if ($this->request->is('post')) {
-            $login = $this->fetchTable('Logins')->find('all', array(
-                'conditions' => array('name' => $name),
-            ))->first();
-            /**
-             * @var Login|null $login
-             */
-            if ($login && ($login->id ?? 0) > 0) {
-                if ($login->failedlogincount < 100 && md5($password) == $login->password) {
-                    $return = $login->id;
-                    $login->set('failedlogincount', 0);
-                } else {
-                    $login->set('failedlogincount', $login->failedlogincount + 1);
-                }
-                $this->fetchTable('Logins')->save($login);
-            }
-        }
-
-        return $return;
     }
 
     protected function getTeamsCountPerGroup(Year $year): int

@@ -18,6 +18,7 @@ use Cake\I18n\DateTime;
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class GroupTeamsController extends AppController
 {
@@ -71,7 +72,7 @@ class GroupTeamsController extends AppController
     {
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
 
             $groups = $this->fetchTable('Groups')->find('all', array(
@@ -107,7 +108,7 @@ class GroupTeamsController extends AppController
         $groupTeams = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year = $this->Cache->getCurrentYear();
 
@@ -223,7 +224,7 @@ class GroupTeamsController extends AppController
         $checkings = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year = $this->Cache->getCurrentYear();
 
@@ -387,7 +388,7 @@ class GroupTeamsController extends AppController
         $checkings = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year = $this->Cache->getCurrentYear();
 

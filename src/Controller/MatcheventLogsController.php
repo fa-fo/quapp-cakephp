@@ -18,6 +18,7 @@ use Cake\I18n\DateTime;
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class MatcheventLogsController extends AppController
 {
@@ -40,7 +41,7 @@ class MatcheventLogsController extends AppController
                      */
                     $postData['matchEvent_id'] = $matchEvent->id;
 
-                    if ($this->checkPostData($match, $postData, $matchEvent)) {
+                    if ($this->Security->checkPostData($match, $postData, $matchEvent)) {
                         $newLog = $this->MatcheventLogs->newEmptyEntity();
                         $newLog = $this->MatcheventLogs->patchEntity($newLog, $postData);
                         $newLog->set('match_id', $match_id);
@@ -89,7 +90,7 @@ class MatcheventLogsController extends AppController
                     $postData['team_id'] = isset($postData['team_id']) ? (int)$postData['team_id'] : null;
                     $postData['playerNumber'] = isset($postData['playerNumber']) ? (int)$postData['playerNumber'] : null;
 
-                    if ($this->checkPostData($match, $postData, $matchEvent)) {
+                    if ($this->Security->checkPostData($match, $postData, $matchEvent)) {
                         $newLog = $this->MatcheventLogs->newEmptyEntity();
                         $newLog = $this->MatcheventLogs->patchEntity($newLog, $postData);
                         $newLog->set('match_id', $match_id);
@@ -164,7 +165,7 @@ class MatcheventLogsController extends AppController
                 $postData = $this->request->getData();
 
                 if (isset($postData['refereePIN'])) {
-                    if ($this->checkPostData($match, $postData, null, true)) {
+                    if ($this->Security->checkPostData($match, $postData, null, true)) {
                         $log = false;
 
                         if ($id) {
@@ -249,7 +250,7 @@ class MatcheventLogsController extends AppController
                  */
                 $postData['matchEvent_id'] = $matchEvent->get('id');
 
-                if ($this->checkPostData($match, $postData, $matchEvent)) {
+                if ($this->Security->checkPostData($match, $postData, $matchEvent)) {
                     $m = $this->fetchTable('Matches')->find()->where(['id' => $match_id])->first();
                     /**
                      * @var Match4 $m
@@ -269,65 +270,6 @@ class MatcheventLogsController extends AppController
         $match_array = $this->MatchGet->getMatches($conditionsArray, $includeLogs);
 
         return is_array($match_array) ? $match_array[0]->toArray() : null;
-    }
-
-    private function checkPostData(array $match, array $postData, \Cake\ORM\Entity|null $matchEvent, bool $cancel = false): bool
-    {
-        if (!$this->request->is('post')) {
-            return false;
-        }
-
-        $settings = $this->Cache->getSettings();
-
-        $refereePIN = $this->fetchTable('TeamYears')->find()
-            ->where(['team_id' => $match['refereeTeam_id'], 'year_id' => $settings['currentYear_id']])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
-
-        if ($settings['isTest'] ?? 0) {
-            if ($refereePIN === null || $refereePIN < 1 || (int)$postData['refereePIN'] !== 12345) {
-                return false;
-            }
-        } else {
-            if ($refereePIN === null || $refereePIN < 1) {
-                return false;
-            }
-            if ((int)$postData['refereePIN'] != $refereePIN) { // check 2nd PIN (match pin)
-                $refereePIN = $this->fetchTable('Matches')->find()->where(['id' => $match['id']])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
-                if ($refereePIN === null || $refereePIN < 1) {
-                    return false;
-                }
-
-                if ((int)$postData['refereePIN'] != $refereePIN) {  // check 3rd PIN possibility (ref subst team pin)
-                    if ($match['refereeTeamSubst_id'] === null) {
-                        return false;
-                    }
-
-                    $refereePIN = $this->fetchTable('TeamYears')->find()
-                        ->where(['team_id' => $match['refereeTeamSubst_id'], 'year_id' => $settings['currentYear_id']])->first()->get('refereePIN'); // get it here cause of security reason nowhere else!
-                    if ($refereePIN === null || $refereePIN < 1) {
-                        return false;
-                    }
-
-                    if ((int)$postData['refereePIN'] != $refereePIN) {
-                        return false;
-                    }
-                }
-            }
-        }
-        if (!isset($postData['matchEvent_id']) || is_null($matchEvent)) {
-            return (bool)$cancel; // allow cancellation without knowing event
-        }
-
-        /**
-         * @var Match4event $matchEvent
-         */
-        if ($matchEvent->needsTeamAssoc == 1 && (!isset($postData['team_id']) || ($match['team1_id'] != (int)$postData['team_id'] && $match['team2_id'] != (int)$postData['team_id']))) {
-            return false;
-        }
-        if ($matchEvent->needsPlayerAssoc == 1 && !isset($postData['playerNumber'])) {
-            return false;
-        }
-
-        return true;
     }
 
     private function savePhoto(string $photoDataBase64, int $match_id, int $id): void
@@ -381,14 +323,14 @@ class MatcheventLogsController extends AppController
         }
     }
 
-    public function getPhotosToCheck(): void
+    public function getAdminPhotosToCheck(): void
     {
         $photos = array(); // initial
         $postData = $this->request->getData();
         $settings = $this->Cache->getSettings();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
-            $conditionsArray = array('Matchevents.code' => 'PHOTO_UPLOAD', 'year_id' => $settings['currentYear_id']);
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
+            $conditionsArray = array('Matchevents.code' => 'PHOTO_UPLOAD', 'Groups.year_id' => $settings['currentYear_id']);
             $containArray = array('Matchevents', 'Matches', 'Matches.Groups');
 
             $photos['toCheck'] = $this->MatcheventLogs->find('all', array(
@@ -408,35 +350,23 @@ class MatcheventLogsController extends AppController
                 'contain' => $containArray,
             ))->count();
 
+            $containArray = array('Matchevents', 'Matches', 'Matches.Groups', 'Matches.Groups.Years', 'Matches.Sports', 'Matches.Teams1', 'Matches.Teams2', 'Matches.Teams3');
             $photos['lastChecked'] = $this->MatcheventLogs->find('all', array(
                 'conditions' => array_merge($conditionsArray, array('playerNumber IS NOT' => null)),
-                'fields' => array('id', 'match_id', 'playerNumber'),
                 'contain' => $containArray,
                 'order' => array('MatcheventLogs.id' => 'DESC')
             ))->limit(32);
-
-            foreach ($photos['lastChecked'] as $log) {
-                /**
-                 * @var Match4eventLog $log
-                 */
-                $conditionsArray = array(
-                    'Matches.id' => $log->match_id,
-                );
-
-                $a = $this->MatchGet->getMatches($conditionsArray);
-                $log['match'] = is_array($a) ? $a[0] : null;
-            }
         }
 
         $this->apiReturn($photos);
     }
 
-    public function setPhotoCheck(string $id = '', string $isOk = ''): void
+    public function setAdminPhotoCheck(string $id = '', string $isOk = ''): void
     {
         $return = array(); // initial
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $id = (int)$id;
             if ($id) {
                 $isOk = (int)$isOk;
@@ -550,7 +480,7 @@ class MatcheventLogsController extends AppController
         $matches = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
 
             if ($settings['isTest'] ?? 0) {
@@ -651,7 +581,7 @@ class MatcheventLogsController extends AppController
         $round_id = (int)$round_id;
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             if ($round_id > 0) {
                 $settings = $this->Cache->getSettings();
                 $conn = ConnectionManager::get('default');

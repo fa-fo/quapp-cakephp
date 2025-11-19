@@ -9,6 +9,7 @@ use Cake\Cache\Cache;
  * Settings Controller
  *
  * @property \App\Model\Table\SettingsTable $Settings
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class SettingsController extends AppController
 {
@@ -19,7 +20,7 @@ class SettingsController extends AppController
         $value = $postData['value'] ?? '';
 
         if ($name != '' && $value != '' && isset($postData['password'])
-            && $this->checkUsernamePassword('admin', $postData['password'])) {
+            && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $setting = $this->Settings->find('all')->where(['name' => $name])->first();
             $setting->set('value', $value);
             $this->Settings->save($setting);

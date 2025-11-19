@@ -19,6 +19,7 @@ use Cake\I18n\DateTime;
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PlayOffComponent $PlayOff
  * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class MatchesController extends AppController
 {
@@ -85,7 +86,7 @@ class MatchesController extends AppController
     {
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
 
             $groups = $this->fetchTable('Groups')->find('all', array(
@@ -195,7 +196,7 @@ class MatchesController extends AppController
         $match = false;
         $postData = $this->request->getData();
 
-        if (isset($postData['team1_id']) && isset($postData['team2_id']) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['team1_id']) && isset($postData['team2_id']) && isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $conditionsArray = array('Matches.id' => $id);
             $matches = $this->MatchGet->getMatches($conditionsArray, 1);
             if (is_array($matches)) {
@@ -218,7 +219,7 @@ class MatchesController extends AppController
         $match = false;
         $postData = $this->request->getData();
 
-        if (isset($postData['refereeName']) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['refereeName']) && isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $conditionsArray = array('Matches.id' => $id);
             $matches = $this->MatchGet->getMatches($conditionsArray, 1);
             if (is_array($matches)) {
@@ -240,7 +241,7 @@ class MatchesController extends AppController
         $match = false;
         $postData = $this->request->getData();
 
-        if (isset($postData['refereeTeamSubst_id']) && isset($postData['password']) && $this->checkUsernamePassword('supervisor', $postData['password'])) {
+        if (isset($postData['refereeTeamSubst_id']) && isset($postData['password']) && $this->Security->checkUsernamePassword('supervisor', $postData['password'])) {
             $match = $this->fetchTable('Matches')->find('all', array(
                 'conditions' => array('id' => $id)
             ))->first();
@@ -294,7 +295,7 @@ class MatchesController extends AppController
         $match = false;
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('supervisor', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('supervisor', $postData['password'])) {
             $conditionsArray = array('Matches.id' => $id);
             $matches = $this->MatchGet->getMatches($conditionsArray, 1);
             if (is_array($matches)) {
@@ -318,7 +319,7 @@ class MatchesController extends AppController
         $return = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['matches']) && isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['matches']) && isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $matches = json_decode($postData['matches'], true);
             $count = count($matches);
 
@@ -447,7 +448,7 @@ class MatchesController extends AppController
         $matches = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year = $this->Cache->getCurrentYear();
 
@@ -576,7 +577,7 @@ class MatchesController extends AppController
     {
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('supervisor', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('supervisor', $postData['password'])) {
             $match = $this->Matches->find()->where(['id' => $id])->first();
             $this->apiReturn($match);
         }
@@ -588,7 +589,7 @@ class MatchesController extends AppController
         $return['matches'] = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('supervisor', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('supervisor', $postData['password'])) {
             $settings = $this->Cache->getSettings();
 
             $conditionsArray = array(
@@ -617,7 +618,7 @@ class MatchesController extends AppController
     {
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $conditionsArray = array('Matches.id' => $id1);
             $m = $this->MatchGet->getMatches($conditionsArray, 0, 0, 1); // needed to access adminView field 'isRefereeCanceled'
             if (is_array($m)) {
@@ -645,7 +646,7 @@ class MatchesController extends AppController
     {
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $match1 = $this->Matches->find()->where(['id' => $id1])->first();
             $match2 = $this->Matches->find()->where(['id' => $id2])->first();
 
@@ -676,7 +677,7 @@ class MatchesController extends AppController
         $matches = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
 
             if ($settings['isTest'] ?? 0) {

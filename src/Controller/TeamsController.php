@@ -11,6 +11,7 @@ use App\Model\Entity\Team;
  * @property \App\Model\Table\TeamsTable $Teams
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class TeamsController extends AppController
 {
@@ -26,7 +27,7 @@ class TeamsController extends AppController
         $return = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $team_id = 0;
             $name = trim($postData['name']);
             $team = $this->Teams->find('all', array(

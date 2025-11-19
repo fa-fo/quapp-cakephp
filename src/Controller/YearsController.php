@@ -16,6 +16,7 @@ use Cake\I18n\DateTime;
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\CalcComponent $Calc
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class YearsController extends AppController
 {
@@ -69,7 +70,7 @@ class YearsController extends AppController
         $year = $this->Cache->getCurrentYear();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
 
             if ($settings['currentDay_id'] < $year->daysCount) {
@@ -99,7 +100,7 @@ class YearsController extends AppController
         $postData = $this->request->getData();
         $alwaysAutoUpdateResults = false;
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $alwaysAutoUpdateResults = $this->fetchTable('Settings')->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();
             /**
              * @var Setting $alwaysAutoUpdateResults
@@ -120,7 +121,7 @@ class YearsController extends AppController
         $postData = $this->request->getData();
         $showEndRanking = false;
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $showEndRanking = $this->fetchTable('Settings')->find('all')->where(['name' => 'showEndRanking'])->first();
             /**
              * @var Setting $showEndRanking
@@ -141,7 +142,7 @@ class YearsController extends AppController
         $return = array();
         $postData = $this->request->getData();
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $return = $this->Calc->getCalcRanking((int)$team1_id, (int)$team2_id);
         }
 
@@ -154,7 +155,7 @@ class YearsController extends AppController
         $year = $this->Cache->getCurrentYear()->toArray();
         $newYear = false;
 
-        if (isset($postData['password']) && $this->checkUsernamePassword('admin', $postData['password'])) {
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $ytime = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $year['daysCount']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
             $ytime = $ytime->addHours(24); // start of next day after last day of the tournament
@@ -407,6 +408,66 @@ class YearsController extends AppController
         $status['ptrRanking'] = $ptrRanking->count();
 
         $this->apiReturn($status);
+    }
+
+    public function clearTest(): void
+    {
+        $postData = $this->request->getData();
+
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->Cache->getSettings();
+
+            if ($settings['isTest'] ?? 0) {
+                $rc = 0;
+
+                $conn = ConnectionManager::get('default');
+                /**
+                 * @var \Cake\Database\Connection $conn
+                 */
+                $rc += $conn->execute("DELETE ptr FROM push_token_ratings ptr WHERE 1")->rowCount();
+                $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE m FROM `matches` m LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE gt FROM group_teams gt LEFT JOIN `groups` g ON gt.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE g FROM `groups` g LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE ty FROM team_years ty LEFT JOIN years y ON ty.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE FROM teams WHERE testTeam=1")->rowCount();
+                $rc += $conn->execute("UPDATE settings SET value=1 WHERE name = 'currentDay_id'")->rowCount();
+                $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'showEndRanking'")->rowCount();
+                $rc += $conn->execute("UPDATE push_tokens SET ptrPoints=0 WHERE 1")->rowCount();
+                $rc += $conn->execute("UPDATE push_tokens SET ptrRanking=NULL WHERE 1")->rowCount();
+                if ($settings['usePlayOff'] == 0) {
+                    $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'alwaysAutoUpdateResults'")->rowCount();
+                }
+
+                // reset all time stats
+                $this->Calc->updateCalcTotal($settings['currentYear_id'] - 1);
+
+                $this->apiReturn(array('rows affected' => $rc));
+            }
+        }
+    }
+
+    public function clearMatchesAndLogs(): void
+    {
+        $postData = $this->request->getData();
+
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->Cache->getSettings();
+
+            if ($settings['isTest'] ?? 0) {
+                $rc = 0;
+                $conn = ConnectionManager::get('default');
+                /**
+                 * @var \Cake\Database\Connection $conn
+                 */
+                $rc += $conn->execute("DELETE ptr FROM push_token_ratings ptr WHERE 1")->rowCount();
+                $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("DELETE m FROM `matches` m LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
+                $rc += $conn->execute("UPDATE push_tokens SET ptrPoints=0 WHERE 1")->rowCount();
+                $rc += $conn->execute("UPDATE push_tokens SET ptrRanking=NULL WHERE 1")->rowCount();
+                $this->apiReturn(array('rows affected' => $rc));
+            }
+        }
     }
 
     public function shufflePattern24toAvoidTripples(): void

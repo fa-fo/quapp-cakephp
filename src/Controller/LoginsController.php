@@ -9,6 +9,7 @@ use App\Model\Entity\Login;
  * Logins Controller
  *
  * @property \App\Model\Table\LoginsTable $Logins
+ * @property \App\Controller\Component\SecurityComponent $Security
  */
 class LoginsController extends AppController
 {
@@ -18,7 +19,7 @@ class LoginsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['name']) && isset($postData['password'])) {
-            $return = $this->checkUsernamePassword($postData['name'], $postData['password']);
+            $return = $this->Security->checkUsernamePassword($postData['name'], $postData['password']);
         }
 
         $this->apiReturn($return);
@@ -30,7 +31,7 @@ class LoginsController extends AppController
         $postData = $this->request->getData();
 
         if (isset($postData['name']) && isset($postData['password']) && isset($postData['newPassword'])
-            && $this->checkUsernamePassword($postData['name'], $postData['password'])) {
+            && $this->Security->checkUsernamePassword($postData['name'], $postData['password'])) {
             $login = $this->Logins->find('all')->where(['name' => $postData['name']])->first();
             /**
              * @var Login|null $login
