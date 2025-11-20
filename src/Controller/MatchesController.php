@@ -19,6 +19,7 @@ use Cake\I18n\DateTime;
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PlayOffComponent $PlayOff
  * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
+ * @property \App\Controller\Component\RoundGetComponent $RoundGet
  * @property \App\Controller\Component\SecurityComponent $Security
  */
 class MatchesController extends AppController
@@ -39,7 +40,7 @@ class MatchesController extends AppController
 
         $return = $this->MatchGet->getMatchesByTeam((int)$team_id, $year_id, $day_id, (int)$adminView);
 
-        $return['currentRoundId'] = $this->getCurrentRoundId($year_id, $day_id);
+        $return['currentRoundId'] = $this->RoundGet->getCurrentRoundId($year_id, $day_id);
 
         $this->apiReturn($return, $year_id, $day_id);
     }
@@ -74,7 +75,7 @@ class MatchesController extends AppController
                 $group['showTime'] = $showTime;
             } else {
                 $group['rounds'] = $this->MatchGet->getMatchesByGroup($group);
-                $group['currentRoundId'] = $this->getCurrentRoundId($group['year_id'], $group['day_id']);
+                $group['currentRoundId'] = $this->RoundGet->getCurrentRoundId($group['year_id'], $group['day_id']);
             }
             $this->apiReturn($group, $group['year_id'], $group['day_id']);
         }
@@ -132,7 +133,7 @@ class MatchesController extends AppController
         if ($showTime !== 0) {
             $return['showTime'] = $showTime;
         } else {
-            $return['currentRoundId'] = $this->getCurrentRoundId($year_id, $day_id, (int)$offset);
+            $return['currentRoundId'] = $this->RoundGet->getCurrentRoundId($year_id, $day_id, (int)$offset);
             $round_id = $round_id > 0 ? $round_id : $return['currentRoundId'];
             $isPlayOffRound = $settings['usePlayOff'] > 0 && $round_id == $this->fetchTable('Rounds')->find('all')->count();
 

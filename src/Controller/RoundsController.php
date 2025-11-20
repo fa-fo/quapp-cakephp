@@ -10,6 +10,7 @@ use App\Model\Entity\Round;
  *
  * @property \App\Model\Table\RoundsTable $Rounds
  * @property \App\Controller\Component\CacheComponent $Cache
+ * @property \App\Controller\Component\RoundGetComponent $RoundGet
  */
 class RoundsController extends AppController
 {
@@ -67,7 +68,7 @@ class RoundsController extends AppController
             unset($r['timeStartDay' . $day_id]); // no need
         }
 
-        $year['currentRoundId'] = $this->getCurrentRoundId($year_id, $day_id, (int)$offset);
+        $year['currentRoundId'] = $this->RoundGet->getCurrentRoundId($year_id, $day_id, (int)$offset);
         $this->apiReturn($year);
     }
 }

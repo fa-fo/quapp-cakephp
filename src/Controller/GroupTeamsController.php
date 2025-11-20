@@ -18,6 +18,7 @@ use Cake\I18n\DateTime;
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
+ * @property \App\Controller\Component\RoundGetComponent $RoundGet
  * @property \App\Controller\Component\SecurityComponent $Security
  */
 class GroupTeamsController extends AppController
@@ -38,7 +39,7 @@ class GroupTeamsController extends AppController
                 $group['isTest'] = $settings['isTest'];
 
                 if ($group['day_id'] == 2
-                    && $this->getCurrentRoundId($settings['currentYear_id'], 2, 10) > 12) {
+                    && $this->RoundGet->getCurrentRoundId($settings['currentYear_id'], 2, 10) > 12) {
                     if ($settings['showEndRanking'] == 0) {
                         $group['groupTeams'] = null;
                         $group['showRanking'] = 0;
@@ -46,7 +47,7 @@ class GroupTeamsController extends AppController
                 }
 
                 if ($group['day_id'] == $settings['currentDay_id']) {
-                    $group['currentRoundId'] = $this->getCurrentRoundId($group['year_id'], $group['day_id']);
+                    $group['currentRoundId'] = $this->RoundGet->getCurrentRoundId($group['year_id'], $group['day_id']);
                 }
             }
 
