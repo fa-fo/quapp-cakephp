@@ -62,7 +62,6 @@ class ScoutRatingsController extends AppController
         $wasLoggedIn = 0;
 
         foreach ($ratings as $rating) {
-            $ok = 0;
             $factor = 1;
             $log = $rating->matchevent_log;
             $event = $log->matchevent;
@@ -75,21 +74,27 @@ class ScoutRatingsController extends AppController
 
             if ($event->code == 'LOGIN') {
                 $mt = DateTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime);
-                $ok = $log->datetime < $mt;
-                if ($ok && $wasLoggedIn == 0) {
-                    $dateDiff = $mt->diffInMinutes($log->datetime);
+                $dateDiff = $log->datetime->diffInMinutes($mt, false);
+                if ($dateDiff > 0 && $wasLoggedIn == 0) {
                     $factor = $dateDiff > 4 ? $factor : $factor * $dateDiff * .2;
                     $wasLoggedIn = 1;
                 } else {
                     $factor = 0;
                 }
             } elseif ($event->code == 'MATCH_CONCLUDE') {
-                $ok = 1;
-                $factor = $match->isResultOk ? $factor : $factor * .8;
+                $factor = $match->isResultOk ? $factor : $factor * .5;
                 $factor = $match->resultAdmin == 0 ? $factor : $factor * .5;
-                $factor = strlen((string)$match->remarks) > 7 ? $factor + .1 : $factor;
+
+                // remarks
+                $thresholds = [7, 14];
+                $remarksLength = strlen((string)$match->remarks);
+                foreach ($thresholds as $t) {
+                    if ($remarksLength > $t) {
+                        $factor += 0.1;
+                    }
+                }
             } elseif ($event->code == 'PHOTO_UPLOAD') {
-                $ok = $log->playerNumber;
+                $factor = $log->playerNumber; // 1 or 0
             }
 
             $scr = $this->ScoutRatings->find()->where(['id' => $rating->id])->first();
@@ -98,7 +103,7 @@ class ScoutRatingsController extends AppController
                 /**
                  * @var ScoutRating $scr
                  */
-                $scr->set('confirmed', (int)$ok * $factor);
+                $scr->set('confirmed', $factor);
                 $this->ScoutRatings->save($scr);
             }
         }
