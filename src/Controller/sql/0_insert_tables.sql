@@ -385,8 +385,8 @@ CREATE TABLE `push_tokens`
     `id`            int(11)     NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `expoPushToken` varchar(64) NOT NULL,
     `my_team_id`    int(11)     NOT NULL,
-    `my_year_id`    int(11)              DEFAULT NULL,
-    `edited`        timestamp   NULL     DEFAULT current_timestamp() ON UPDATE current_timestamp()
+    `my_year_id`    int(11)          DEFAULT NULL,
+    `edited`        timestamp   NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
   COLLATE = utf8_general_ci;
@@ -547,7 +547,7 @@ CREATE TABLE `sports`
     `name`       varchar(32) NOT NULL,
     `code`       varchar(4)  NOT NULL,
     `goalFactor` int(11)     NOT NULL,
-    `colPushTokenRating -> ScoutRatingor`      varchar(8)  DEFAULT NULL,
+    `color`      varchar(8)  DEFAULT NULL,
     `icon`       varchar(64) DEFAULT NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
@@ -581,14 +581,15 @@ CREATE TABLE `teams`
 
 CREATE TABLE `team_years`
 (
-    `id`         int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    `year_id`    int(11) NOT NULL,
-    `team_id`    int(11) NOT NULL,
-    `refereePIN` varchar(5)       DEFAULT NULL,
-    `endRanking` int(11)          DEFAULT NULL,
-    `scrRanking` int(11)          DEFAULT NULL,
-    `scrPoints`  int(11)          DEFAULT NULL,
-    `canceled`   int(11) NOT NULL DEFAULT 0
+    `id`            int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `year_id`       int(11) NOT NULL,
+    `team_id`       int(11) NOT NULL,
+    `refereePIN`    varchar(5)       DEFAULT NULL,
+    `endRanking`    int(11)          DEFAULT NULL,
+    `scrRanking`    int(11)          DEFAULT NULL,
+    `scrPoints`     int(11)          DEFAULT NULL,
+    `scrMatchCount` int(11)          DEFAULT NULL,
+    `canceled`      int(11) NOT NULL DEFAULT 0
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
   COLLATE = utf8_general_ci;

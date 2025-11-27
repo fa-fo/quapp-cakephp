@@ -10,7 +10,7 @@ class ScrRankingComponent extends Component
     public function getScrRanking(int $yearId, int $limit = null, string $orderDir = 'ASC'): array|false
     {
         $return = FactoryLocator::get('Table')->get('TeamYears')->find('all', array(
-            'fields' => array('scrRanking', 'scrPoints', 'team_name' => 'Teams.name'),
+            'fields' => array('scrRanking', 'scrPoints', 'scrMatchCount', 'team_name' => 'Teams.name'),
             'conditions' => array('scrRanking IS NOT' => null, 'year_id' => $yearId),
             'contain' => array('Teams')
         ))->orderBy(array('scrRanking' => 'ASC'))->toArray();
