@@ -19,7 +19,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `days`
 (
-    `id`   int(11)     NOT NULL,
+    `id`   int(11)     NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `name` varchar(32) NOT NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
@@ -32,7 +32,7 @@ VALUES (1, 'Samstag'),
 
 CREATE TABLE `groups`
 (
-    `id`         int(11)     NOT NULL,
+    `id`         int(11)     NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `year_id`    int(11)     NOT NULL,
     `day_id`     int(11)     NOT NULL,
     `name`       varchar(16) NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE `groups`
 
 CREATE TABLE `group_teams`
 (
-    `id`                int(11) NOT NULL,
+    `id`                int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `group_id`          int(11) NOT NULL,
     `placeNumber`       int(11) NOT NULL,
     `team_id`           int(11) NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE `group_teams`
 
 CREATE TABLE `logins`
 (
-    `id`               int(11)     NOT NULL,
+    `id`               int(11)     NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `name`             varchar(32) NOT NULL,
     `password`         varchar(32) NOT NULL,
     `failedlogincount` INT         NOT NULL DEFAULT 0
@@ -74,7 +74,7 @@ CREATE TABLE `logins`
 
 CREATE TABLE `matches`
 (
-    `id`                  int(11) NOT NULL,
+    `id`                  int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `group_id`            int(11) NOT NULL,
     `round_id`            int(11) NOT NULL,
     `sport_id`            int(11) NOT NULL,
@@ -98,7 +98,7 @@ CREATE TABLE `matches`
 
 CREATE TABLE `matchevents`
 (
-    `id`                      int(11)     NOT NULL,
+    `id`                      int(11)     NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `code`                    varchar(16) NOT NULL,
     `name`                    varchar(64) NOT NULL,
     `needsTeamAssoc`          int(11)     NOT NULL DEFAULT 0,
@@ -174,7 +174,7 @@ VALUES (1, 'LOGIN', 'SR zum Spiel eingeloggt', 0, 0, NULL, NULL, 0, 0, NULL, NUL
 
 CREATE TABLE `matchevent_logs`
 (
-    `id`            int(11)  NOT NULL,
+    `id`            int(11)  NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `match_id`      int(11)  NOT NULL,
     `matchEvent_id` int(11)  NOT NULL,
     `team_id`       int(11)           DEFAULT NULL,
@@ -191,7 +191,7 @@ CREATE TABLE `matchevent_logs`
 
 CREATE TABLE `matchscheduling_pattern16`
 (
-    `id`                     int(11) NOT NULL,
+    `id`                     int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `round_id`               int(11) NOT NULL,
     `placenumberTeam1`       int(11) NOT NULL,
     `placenumberTeam2`       int(11) NOT NULL,
@@ -271,7 +271,7 @@ VALUES (1, 1, 1, 9, 5, 4),
 
 CREATE TABLE `matchscheduling_pattern24`
 (
-    `id`                     int(11) NOT NULL,
+    `id`                     int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `round_id`               int(11) NOT NULL,
     `placenumberTeam1`       int(11) NOT NULL,
     `placenumberTeam2`       int(11) NOT NULL,
@@ -281,134 +281,119 @@ CREATE TABLE `matchscheduling_pattern24`
   DEFAULT CHARSET = utf8
   COLLATE = utf8_general_ci;
 
-INSERT INTO `matchscheduling_pattern24` (`id`, `round_id`, `placenumberTeam1`, `placenumberTeam2`,
-                                         `placenumberRefereeTeam`, `sport_id`)
-VALUES (1, 1, 5, 22, NULL, 1),
-       (2, 2, 9, 18, NULL, 1),
-       (3, 3, 13, 14, NULL, 1),
-       (4, 4, 6, 23, NULL, 1),
-       (5, 5, 10, 19, NULL, 1),
-       (6, 6, 14, 15, NULL, 1),
-       (7, 7, 7, 24, NULL, 1),
-       (8, 8, 11, 20, NULL, 1),
-       (9, 9, 15, 16, NULL, 1),
-       (10, 10, 8, 1, NULL, 1),
-       (11, 11, 12, 21, NULL, 1),
-       (12, 12, 16, 17, NULL, 1),
-       (13, 13, 9, 2, NULL, 1),
-       (14, 14, 13, 22, NULL, 1),
-       (15, 15, 17, 18, NULL, 1),
-       (16, 16, 10, 3, NULL, 1),
-       (17, 17, 14, 23, NULL, 1),
-       (18, 18, 18, 19, NULL, 1),
-       (19, 19, 11, 4, NULL, 1),
-       (20, 20, 15, 24, NULL, 1),
-       (21, 21, 19, 20, NULL, 1),
-       (22, 22, 12, 5, NULL, 1),
-       (23, 23, 16, 1, NULL, 1),
-       (24, 24, 20, 21, NULL, 1),
-       (25, 1, 2, 1, NULL, 2),
-       (26, 2, 6, 21, NULL, 2),
-       (27, 3, 10, 17, NULL, 2),
-       (28, 4, 3, 2, NULL, 2),
-       (29, 5, 7, 22, NULL, 2),
-       (30, 6, 11, 18, NULL, 2),
-       (31, 7, 4, 3, NULL, 2),
-       (32, 8, 8, 23, NULL, 2),
-       (33, 9, 12, 19, NULL, 2),
-       (34, 10, 5, 4, NULL, 2),
-       (35, 11, 9, 24, NULL, 2),
-       (36, 12, 13, 20, NULL, 2),
-       (37, 13, 6, 5, NULL, 2),
-       (38, 14, 10, 1, NULL, 2),
-       (39, 15, 14, 21, NULL, 2),
-       (40, 16, 7, 6, NULL, 2),
-       (41, 17, 11, 2, NULL, 2),
-       (42, 18, 15, 22, NULL, 2),
-       (43, 19, 8, 7, NULL, 2),
-       (44, 20, 12, 3, NULL, 2),
-       (45, 21, 16, 23, NULL, 2),
-       (46, 22, 9, 8, NULL, 2),
-       (47, 23, 13, 4, NULL, 2),
-       (48, 24, 17, 24, NULL, 2),
-       (49, 1, 3, 24, NULL, 3),
-       (50, 2, 7, 20, NULL, 3),
-       (51, 3, 11, 16, NULL, 3),
-       (52, 4, 4, 1, NULL, 3),
-       (53, 5, 8, 21, NULL, 3),
-       (54, 6, 12, 17, NULL, 3),
-       (55, 7, 5, 2, NULL, 3),
-       (56, 8, 9, 22, NULL, 3),
-       (57, 9, 13, 18, NULL, 3),
-       (58, 10, 6, 3, NULL, 3),
-       (59, 11, 10, 23, NULL, 3),
-       (60, 12, 14, 19, NULL, 3),
-       (61, 13, 7, 4, NULL, 3),
-       (62, 14, 11, 24, NULL, 3),
-       (63, 15, 15, 20, NULL, 3),
-       (64, 16, 8, 5, NULL, 3),
-       (65, 17, 12, 1, NULL, 3),
-       (66, 18, 16, 21, NULL, 3),
-       (67, 19, 9, 6, NULL, 3),
-       (68, 20, 13, 2, NULL, 3),
-       (69, 21, 17, 22, NULL, 3),
-       (70, 22, 10, 7, NULL, 3),
-       (71, 23, 14, 3, NULL, 3),
-       (72, 24, 18, 23, NULL, 3),
-       (73, 1, 4, 23, NULL, 4),
-       (74, 2, 8, 19, NULL, 4),
-       (75, 3, 12, 15, NULL, 4),
-       (76, 4, 5, 24, NULL, 4),
-       (77, 5, 9, 20, NULL, 4),
-       (78, 6, 13, 16, NULL, 4),
-       (79, 7, 6, 1, NULL, 4),
-       (80, 8, 10, 21, NULL, 4),
-       (81, 9, 14, 17, NULL, 4),
-       (82, 10, 7, 2, NULL, 4),
-       (83, 11, 11, 22, NULL, 4),
-       (84, 12, 15, 18, NULL, 4),
-       (85, 13, 8, 3, NULL, 4),
-       (86, 14, 12, 23, NULL, 4),
-       (87, 15, 16, 19, NULL, 4),
-       (88, 16, 9, 4, NULL, 4),
-       (89, 17, 13, 24, NULL, 4),
-       (90, 18, 17, 20, NULL, 4),
-       (91, 19, 10, 5, NULL, 4),
-       (92, 20, 14, 1, NULL, 4),
-       (93, 21, 18, 21, NULL, 4),
-       (94, 22, 11, 6, NULL, 4),
-       (95, 23, 15, 2, NULL, 4),
-       (96, 24, 19, 22, NULL, 4);
+INSERT INTO `matchscheduling_pattern24` (`round_id`, `placenumberTeam1`, `placenumberTeam2`, `sport_id`)
+VALUES (1, 1, 8, 1),
+       (1, 4, 10, 2),
+       (1, 5, 12, 3),
+       (1, 3, 11, 4),
+       (2, 6, 9, 1),
+       (2, 7, 10, 2),
+       (2, 1, 18, 3),
+       (2, 13, 17, 4),
+       (3, 3, 9, 1),
+       (3, 7, 23, 2),
+       (3, 21, 22, 3),
+       (3, 5, 16, 4),
+       (4, 18, 24, 1),
+       (4, 8, 11, 2),
+       (4, 12, 17, 3),
+       (4, 14, 21, 4),
+       (5, 2, 22, 1),
+       (5, 18, 19, 2),
+       (5, 15, 20, 3),
+       (5, 12, 23, 4),
+       (6, 6, 20, 1),
+       (6, 13, 22, 2),
+       (6, 5, 10, 3),
+       (6, 9, 19, 4),
+       (7, 11, 17, 1),
+       (7, 14, 18, 2),
+       (7, 6, 21, 3),
+       (7, 9, 10, 4),
+       (8, 12, 13, 1),
+       (8, 22, 24, 2),
+       (8, 11, 18, 3),
+       (8, 17, 20, 4),
+       (9, 5, 21, 1),
+       (9, 3, 8, 2),
+       (9, 16, 19, 3),
+       (9, 1, 23, 4),
+       (10, 4, 17, 1),
+       (10, 6, 12, 2),
+       (10, 3, 23, 3),
+       (10, 10, 15, 4),
+       (11, 10, 22, 1),
+       (11, 14, 20, 2),
+       (11, 13, 19, 3),
+       (11, 1, 6, 4),
+       (12, 3, 7, 1),
+       (12, 2, 19, 2),
+       (12, 1, 4, 3),
+       (12, 11, 21, 4),
+       (13, 15, 18, 1),
+       (13, 3, 13, 2),
+       (13, 4, 9, 3),
+       (13, 16, 24, 4),
+       (14, 11, 14, 1),
+       (14, 16, 20, 2),
+       (14, 2, 13, 3),
+       (14, 7, 22, 4),
+       (15, 10, 14, 1),
+       (15, 15, 17, 2),
+       (15, 2, 3, 3),
+       (15, 6, 24, 4),
+       (16, 7, 12, 1),
+       (16, 1, 24, 2),
+       (16, 10, 16, 3),
+       (16, 8, 20, 4),
+       (17, 1, 19, 1),
+       (17, 12, 15, 2),
+       (17, 6, 17, 3),
+       (17, 5, 22, 4),
+       (18, 5, 23, 1),
+       (18, 11, 16, 2),
+       (18, 8, 15, 3),
+       (18, 3, 18, 4),
+       (19, 20, 21, 1),
+       (19, 1, 9, 2),
+       (19, 14, 24, 3),
+       (19, 4, 18, 4),
+       (20, 16, 23, 1),
+       (20, 2, 21, 2),
+       (20, 7, 9, 3),
+       (20, 12, 19, 4),
+       (21, 13, 16, 1),
+       (21, 4, 23, 2),
+       (21, 7, 11, 3),
+       (21, 2, 8, 4),
+       (22, 4, 19, 1),
+       (22, 17, 21, 2),
+       (22, 8, 22, 3),
+       (22, 14, 15, 4),
+       (23, 2, 15, 1),
+       (23, 5, 9, 2),
+       (23, 20, 24, 3),
+       (23, 7, 13, 4),
+       (24, 8, 24, 1),
+       (24, 5, 6, 2),
+       (24, 14, 23, 3),
+       (24, 2, 4, 4);
 
 
 CREATE TABLE `push_tokens`
 (
-    `id`            int(11)     NOT NULL,
+    `id`            int(11)     NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `expoPushToken` varchar(64) NOT NULL,
     `my_team_id`    int(11)     NOT NULL,
     `my_year_id`    int(11)              DEFAULT NULL,
-    `ptrPoints`     int(11)     NOT NULL DEFAULT 0,
-    `ptrRanking`    int(11)              DEFAULT NULL,
     `edited`        timestamp   NULL     DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
   COLLATE = utf8_general_ci;
 
-CREATE TABLE `push_token_ratings`
-(
-    `id`                int(11) NOT NULL,
-    `push_token_id`     int(11) NOT NULL,
-    `matchevent_log_id` int(11) NOT NULL,
-    `points`            int(11)        DEFAULT NULL,
-    `confirmed`         decimal(10, 1) DEFAULT NULL
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8
-  COLLATE = utf8_general_ci;
-
-
 CREATE TABLE `rankingpoints`
 (
-    `id`         int(11) NOT NULL,
+    `id`         int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `endRanking` int(11) NOT NULL,
     `points`     int(11) NOT NULL
 ) ENGINE = InnoDB
@@ -484,7 +469,7 @@ VALUES (1, 1, 64),
 
 CREATE TABLE `rounds`
 (
-    `id`                int(11) NOT NULL,
+    `id`                int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `timeStartDay1`     time    NOT NULL,
     `timeStartDay2`     time    NOT NULL,
     `autoUpdateResults` int(11) NOT NULL DEFAULT 1
@@ -505,23 +490,26 @@ VALUES (1, '10:00:00', '09:00:00', 1),
        (10, '14:30:00', '13:30:00', 1),
        (11, '15:00:00', '14:00:00', 1),
        (12, '15:30:00', '14:30:00', 1),
-       (13, '16:00:00', '15:00:00', 1),
-       (14, '16:30:00', '15:30:00', 1),
-       (15, '17:00:00', '16:00:00', 1),
-       (16, '17:30:00', '16:30:00', 1),
-       (17, '18:00:00', '17:00:00', 1),
-       (18, '18:30:00', '17:30:00', 1),
-       (19, '19:00:00', '18:00:00', 1),
-       (20, '19:30:00', '18:30:00', 1),
-       (21, '20:00:00', '19:00:00', 1),
-       (22, '20:30:00', '19:30:00', 1),
-       (23, '21:00:00', '20:00:00', 1),
-       (24, '21:30:00', '20:30:00', 1);
+       (13, '16:00:00', '15:00:00', 0),
+       (14, '16:30:00', '15:30:00', 0),
+       (15, '17:00:00', '16:00:00', 0),
+       (16, '17:30:00', '16:30:00', 0);
+
+
+CREATE TABLE `scout_ratings`
+(
+    `id`                int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `matchevent_log_id` int(11) NOT NULL,
+    `points`            int(11)        DEFAULT NULL,
+    `confirmed`         decimal(10, 1) DEFAULT NULL
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8
+  COLLATE = utf8_general_ci;
 
 
 CREATE TABLE `settings`
 (
-    `id`    int(11)     NOT NULL,
+    `id`    int(11)     NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `name`  varchar(64) NOT NULL,
     `value` int(11)     NOT NULL
 ) ENGINE = InnoDB
@@ -530,7 +518,7 @@ CREATE TABLE `settings`
 
 INSERT INTO `settings` (`id`, `name`, `value`)
 VALUES (1, 'isTest', 1),
-       (2, 'currentYear_id', 27),
+       (2, 'currentYear_id', 28),
        (3, 'currentDay_id', 1),
        (4, 'alwaysAutoUpdateResults', 0),
        (5, 'showScheduleHoursBefore', 3),
@@ -549,16 +537,17 @@ VALUES (1, 'isTest', 1),
        (18, 'useRefereeName', 0),
        (19, 'useResourceContentApi', 0),
        (20, 'showArchieve', 1),
-       (21, 'usePushTokenRatings', 1);
+       (21, 'useScoutRatings', 1),
+       (22, 'useAutoReload', 1);
 
 
 CREATE TABLE `sports`
 (
-    `id`         int(11)     NOT NULL,
+    `id`         int(11)     NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `name`       varchar(32) NOT NULL,
     `code`       varchar(4)  NOT NULL,
     `goalFactor` int(11)     NOT NULL,
-    `color`      varchar(8)  DEFAULT NULL,
+    `colPushTokenRating -> ScoutRatingor`      varchar(8)  DEFAULT NULL,
     `icon`       varchar(64) DEFAULT NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
@@ -574,16 +563,17 @@ VALUES (1, 'Basketball', 'BB', 1, NULL, NULL),
 
 CREATE TABLE `teams`
 (
-    `id`                     int(11)     NOT NULL,
-    `name`                   varchar(64) NOT NULL,
-    `calcTotalYears`         int(11)              DEFAULT NULL,
-    `calcTotalRankingPoints` int(11)              DEFAULT NULL,
-    `calcTotalPointsPerYear` decimal(4, 2)        DEFAULT NULL,
-    `calcTotalChampionships` int(11)              DEFAULT NULL,
-    `calcTotalRanking`       int(11)              DEFAULT NULL,
-    `prevTeam_id`            INT         NULL     DEFAULT NULL,
-    `hidden`                 int(11)     NOT NULL DEFAULT 0,
-    `testTeam`               int(11)     NOT NULL DEFAULT 0
+    `id`                     int(11)       NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `name`                   varchar(64)   NOT NULL,
+    `calcTotalYears`         int(11)                DEFAULT NULL,
+    `calcTotalRankingPoints` int(11)                DEFAULT NULL,
+    `calcTotalPointsPerYear` decimal(4, 2)          DEFAULT NULL,
+    `calcTotalChampionships` int(11)                DEFAULT NULL,
+    `calcTotalRanking`       int(11)                DEFAULT NULL,
+    `prevTeam_id`            INT           NULL     DEFAULT NULL,
+    `hidden`                 int(11)       NOT NULL DEFAULT 0,
+    `testTeam`               int(11)       NOT NULL DEFAULT 0,
+    `calcPowerRankingPoints` DECIMAL(4, 2) NULL     DEFAULT 0
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
   COLLATE = utf8_general_ci;
@@ -591,11 +581,13 @@ CREATE TABLE `teams`
 
 CREATE TABLE `team_years`
 (
-    `id`         int(11) NOT NULL,
+    `id`         int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `year_id`    int(11) NOT NULL,
     `team_id`    int(11) NOT NULL,
     `refereePIN` varchar(5)       DEFAULT NULL,
     `endRanking` int(11)          DEFAULT NULL,
+    `scrRanking` int(11)          DEFAULT NULL,
+    `scrPoints`  int(11)          DEFAULT NULL,
     `canceled`   int(11) NOT NULL DEFAULT 0
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
@@ -604,7 +596,7 @@ CREATE TABLE `team_years`
 
 CREATE TABLE `years`
 (
-    `id`         int(11) NOT NULL,
+    `id`         int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `name`       int(11) NOT NULL,
     `day1`       date    NOT NULL,
     `day2`       date             DEFAULT NULL,
@@ -649,27 +641,22 @@ VALUES (1, 1995, '1995-07-15', '1995-07-16', 28, 2),
 -- Indizes der exportierten Tabellen
 --
 ALTER TABLE `days`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `unique_name` (`name`);
 
 ALTER TABLE `groups`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `unique_yearId_dayId_name` (`year_id`, `day_id`, `name`),
     ADD KEY `fk_day_id` (`day_id`);
 
 ALTER TABLE `group_teams`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `unique_groupId_placenumber` (`group_id`, `placeNumber`) USING BTREE,
     ADD UNIQUE KEY `unique_groupId_team_id` (`group_id`, `team_id`),
     ADD UNIQUE KEY `unique_groupId_ranking` (`group_id`, `calcRanking`),
     ADD KEY `fk_team_id` (`team_id`);
 
 ALTER TABLE `logins`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `name_unique` (`name`) USING BTREE;
 
 ALTER TABLE `matches`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `unique_groupId_roundId_sport_id` (`group_id`, `round_id`, `sport_id`) USING BTREE,
     ADD UNIQUE KEY `unique_groupId_roundId_referee` (`group_id`, `round_id`, `refereeTeam_id`),
     ADD KEY `fk_round_id` (`round_id`),
@@ -680,66 +667,48 @@ ALTER TABLE `matches`
     ADD KEY `fk_refereeTeamSubst_id` (`refereeTeamSubst_id`);
 
 ALTER TABLE `matchevents`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `unique_code` (`code`) USING BTREE;
 
 ALTER TABLE `matchevent_logs`
-    ADD PRIMARY KEY (`id`),
     ADD KEY `fk_match_id` (`match_id`),
     ADD KEY `fk_matchEvent_id` (`matchEvent_id`),
     ADD KEY `fk_team3_id` (`team_id`);
 
 ALTER TABLE `matchscheduling_pattern16`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `unique_sportId_round_id` (`sport_id`, `round_id`),
     ADD UNIQUE KEY `unique_referee_round_id` (`placenumberRefereeTeam`, `round_id`),
     ADD KEY `fk_round_id2` (`round_id`);
 
 ALTER TABLE `matchscheduling_pattern24`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `unique_sportId_round_id` (`sport_id`, `round_id`),
     ADD UNIQUE KEY `unique_referee_round_id` (`placenumberRefereeTeam`, `round_id`),
     ADD KEY `fk_round_id2` (`round_id`);
 
 ALTER TABLE `push_tokens`
-    ADD PRIMARY KEY (`id`),
     ADD KEY `fk_my_year_id` (`my_year_id`),
     ADD KEY `fk_my_team_id` (`my_team_id`);
 
-ALTER TABLE `push_token_ratings`
-    ADD PRIMARY KEY (`id`),
+ALTER TABLE `scout_ratings`
     ADD UNIQUE KEY `unique_log_id` (`matchevent_log_id`),
-    ADD KEY `fk_push_token_id` (`push_token_id`),
     ADD KEY `fk_matchevent_log_id` (`matchevent_log_id`);
 
 ALTER TABLE `rankingpoints`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `unique_endRanking` (`endRanking`) USING BTREE;
 
-ALTER TABLE `rounds`
-    ADD PRIMARY KEY (`id`);
-
-ALTER TABLE `settings`
-    ADD PRIMARY KEY (`id`);
-
 ALTER TABLE `sports`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `unique_name` (`name`) USING BTREE;
 
 ALTER TABLE `teams`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `name_unique` (`name`),
     ADD KEY `fk_prevTeam_id` (`prevTeam_id`);
 
 ALTER TABLE `team_years`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `unique_yearId_team_id` (`year_id`, `team_id`) USING BTREE,
     ADD UNIQUE KEY `unique_yearId_endRanking` (`year_id`, `endRanking`),
     ADD UNIQUE KEY `unique_yearId_teamId_refereePIN` (`year_id`, `team_id`, `refereePIN`),
     ADD KEY `fk_team_id4` (`team_id`);
 
 ALTER TABLE `years`
-    ADD PRIMARY KEY (`id`),
     ADD UNIQUE KEY `unique_name` (`name`) USING BTREE;
 
 
@@ -780,8 +749,7 @@ ALTER TABLE `push_tokens`
     ADD CONSTRAINT `fk_year_id5` FOREIGN KEY (`my_year_id`) REFERENCES `years` (`id`),
     ADD CONSTRAINT `fk_my_team_id` FOREIGN KEY (`my_team_id`) REFERENCES `teams` (`id`);
 
-ALTER TABLE `push_token_ratings`
-    ADD CONSTRAINT `fk_push_token_id` FOREIGN KEY (`push_token_id`) REFERENCES `push_tokens` (`id`),
+ALTER TABLE `scout_ratings`
     ADD CONSTRAINT `fk_matchevent_log_id` FOREIGN KEY (`matchevent_log_id`) REFERENCES `matchevent_logs` (`id`);
 
 ALTER TABLE `teams`
@@ -790,57 +758,6 @@ ALTER TABLE `teams`
 ALTER TABLE `team_years`
     ADD CONSTRAINT `fk_team_id4` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`),
     ADD CONSTRAINT `fk_year_id3` FOREIGN KEY (`year_id`) REFERENCES `years` (`id`);
-
-
---
--- AUTO_INCREMENT der exportierten Tabellen
---
-ALTER TABLE `days`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-    AUTO_INCREMENT = 3;
-ALTER TABLE `groups`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `group_teams`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `logins`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-    AUTO_INCREMENT = 3;
-ALTER TABLE `matches`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `matchevents`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-    AUTO_INCREMENT = 101;
-ALTER TABLE `matchevent_logs`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `matchscheduling_pattern16`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-    AUTO_INCREMENT = 65;
-ALTER TABLE `matchscheduling_pattern24`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-    AUTO_INCREMENT = 97;
-ALTER TABLE `push_tokens`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `push_token_ratings`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `rankingpoints`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-    AUTO_INCREMENT = 65;
-ALTER TABLE `rounds`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-    AUTO_INCREMENT = 25;
-ALTER TABLE `settings`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-    AUTO_INCREMENT = 21;
-ALTER TABLE `sports`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-    AUTO_INCREMENT = 5;
-ALTER TABLE `teams`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `team_years`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `years`
-    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
 
 COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT = @OLD_CHARACTER_SET_CLIENT */;
