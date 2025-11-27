@@ -58,6 +58,9 @@ class TeamsTable extends Table
         $this->hasMany('TeamYears', [
             'foreignKey' => 'team_id',
         ]);
+        $this->hasMany('ScoutRatings', [
+            'foreignKey' => 'refereeTeam_id',
+        ]);
         $this->hasOne('Teams', [
             'foreignKey' => 'prevTeam_id',
         ]);

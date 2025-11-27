@@ -202,13 +202,6 @@ class YearsController extends AppController
 
                 Cache::delete('app_settings');
                 Cache::delete('app_year');
-
-                $conn = ConnectionManager::get('default');
-                /**
-                 * @var \Cake\Database\Connection $conn
-                 */
-                $conn->execute("UPDATE push_tokens SET ptrPoints=0 WHERE 1")->rowCount();
-                $conn->execute("UPDATE push_tokens SET ptrRanking=NULL WHERE 1")->rowCount();
             }
         }
 
@@ -230,6 +223,10 @@ class YearsController extends AppController
         $teamYearsPins = $this->fetchTable('TeamYears')->find('all', array(
             'conditions' => array('year_id' => $settings['currentYear_id'], 'refereePIN IS NOT' => null),
         ))->toArray();
+
+        $scrRanking = $this->fetchTable('TeamYears')->find('all', array(
+            'conditions' => array('year_id' => $settings['currentYear_id'], 'scrRanking IS NOT' => null),
+        ));
 
         $groups = $this->fetchTable('Groups')->find('all', array(
             'conditions' => $conditionsArray,
@@ -374,9 +371,8 @@ class YearsController extends AppController
             ->orderBy(array('Matches.round_id' => 'ASC'))
             ->toArray();
 
-        $ptrAll = $this->fetchTable('PushTokenRatings')->find('all');
-        $ptrConfirmed = $this->fetchTable('PushTokenRatings')->find('all', conditions: ['confirmed IS NOT' => null]);
-        $ptrRanking = $this->fetchTable('PushTokens')->find('all', conditions: ['ptrRanking IS NOT' => null]);
+        $scrAll = $this->fetchTable('ScoutRatings')->find('all');
+        $scrConfirmed = $this->fetchTable('ScoutRatings')->find('all', conditions: ['confirmed IS NOT' => null]);
 
         $status['teamYearsCount'] = count($teamYears);
         $status['teamYearsEndRankingCount'] = count($teamYearsEndRanking);
@@ -403,9 +399,9 @@ class YearsController extends AppController
 
         $status['roundsWithPossibleLogsDelete'] = array_column($roundsWithPossibleLogsDelete, 'round_id');
 
-        $status['ptrAll'] = $ptrAll->count();
-        $status['ptrConfirmed'] = $ptrConfirmed->count();
-        $status['ptrRanking'] = $ptrRanking->count();
+        $status['scrAll'] = $scrAll->count();
+        $status['scrConfirmed'] = $scrConfirmed->count();
+        $status['scrRanking'] = $scrRanking->count();
 
         $this->apiReturn($status);
     }
@@ -419,12 +415,11 @@ class YearsController extends AppController
 
             if ($settings['isTest'] ?? 0) {
                 $rc = 0;
-
                 $conn = ConnectionManager::get('default');
                 /**
                  * @var \Cake\Database\Connection $conn
                  */
-                $rc += $conn->execute("DELETE ptr FROM push_token_ratings ptr WHERE 1")->rowCount();
+                $rc += $conn->execute("DELETE scr FROM scout_ratings scr LEFT JOIN matchevent_logs ml ON ml.id = scr.matchevent_log_id LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE m FROM `matches` m LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE gt FROM group_teams gt LEFT JOIN `groups` g ON gt.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
@@ -433,13 +428,13 @@ class YearsController extends AppController
                 $rc += $conn->execute("DELETE FROM teams WHERE testTeam=1")->rowCount();
                 $rc += $conn->execute("UPDATE settings SET value=1 WHERE name = 'currentDay_id'")->rowCount();
                 $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'showEndRanking'")->rowCount();
-                $rc += $conn->execute("UPDATE push_tokens SET ptrPoints=0 WHERE 1")->rowCount();
-                $rc += $conn->execute("UPDATE push_tokens SET ptrRanking=NULL WHERE 1")->rowCount();
                 if ($settings['usePlayOff'] == 0) {
                     $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'alwaysAutoUpdateResults'")->rowCount();
                 }
 
-                // reset all time stats
+                Cache::delete('app_settings');
+
+                // reset all-time stats
                 $this->Calc->updateCalcTotal($settings['currentYear_id'] - 1);
 
                 $this->apiReturn(array('rows affected' => $rc));
@@ -460,11 +455,9 @@ class YearsController extends AppController
                 /**
                  * @var \Cake\Database\Connection $conn
                  */
-                $rc += $conn->execute("DELETE ptr FROM push_token_ratings ptr WHERE 1")->rowCount();
+                $rc += $conn->execute("DELETE scr FROM scout_ratings scr LEFT JOIN matchevent_logs ml ON ml.id = scr.matchevent_log_id LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE m FROM `matches` m LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
-                $rc += $conn->execute("UPDATE push_tokens SET ptrPoints=0 WHERE 1")->rowCount();
-                $rc += $conn->execute("UPDATE push_tokens SET ptrRanking=NULL WHERE 1")->rowCount();
                 $this->apiReturn(array('rows affected' => $rc));
             }
         }

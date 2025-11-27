@@ -6,20 +6,20 @@ namespace App\Controller;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Match4event;
 use App\Model\Entity\Match4eventLog;
-use App\Model\Entity\PushTokenRating;
+use App\Model\Entity\ScoutRating;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\DateTime;
 
 /**
- * PushTokenRatings Controller
+ * ScoutRatings Controller
  *
- * @property \App\Model\Table\PushTokenRatingsTable $PushTokenRatings
+ * @property \App\Model\Table\ScoutRatingsTable $ScoutRatings
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
- * @property \App\Controller\Component\PtrRankingComponent $PtrRanking
+ * @property \App\Controller\Component\ScrRankingComponent $ScrRanking
  * @property \App\Controller\Component\SecurityComponent $Security
  */
-class PushTokenRatingsController extends AppController
+class ScoutRatingsController extends AppController
 {
     public function checkAll(): void
     {
@@ -38,24 +38,28 @@ class PushTokenRatingsController extends AppController
 
             if (is_array($matches)) {
                 foreach ($matches as $match) {
-                    $this->checkPtrPoints($match);
+                    $this->checkScrPoints($match);
                 }
             }
 
-            $rowCount = $this->setPtrRanking($settings['currentYear_id']);
+            $rowCount = $this->setScrRanking($settings['currentYear_id']);
         }
+
         $this->apiReturn($rowCount);
     }
 
-    private function checkPtrPoints(\Cake\ORM\Entity $match): void
+    private function checkScrPoints(\Cake\ORM\Entity $match): void
     {
-        $ratings = $this->PushTokenRatings->find('all', array(
+        $ratings = $this->ScoutRatings->find('all', array(
             'contain' => array(
                 'MatcheventLogs',
                 'MatcheventLogs.Matchevents',
             ),
-            'conditions' => array('MatcheventLogs.match_id' => $match->id)
+            'conditions' => array('MatcheventLogs.match_id' => $match->id),
+            'order' => array('ScoutRatings.id' => 'ASC')
         ))->all();
+
+        $wasLoggedIn = 0;
 
         foreach ($ratings as $rating) {
             $ok = 0;
@@ -63,7 +67,7 @@ class PushTokenRatingsController extends AppController
             $log = $rating->matchevent_log;
             $event = $log->matchevent;
             /**
-             * @var PushTokenRating $rating
+             * @var ScoutRating $rating
              * @var Match4eventLog $log
              * @var Match4event $event
              * @var Match4 $match
@@ -72,9 +76,10 @@ class PushTokenRatingsController extends AppController
             if ($event->code == 'LOGIN') {
                 $mt = DateTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime);
                 $ok = $log->datetime < $mt;
-                if ($ok) {
+                if ($ok && $wasLoggedIn == 0) {
                     $dateDiff = $mt->diffInMinutes($log->datetime);
                     $factor = $dateDiff > 4 ? $factor : $factor * $dateDiff * .2;
+                    $wasLoggedIn = 1;
                 } else {
                     $factor = 0;
                 }
@@ -87,58 +92,37 @@ class PushTokenRatingsController extends AppController
                 $ok = $log->playerNumber;
             }
 
-            $ptr = $this->PushTokenRatings->find()->where(['id' => $rating->id])->first();
+            $scr = $this->ScoutRatings->find()->where(['id' => $rating->id])->first();
 
-            if ($ptr) {
+            if ($scr) {
                 /**
-                 * @var PushTokenRating $ptr
+                 * @var ScoutRating $scr
                  */
-                $ptr->set('confirmed', (int)$ok * $factor);
-                $this->PushTokenRatings->save($ptr);
+                $scr->set('confirmed', (int)$ok * $factor);
+                $this->ScoutRatings->save($scr);
             }
         }
     }
 
-    private function setPtrRanking(int $year_id): int
+    private function setScrRanking(int $year_id): int
     {
         $conn = ConnectionManager::get('default');
         /**
          * @var \Cake\Database\Connection $conn
          */
-        $conn->execute("UPDATE push_tokens SET ptrPoints=0 WHERE 1");
-        $conn->execute("UPDATE push_tokens SET ptrRanking=NULL WHERE 1");
+        $conn->execute("UPDATE team_years SET scrRanking=NULL WHERE year_id=" . $year_id);
+        $conn->execute("UPDATE team_years SET scrPoints=NULL WHERE year_id=" . $year_id);
 
-        $sql = "
-            UPDATE push_tokens pt
-                LEFT JOIN (
-                    SELECT q.*, (@rownum := @rownum + 1) AS rr
-                    FROM (
-                             SELECT max(pt2.id) as id, sum(ptr.points * ptr.confirmed) AS pp
-                             FROM push_tokens pt2
-                             LEFT JOIN push_token_ratings ptr ON ptr.push_token_id = pt2.id
-                             WHERE pt2.my_year_id=" . $year_id . "
-                             GROUP BY ptr.push_token_id
-                             ORDER BY pp DESC
-                         ) q
-                             CROSS JOIN (SELECT @rownum := 0) ff
-                ) p ON pt.id = p.id
-
-            SET pt.ptrPoints = p.pp,
-                pt.ptrRanking = p.rr
-            WHERE p.pp IS NOT NULL";
-
-        $stmt = $conn->execute($sql);
-
-        return $stmt->rowCount();
+        return $conn->execute(file_get_contents(__DIR__ . "/sql/update_teamYears_scrRanking.sql"), ['year_id' => $year_id])->rowCount();
     }
 
     /**
      * @throws \Exception
      */
-    public function getPtrRanking(string $mode = 'single'): void
+    public function getScrRanking(): void
     {
         $settings = $this->Cache->getSettings();
-        $return = $this->PtrRanking->getPtrRanking($mode, $settings['currentYear_id']);
+        $return = $this->ScrRanking->getScrRanking($settings['currentYear_id']);
 
         $this->apiReturn($return);
     }

@@ -12,6 +12,8 @@ use Cake\ORM\Entity;
  * @property int $year_id
  * @property int $team_id
  * @property int|null $endRanking
+ * @property int|null $scrRanking
+ * @property int|null $scrPoints
  * @property int $canceled
  *
  * @property \App\Model\Entity\Year $year
@@ -30,6 +32,8 @@ class TeamYear extends Entity
         'year_id' => true,
         'team_id' => true,
         'endRanking' => true,
+        'scrRanking' => true,
+        'scrPoints' => true,
         'canceled' => true,
         'year' => true,
         'team' => true,

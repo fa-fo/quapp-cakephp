@@ -6,8 +6,7 @@ namespace App\Controller;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Match4event;
 use App\Model\Entity\Match4eventLog;
-use App\Model\Entity\PushToken;
-use App\Model\Entity\PushTokenRating;
+use App\Model\Entity\ScoutRating;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\DateTime;
 
@@ -48,9 +47,7 @@ class MatcheventLogsController extends AppController
                         $newLog->set('datetime', DateTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
                         if ($this->MatcheventLogs->save($newLog)) {
-                            if (isset($postData['expoPushToken'])) {
-                                $this->setPushTokenRating($newLog->id, $postData['matchEventCode'], $postData['expoPushToken']);
-                            }
+                            $this->setScoutRating($newLog->id, $postData['matchEventCode']);
 
                             $logs = $this->MatchGet->getLogs($match_id);
 
@@ -101,9 +98,7 @@ class MatcheventLogsController extends AppController
                                 $this->savePhoto($postData['photo'], $match_id, $newLog->id);
                             }
 
-                            if (isset($postData['expoPushToken'])) {
-                                $this->setPushTokenRating($newLog->id, $postData['matchEventCode'], $postData['expoPushToken']);
-                            }
+                            $this->setScoutRating($newLog->id, $postData['matchEventCode']);
 
                             $isMatchLive = $match['logsCalc']['isMatchLive'] ?? 0;
 
@@ -442,30 +437,26 @@ class MatcheventLogsController extends AppController
         return $dir . '/' . $match_id . '_' . $id . '.jpg';
     }
 
-    private function setPushTokenRating(int $id, string $matchEventCode, string $expoPushToken): void
+    private function setScoutRating(int $id, string $matchEventCode): void
     {
         $settings = $this->Cache->getSettings();
 
-        if ($settings['usePushTokenRatings'] && $expoPushToken != '') {
-            $pt = $this->fetchTable('PushTokens')->find()->where(['expoPushToken' => $expoPushToken])->first();
+        if ($settings['useScoutRatings']) {
+            $scrPoints = $this->getScoutRatingPoints($matchEventCode);
 
-            if ($pt) {
+            if ($scrPoints > 0) {
+                $scr = $this->fetchTable('ScoutRatings')->newEmptyEntity();
                 /**
-                 * @var PushToken $pt
+                 * @var ScoutRating $scr
                  */
-                $ptr = $this->fetchTable('PushTokenRatings')->newEmptyEntity();
-                /**
-                 * @var PushTokenRating $ptr
-                 */
-                $ptr->set('push_token_id', $pt->id);
-                $ptr->set('matchevent_log_id', $id);
-                $ptr->set('points', $this->getPushTokenRatingPoints($matchEventCode));
-                $this->fetchTable('PushTokenRatings')->save($ptr);
+                $scr->set('matchevent_log_id', $id);
+                $scr->set('points', $scrPoints);
+                $this->fetchTable('ScoutRatings')->save($scr);
             }
         }
     }
 
-    private function getPushTokenRatingPoints(string $matchEventCode): int
+    private function getScoutRatingPoints(string $matchEventCode): int
     {
         return match ($matchEventCode) {
             'LOGIN' => 50,
@@ -511,11 +502,11 @@ class MatcheventLogsController extends AppController
                     $newLog->set('match_id', $m->id);
                     $this->MatcheventLogs->save($newLog);
 
-                    $ptr = $this->fetchTable('PushTokenRatings')->newEmptyEntity();
-                    $ptr->set('push_token_id', $pt->id);
-                    $ptr->set('matchevent_log_id', $newLog->id);
-                    $ptr->set('points', $this->getPushTokenRatingPoints('LOGIN'));
-                    $this->fetchTable('PushTokenRatings')->save($ptr);
+                    $scr = $this->fetchTable('ScoutRatings')->newEmptyEntity();
+                    $scr->set('push_token_id', $pt->id);
+                    $scr->set('matchevent_log_id', $newLog->id);
+                    $scr->set('points', $this->getScoutRatingPoints('LOGIN'));
+                    $this->fetchTable('ScoutRatings')->save($scr);
 
 
                     // MATCH_START
@@ -556,11 +547,11 @@ class MatcheventLogsController extends AppController
                     $newLog->set('match_id', $m->id);
                     $this->MatcheventLogs->save($newLog);
 
-                    $ptr = $this->fetchTable('PushTokenRatings')->newEmptyEntity();
-                    $ptr->set('push_token_id', $pt->id);
-                    $ptr->set('matchevent_log_id', $newLog->id);
-                    $ptr->set('points', $this->getPushTokenRatingPoints('MATCH_CONCLUDE'));
-                    $this->fetchTable('PushTokenRatings')->save($ptr);
+                    $scr = $this->fetchTable('ScoutRatings')->newEmptyEntity();
+                    $scr->set('push_token_id', $pt->id);
+                    $scr->set('matchevent_log_id', $newLog->id);
+                    $scr->set('points', $this->getScoutRatingPoints('MATCH_CONCLUDE'));
+                    $this->fetchTable('ScoutRatings')->save($scr);
 
                     // LOGOUT
                     $newLog = $this->MatcheventLogs->newEmptyEntity();
@@ -588,8 +579,8 @@ class MatcheventLogsController extends AppController
                 /**
                  * @var \Cake\Database\Connection $conn
                  */
-                $sql = "DELETE ptr FROM push_token_ratings ptr
-                        LEFT JOIN matchevent_logs ml ON ml.id = ptr.matchevent_log_id
+                $sql = "DELETE scr FROM scout_ratings scr
+                        LEFT JOIN matchevent_logs ml ON ml.id = scr.matchevent_log_id
                         LEFT JOIN `matches` m ON ml.match_id=m.id
                         LEFT JOIN `groups` g ON m.group_id=g.id
                         WHERE m.round_id = " . $round_id . "

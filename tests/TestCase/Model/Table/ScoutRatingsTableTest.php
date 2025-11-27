@@ -3,20 +3,20 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
-use App\Model\Table\PushTokenRatingsTable;
+use App\Model\Table\ScoutRatingsTable;
 use Cake\TestSuite\TestCase;
 
 /**
- * App\Model\Table\PushTokenRatingsTable Test Case
+ * App\Model\Table\ScoutRatingsTable Test Case
  */
-class PushTokenRatingsTableTest extends TestCase
+class ScoutRatingsTableTest extends TestCase
 {
     /**
      * Test subject
      *
-     * @var \App\Model\Table\PushTokenRatingsTable
+     * @var \App\Model\Table\ScoutRatingsTable
      */
-    protected $PushTokenRatings;
+    protected $ScoutRatings;
 
     /**
      * Fixtures
@@ -24,9 +24,7 @@ class PushTokenRatingsTableTest extends TestCase
      * @var list<string>
      */
     protected array $fixtures = [
-        'app.PushTokenRatings',
-        'app.Years',
-        'app.PushTokens',
+        'app.ScoutRatings',
         'app.MatcheventLogs',
     ];
 
@@ -38,8 +36,8 @@ class PushTokenRatingsTableTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $config = $this->getTableLocator()->exists('PushTokenRatings') ? [] : ['className' => PushTokenRatingsTable::class];
-        $this->PushTokenRatings = $this->getTableLocator()->get('PushTokenRatings', $config);
+        $config = $this->getTableLocator()->exists('ScoutRatings') ? [] : ['className' => ScoutRatingsTable::class];
+        $this->ScoutRatings = $this->getTableLocator()->get('ScoutRatings', $config);
     }
 
     /**
@@ -49,7 +47,7 @@ class PushTokenRatingsTableTest extends TestCase
      */
     protected function tearDown(): void
     {
-        unset($this->PushTokenRatings);
+        unset($this->ScoutRatings);
 
         parent::tearDown();
     }
@@ -58,7 +56,7 @@ class PushTokenRatingsTableTest extends TestCase
      * Test validationDefault method
      *
      * @return void
-     * @uses \App\Model\Table\PushTokenRatingsTable::validationDefault()
+     * @uses \App\Model\Table\ScoutRatingsTable::validationDefault()
      */
     public function testValidationDefault(): void
     {
@@ -69,7 +67,7 @@ class PushTokenRatingsTableTest extends TestCase
      * Test buildRules method
      *
      * @return void
-     * @uses \App\Model\Table\PushTokenRatingsTable::buildRules()
+     * @uses \App\Model\Table\ScoutRatingsTable::buildRules()
      */
     public function testBuildRules(): void
     {

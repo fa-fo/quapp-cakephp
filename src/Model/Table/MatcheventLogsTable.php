@@ -13,7 +13,7 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\MatchesTable&\Cake\ORM\Association\BelongsTo $Matches
  * @property \App\Model\Table\MatcheventsTable&\Cake\ORM\Association\BelongsTo $Matchevents
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\BelongsTo $Teams
- * @property \App\Model\Table\PushTokenRatingsTable&\Cake\ORM\Association\HasOne $PushTokenRatings
+ * @property \App\Model\Table\ScoutRatingsTable&\Cake\ORM\Association\HasOne $ScoutRatings
  *
  * @method \App\Model\Entity\Match4eventLog newEmptyEntity()
  * @method \App\Model\Entity\Match4eventLog newEntity(array $data, array $options = [])
@@ -56,7 +56,7 @@ class MatcheventLogsTable extends Table
         $this->belongsTo('Teams', [
             'foreignKey' => 'team_id',
         ]);
-        $this->hasOne('PushTokenRatings', [
+        $this->hasOne('ScoutRatings', [
             'foreignKey' => 'matchevent_log_id',
         ]);
     }

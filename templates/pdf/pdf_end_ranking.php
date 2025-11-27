@@ -11,11 +11,10 @@ try {
     $c = 0;
     $teamYears = $teamYears ?? array();
     $year = $year ?? array();
-    $ptrRankingSingle = $ptrRankingSingle ?? array();
-    $ptrRankingTeams = $ptrRankingTeams ?? array();
+    $scrRankingTeams = $scrRankingTeams ?? array();
 
-    $fontSize = count($ptrRankingSingle) > 0 ? 14 : 16;
-    $padding = count($ptrRankingSingle) > 0 ? 3 : 4;
+    $fontSize = 14;
+    $padding = 4;
 
     $html .= '<style>
         h1 {margin: 0; padding: 0; font-size: 18px}
@@ -40,31 +39,17 @@ try {
         $endTableArray = array($year['teamsCount']);
     }
 
-    if (count($ptrRankingSingle) > 0 || count($ptrRankingTeams) > 0) {
+    if (count($scrRankingTeams) > 0) {
         $html .= '<p>Die besten, fleißigsten Protokollierenden:</p>';
         $html .= '<table border="0"  cellspacing="0" cellpadding="0" align="center" width="90%">';
         $html .= '<tr><td class="b0">';
-        /*
-        $html .= '<p>Einzelwertung:</p>';
-        $html .= '<table border="0"  cellspacing="0" cellpadding="1" align="left" width="90%">';
-        foreach ($ptrRankingSingle as $ptr) {
-            $html .= '<tr>';
-            $html .= '<td width="20" align="right" class="ptr"><b>' . ($ptr->ptrRanking ?? 0) . '</b></td>';
-            $html .= '<td class="ptr">' . $ptr->team_name . '</td>';
-            $html .= '<td class="ptr" align="right">' . $ptr->ptrPoints . ' P.</td>';
-            $html .= '</tr>';
-        }
-        $html .= '</table>';
-        */
-        $html .= '</td><td class="b0">';
-
         $html .= '<p>Teamwertung:</p>';
         $html .= '<table border="0"  cellspacing="0" cellpadding="1" align="left" width="90%">';
-        foreach ($ptrRankingTeams as $ptr) {
+        foreach ($scrRankingTeams as $scr) {
             $html .= '<tr>';
-            $html .= '<td width="20" align="right" class="ptr"><b>' . ($ptr->ptrRanking ?? 0) . '</b></td>';
-            $html .= '<td class="ptr">' . $ptr->team_name . '</td>';
-            $html .= '<td class="ptr" align="right">' . $ptr->ptrPoints . ' P.</td>';
+            $html .= '<td width="20" align="right" class="ptr"><b>' . ($scr->scrRanking ?? 0) . '</b></td>';
+            $html .= '<td class="ptr">' . $scr->team_name . '</td>';
+            $html .= '<td class="ptr" align="right">' . $scr->scrPoints . ' P.</td>';
             $html .= '</tr>';
         }
         $html .= '</table>';

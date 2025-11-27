@@ -6,20 +6,16 @@ namespace App\Model\Entity;
 use Cake\ORM\Entity;
 
 /**
- * PushTokenRating Entity
+ * ScoutRating Entity
  *
  * @property int $id
- * @property int $year_id
- * @property int $push_token_id
  * @property int $matchevent_log_id
  * @property int|null $points
  * @property float|null $confirmed
  *
- * @property \App\Model\Entity\Year $year
- * @property \App\Model\Entity\PushToken $push_token
  * @property \App\Model\Entity\Match4eventLog $matchevent_log
  */
-class PushTokenRating extends Entity
+class ScoutRating extends Entity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
@@ -31,13 +27,9 @@ class PushTokenRating extends Entity
      * @var array<string, bool>
      */
     protected array $_accessible = [
-        'year_id' => true,
-        'push_token_id' => true,
         'matchevent_log_id' => true,
         'points' => true,
         'confirmed' => true,
-        'year' => true,
-        'push_token' => true,
         'matchevent_log' => true,
     ];
 }

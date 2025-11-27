@@ -52,7 +52,7 @@ class AppController extends Controller
         $this->loadComponent('GroupGet');
         $this->loadComponent('MatchGet');
         $this->loadComponent('PlayOff');
-        $this->loadComponent('PtrRanking');
+        $this->loadComponent('ScrRanking');
         $this->loadComponent('RoundGet');
         $this->loadComponent('Security');
     }

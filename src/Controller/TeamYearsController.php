@@ -19,7 +19,7 @@ use Cake\I18n\DateTime;
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PlayOffComponent $PlayOff
- * @property \App\Controller\Component\PtrRankingComponent $PtrRanking
+ * @property \App\Controller\Component\ScrRankingComponent $ScrRanking
  * @property \App\Controller\Component\SecurityComponent $Security
  */
 class TeamYearsController extends AppController
@@ -303,12 +303,9 @@ class TeamYearsController extends AppController
             $this->viewBuilder()->setVar('teamYears', $teamYears);
             $this->viewBuilder()->setVar('year', $year);
 
-            if ($settings['usePushTokenRatings']) {
-                $ptrRankingSingle = $this->PtrRanking->getPtrRanking('single', $year['id'], 3, 'DESC');
-                $this->viewBuilder()->setVar('ptrRankingSingle', $ptrRankingSingle);
-
-                $ptrRankingTeams = $this->PtrRanking->getPtrRanking('teams', $year['id'], 3, 'DESC');
-                $this->viewBuilder()->setVar('ptrRankingTeams', $ptrRankingTeams);
+            if ($settings['useScoutRatings']) {
+                $scrRankingTeams = $this->ScrRanking->getScrRanking($year['id'], 3, 'DESC');
+                $this->viewBuilder()->setVar('scrRankingTeams', $scrRankingTeams);
             }
 
             $this->pdfReturn();

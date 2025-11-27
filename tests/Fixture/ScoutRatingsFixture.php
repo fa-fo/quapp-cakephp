@@ -6,9 +6,9 @@ namespace App\Test\Fixture;
 use Cake\TestSuite\Fixture\TestFixture;
 
 /**
- * PushTokenRatingsFixture
+ * ScoutRatingsFixture
  */
-class PushTokenRatingsFixture extends TestFixture
+class ScoutRatingsFixture extends TestFixture
 {
     /**
      * Init method
@@ -20,8 +20,6 @@ class PushTokenRatingsFixture extends TestFixture
         $this->records = [
             [
                 'id' => 1,
-                'year_id' => 1,
-                'push_token_id' => 1,
                 'matchevent_log_id' => 1,
                 'points' => 1,
                 'confirmed' => 1,

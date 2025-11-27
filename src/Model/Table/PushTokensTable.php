@@ -11,7 +11,7 @@ use Cake\Validation\Validator;
  * PushTokens Model
  *
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\BelongsTo $Teams
- * @property \App\Model\Table\PushTokenRatingsTable&\Cake\ORM\Association\HasMany $PushTokenRatings
+ * @property \App\Model\Table\ScoutRatingsTable&\Cake\ORM\Association\HasMany $ScoutRatings
  *
  * @method \App\Model\Entity\PushToken newEmptyEntity()
  * @method \App\Model\Entity\PushToken newEntity(array $data, array $options = [])
@@ -46,10 +46,6 @@ class PushTokensTable extends Table
         $this->belongsTo('Teams', [
             'foreignKey' => 'my_team_id',
             'joinType' => 'INNER',
-        ]);
-
-        $this->hasMany('PushTokenRatings', [
-            'foreignKey' => 'push_token_id',
         ]);
     }
 
