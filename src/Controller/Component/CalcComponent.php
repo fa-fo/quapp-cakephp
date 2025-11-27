@@ -153,9 +153,9 @@ class CalcComponent extends Component
         /**
          * @var \Cake\Database\Connection $conn
          */
-        $conn->execute(file_get_contents(__DIR__ . "/sql/setnull_team_calcTotal.sql"));
-        $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcTotal.sql"));
-        $conn->execute(file_get_contents(__DIR__ . "/sql/update_team_calcPower.sql"), ['year_id' => $yearId]);
+        $conn->execute(file_get_contents(__DIR__ . "/../sql/setnull_team_calcTotal.sql"));
+        $conn->execute(file_get_contents(__DIR__ . "/../sql/update_team_calcTotal.sql"));
+        $conn->execute(file_get_contents(__DIR__ . "/../sql/update_team_calcPower.sql"), ['year_id' => $yearId]);
 
         // Add prev team names points:
         $conditionsArray = array('Teams.calcTotalRankingPoints IS NOT' => null, 'Teams.hidden' => 0);
@@ -202,14 +202,15 @@ class CalcComponent extends Component
         return $c;
     }
 
-    private function addFromPrevNames(Team $team, Team|null $prevTeam): bool|int
+    private function addFromPrevNames(Team $team, Team|array|null $prevTeam): bool|int
     {
         $oldNameId = false;
-        if ($prevTeam) {
+
+        if ($prevTeam !== null) {
             $oldNameId = $prevTeam['id'];
-            $team['calcTotalYears'] += $prevTeam['calcTotalYears'];
-            $team['calcTotalRankingPoints'] += $prevTeam['calcTotalRankingPoints'];
-            $team['calcTotalChampionships'] += $prevTeam['calcTotalChampionships'];
+            $team->calcTotalYears += $prevTeam['calcTotalYears'];
+            $team->calcTotalRankingPoints += $prevTeam['calcTotalRankingPoints'];
+            $team->calcTotalChampionships += $prevTeam['calcTotalChampionships'];
 
             $this->addFromPrevNames($team, $prevTeam['prev_team']);
         }
