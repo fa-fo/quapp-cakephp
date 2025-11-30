@@ -14,6 +14,7 @@ use Cake\ORM\Entity;
  * @property int|null $endRanking
  * @property int|null $scrRanking
  * @property int|null $scrPoints
+ * @property int|null $scrMatchCount
  * @property int $canceled
  *
  * @property \App\Model\Entity\Year $year
@@ -34,6 +35,7 @@ class TeamYear extends Entity
         'endRanking' => true,
         'scrRanking' => true,
         'scrPoints' => true,
+        'scrMatchCount' => true,
         'canceled' => true,
         'year' => true,
         'team' => true,

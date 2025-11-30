@@ -6,7 +6,6 @@ namespace App\Controller;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Match4event;
 use App\Model\Entity\Match4eventLog;
-use App\Model\Entity\ScoutRating;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\DateTime;
 
@@ -47,8 +46,6 @@ class MatcheventLogsController extends AppController
                         $newLog->set('datetime', DateTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
                         if ($this->MatcheventLogs->save($newLog)) {
-                            $this->setScoutRating($newLog->id, $postData['matchEventCode']);
-
                             $logs = $this->MatchGet->getLogs($match_id);
 
                             if (is_array($logs)) {
@@ -98,11 +95,9 @@ class MatcheventLogsController extends AppController
                                 $this->savePhoto($postData['photo'], $match_id, $newLog->id);
                             }
 
-                            $this->setScoutRating($newLog->id, $postData['matchEventCode']);
-
                             $isMatchLive = $match['logsCalc']['isMatchLive'] ?? 0;
-
                             $logs = $this->MatchGet->getLogs($match_id);
+
                             if (is_array($logs)) {
                                 $calc = $logs['calc'];
 
@@ -437,35 +432,6 @@ class MatcheventLogsController extends AppController
         return $dir . '/' . $match_id . '_' . $id . '.jpg';
     }
 
-    private function setScoutRating(int $id, string $matchEventCode): void
-    {
-        $settings = $this->Cache->getSettings();
-
-        if ($settings['useScoutRatings']) {
-            $scrPoints = $this->getScoutRatingPoints($matchEventCode);
-
-            if ($scrPoints > 0) {
-                $scr = $this->fetchTable('ScoutRatings')->newEmptyEntity();
-                /**
-                 * @var ScoutRating $scr
-                 */
-                $scr->set('matchevent_log_id', $id);
-                $scr->set('points', $scrPoints);
-                $this->fetchTable('ScoutRatings')->save($scr);
-            }
-        }
-    }
-
-    private function getScoutRatingPoints(string $matchEventCode): int
-    {
-        return match ($matchEventCode) {
-            'LOGIN' => 50,
-            'MATCH_CONCLUDE' => 40,
-            'PHOTO_UPLOAD' => 20,
-            default => 0,
-        };
-    }
-
     public function insertTestLogs(): void
     {
         $matches = array();
@@ -501,13 +467,6 @@ class MatcheventLogsController extends AppController
                     $newLog->set('matchEvent_id', $event->get('id'));
                     $newLog->set('match_id', $m->id);
                     $this->MatcheventLogs->save($newLog);
-
-                    $scr = $this->fetchTable('ScoutRatings')->newEmptyEntity();
-                    $scr->set('push_token_id', $pt->id);
-                    $scr->set('matchevent_log_id', $newLog->id);
-                    $scr->set('points', $this->getScoutRatingPoints('LOGIN'));
-                    $this->fetchTable('ScoutRatings')->save($scr);
-
 
                     // MATCH_START
                     $newLog = $this->MatcheventLogs->newEmptyEntity();
@@ -546,12 +505,6 @@ class MatcheventLogsController extends AppController
                     $newLog->set('matchEvent_id', $event->get('id'));
                     $newLog->set('match_id', $m->id);
                     $this->MatcheventLogs->save($newLog);
-
-                    $scr = $this->fetchTable('ScoutRatings')->newEmptyEntity();
-                    $scr->set('push_token_id', $pt->id);
-                    $scr->set('matchevent_log_id', $newLog->id);
-                    $scr->set('points', $this->getScoutRatingPoints('MATCH_CONCLUDE'));
-                    $this->fetchTable('ScoutRatings')->save($scr);
 
                     // LOGOUT
                     $newLog = $this->MatcheventLogs->newEmptyEntity();

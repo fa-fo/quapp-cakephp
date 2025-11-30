@@ -496,17 +496,6 @@ VALUES (1, '10:00:00', '09:00:00', 1),
        (16, '17:30:00', '16:30:00', 0);
 
 
-CREATE TABLE `scout_ratings`
-(
-    `id`                int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    `matchevent_log_id` int(11) NOT NULL,
-    `points`            int(11)        DEFAULT NULL,
-    `confirmed`         decimal(10, 1) DEFAULT NULL
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8
-  COLLATE = utf8_general_ci;
-
-
 CREATE TABLE `settings`
 (
     `id`    int(11)     NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -689,10 +678,6 @@ ALTER TABLE `push_tokens`
     ADD KEY `fk_my_year_id` (`my_year_id`),
     ADD KEY `fk_my_team_id` (`my_team_id`);
 
-ALTER TABLE `scout_ratings`
-    ADD UNIQUE KEY `unique_log_id` (`matchevent_log_id`),
-    ADD KEY `fk_matchevent_log_id` (`matchevent_log_id`);
-
 ALTER TABLE `rankingpoints`
     ADD UNIQUE KEY `unique_endRanking` (`endRanking`) USING BTREE;
 
@@ -749,9 +734,6 @@ ALTER TABLE `matchscheduling_pattern24`
 ALTER TABLE `push_tokens`
     ADD CONSTRAINT `fk_year_id5` FOREIGN KEY (`my_year_id`) REFERENCES `years` (`id`),
     ADD CONSTRAINT `fk_my_team_id` FOREIGN KEY (`my_team_id`) REFERENCES `teams` (`id`);
-
-ALTER TABLE `scout_ratings`
-    ADD CONSTRAINT `fk_matchevent_log_id` FOREIGN KEY (`matchevent_log_id`) REFERENCES `matchevent_logs` (`id`);
 
 ALTER TABLE `teams`
     ADD CONSTRAINT `fk_prevTeam_id` FOREIGN KEY (`prevTeam_id`) REFERENCES `teams` (`id`);

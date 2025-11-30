@@ -11,7 +11,6 @@ namespace App\Controller;
 class MatcheventsController extends AppController
 {
     public function all(int $withPhotoAdd = 0): void
-
     {
         $matchevents = $this->Matchevents->find('all', array(
             'conditions' => array('logsAddableOnLoggedIn' => 1, 'code !=' => $withPhotoAdd ? '' : 'PHOTO_ADD')

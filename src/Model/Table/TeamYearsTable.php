@@ -78,6 +78,10 @@ class TeamYearsTable extends Table
             ->allowEmptyString('scrPoints');
 
         $validator
+            ->integer('scrMatchCount')
+            ->allowEmptyString('scrMatchCount');
+
+        $validator
             ->integer('canceled')
             ->notEmptyString('canceled');
 

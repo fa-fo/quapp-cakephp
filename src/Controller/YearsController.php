@@ -371,9 +371,6 @@ class YearsController extends AppController
             ->orderBy(array('Matches.round_id' => 'ASC'))
             ->toArray();
 
-        $scrAll = $this->fetchTable('ScoutRatings')->find('all');
-        $scrConfirmed = $this->fetchTable('ScoutRatings')->find('all', conditions: ['confirmed IS NOT' => null]);
-
         $status['teamYearsCount'] = count($teamYears);
         $status['teamYearsEndRankingCount'] = count($teamYearsEndRanking);
         $status['teamYearsPins'] = count($teamYearsPins);
@@ -399,8 +396,6 @@ class YearsController extends AppController
 
         $status['roundsWithPossibleLogsDelete'] = array_column($roundsWithPossibleLogsDelete, 'round_id');
 
-        $status['scrAll'] = $scrAll->count();
-        $status['scrConfirmed'] = $scrConfirmed->count();
         $status['scrRanking'] = $scrRanking->count();
 
         $this->apiReturn($status);

@@ -4,16 +4,13 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Model\Entity\Match4;
-use App\Model\Entity\Match4event;
 use App\Model\Entity\Match4eventLog;
-use App\Model\Entity\ScoutRating;
-use Cake\Datasource\ConnectionManager;
+use App\Model\Entity\TeamYear;
 use Cake\I18n\DateTime;
 
 /**
  * ScoutRatings Controller
  *
- * @property \App\Model\Table\ScoutRatingsTable $ScoutRatings
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\ScrRankingComponent $ScrRanking
@@ -21,109 +18,109 @@ use Cake\I18n\DateTime;
  */
 class ScoutRatingsController extends AppController
 {
-    public function checkAll(): void
+    public function setScrRanking(int $year_id = 0): void
     {
-        $rowCount = 0;
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
+            //$array = array();
             $settings = $this->Cache->getSettings();
+            $year_id = $year_id ?: $settings['currentYear_id'];
 
-            $conditionsArray = array(
-                'Groups.year_id' => $settings['currentYear_id'],
-                'Groups.day_id' => $settings['currentDay_id'],
-            );
+            $teamYears = $this->fetchTable('TeamYears')->find('all', array(
+                'contain' => array('Teams'),
+                'conditions' => array('TeamYears.year_id' => $year_id, 'Teams.hidden' => 0),
+            ))->toArray();
 
-            $matches = $this->MatchGet->getMatches($conditionsArray, 1, 0, 1);
-
-            if (is_array($matches)) {
-                foreach ($matches as $match) {
-                    $this->checkScrPoints($match);
-                }
-            }
-
-            $rowCount = $this->setScrRanking($settings['currentYear_id']);
-        }
-
-        $this->apiReturn($rowCount);
-    }
-
-    private function checkScrPoints(\Cake\ORM\Entity $match): void
-    {
-        $ratings = $this->ScoutRatings->find('all', array(
-            'contain' => array(
-                'MatcheventLogs',
-                'MatcheventLogs.Matchevents',
-            ),
-            'conditions' => array('MatcheventLogs.match_id' => $match->id),
-            'order' => array('ScoutRatings.id' => 'ASC')
-        ))->all();
-
-        $wasLoggedIn = 0;
-
-        foreach ($ratings as $rating) {
-            $factor = 1;
-            $log = $rating->matchevent_log;
-            $event = $log->matchevent;
-            /**
-             * @var ScoutRating $rating
-             * @var Match4eventLog $log
-             * @var Match4event $event
-             * @var Match4 $match
-             */
-
-            if ($event->code == 'LOGIN') {
-                $mt = DateTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime);
-                $dateDiff = $log->datetime->diffInMinutes($mt, false);
-                if ($dateDiff > 0 && $wasLoggedIn == 0) {
-                    $factor = $dateDiff > 4 ? $factor : $factor * $dateDiff * .2;
-                    $wasLoggedIn = 1;
-                } else {
-                    $factor = 0;
-                }
-            } elseif ($event->code == 'MATCH_CONCLUDE') {
-                $factor = $match->isResultOk ? $factor : $factor * .5;
-                $factor = $match->resultAdmin == 0 ? $factor : $factor * .5;
-
-                // remarks
-                $thresholds = [7, 14];
-                $remarksLength = strlen((string)$match->remarks);
-                foreach ($thresholds as $t) {
-                    if ($remarksLength > $t) {
-                        $factor += 0.1;
-                    }
-                }
-            } elseif ($event->code == 'PHOTO_UPLOAD') {
-                $factor = $log->playerNumber; // 1 or 0
-            }
-
-            $scr = $this->ScoutRatings->find()->where(['id' => $rating->id])->first();
-
-            if ($scr) {
+            foreach ($teamYears as $teamYear) {
                 /**
-                 * @var ScoutRating $scr
+                 * @var TeamYear $teamYear
                  */
-                $scr->set('confirmed', $factor);
-                $this->ScoutRatings->save($scr);
+                $sumPoints = 0;
+
+                $conditionsArray = array(
+                    'Groups.year_id' => $year_id,
+                    'Matches.canceled' => 0,
+                    'OR' => array(
+                        'Matches.refereeTeamSubst_id' => $teamYear->team_id,
+                        'AND' => array('Matches.refereeTeamSubst_id IS' => null, 'Matches.refereeTeam_id' => $teamYear->team_id)));
+
+                $matches = $this->MatchGet->getMatches($conditionsArray, 1, 0, 1);
+
+                if (is_array($matches)) {
+                    foreach ($matches as $match) {
+                        /**
+                         * @var Match4 $match
+                         */
+                        $logs = $this->fetchTable('MatcheventLogs')->find('all', array(
+                            'contain' => array('Matchevents'),
+                            'conditions' => array('match_id' => $match->id, 'matchEvent_id IN' => array(1, 90, 98)),
+                        ))->orderBy(array('MatcheventLogs.id' => 'ASC'))->all();
+
+                        $wasLoggedIn = 0;
+                        foreach ($logs as $log) {
+                            /**
+                             * @var Match4eventLog $log
+                             */
+                            $points = 0;
+                            $factor = 1;
+
+                            if ($log->matchevent->code == 'LOGIN') {
+                                $points = 50;
+                                $mt = DateTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime);
+                                $dateDiff = $log->datetime->diffInMinutes($mt, false);
+                                if ($dateDiff > 0 && $wasLoggedIn == 0) {
+                                    $factor = $dateDiff > 4 ? $factor : $factor * $dateDiff * .2;
+                                    $wasLoggedIn = 1;
+                                } else {
+                                    $factor = 0;
+                                }
+                            } elseif ($log->matchevent->code == 'MATCH_CONCLUDE') {
+                                $points = 40;
+                                $factor = $match->isResultOk ? $factor : $factor * .5;
+                                $factor = $match->resultAdmin == 0 ? $factor : $factor * .5;
+
+                                // remarks
+                                $thresholds = [7, 14];
+                                $remarksLength = strlen((string)$match->remarks);
+                                foreach ($thresholds as $t) {
+                                    if ($remarksLength > $t) {
+                                        $factor += 0.1;
+                                    }
+                                }
+                            } elseif ($log->matchevent->code == 'PHOTO_UPLOAD') {
+                                $points = 20;
+                                $factor = $log->playerNumber; // 1 or 0
+                            }
+
+                            $sumPoints += (int)($points * $factor);
+                            //$array[$teamYear->team_id][] = $log->matchevent->code.' -> '.(int)($points * $factor);
+                        }
+                    }
+
+                    $teamYear->set('scrPoints', $sumPoints);
+                    $teamYear->set('scrMatchCount', count($matches));
+                    $this->fetchTable('TeamYears')->save($teamYear);
+                }
+            }
+
+            usort($teamYears, function ($a, $b) {
+                return $b->scrPoints <=> $a->scrPoints;
+            });
+
+            $c = 0;
+
+            foreach ($teamYears as $teamYear) {
+                $c++;
+                $teamYear->set('scrRanking', $c);
+                $this->fetchTable('TeamYears')->save($teamYear);
             }
         }
+
+        $this->apiReturn(null);
     }
 
-    private function setScrRanking(int $year_id): int
-    {
-        $conn = ConnectionManager::get('default');
-        /**
-         * @var \Cake\Database\Connection $conn
-         */
-        $conn->execute("UPDATE team_years SET scrRanking=NULL WHERE year_id=" . $year_id);
-        $conn->execute("UPDATE team_years SET scrPoints=NULL WHERE year_id=" . $year_id);
 
-        return $conn->execute(file_get_contents(__DIR__ . "/sql/update_teamYears_scrRanking.sql"), ['year_id' => $year_id])->rowCount();
-    }
-
-    /**
-     * @throws \Exception
-     */
     public function getScrRanking(): void
     {
         $settings = $this->Cache->getSettings();

@@ -11,7 +11,6 @@ use Cake\Validation\Validator;
  * PushTokens Model
  *
  * @property \App\Model\Table\TeamsTable&\Cake\ORM\Association\BelongsTo $Teams
- * @property \App\Model\Table\ScoutRatingsTable&\Cake\ORM\Association\HasMany $ScoutRatings
  *
  * @method \App\Model\Entity\PushToken newEmptyEntity()
  * @method \App\Model\Entity\PushToken newEntity(array $data, array $options = [])
