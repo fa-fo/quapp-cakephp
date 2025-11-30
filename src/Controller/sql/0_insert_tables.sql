@@ -576,7 +576,7 @@ CREATE TABLE `team_years`
     `refereePIN`    varchar(5)       DEFAULT NULL,
     `endRanking`    int(11)          DEFAULT NULL,
     `scrRanking`    int(11)          DEFAULT NULL,
-    `scrPoints`     int(11)          DEFAULT NULL,
+    `scrPoints`     decimal(4, 1)    DEFAULT NULL,
     `scrMatchCount` int(11)          DEFAULT NULL,
     `canceled`      int(11) NOT NULL DEFAULT 0
 ) ENGINE = InnoDB

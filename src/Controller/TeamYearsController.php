@@ -304,8 +304,8 @@ class TeamYearsController extends AppController
             $this->viewBuilder()->setVar('year', $year);
 
             if ($settings['useScoutRatings']) {
-                $scrRankingTeams = $this->ScrRanking->getScrRanking($year['id'], 3, 'DESC');
-                $this->viewBuilder()->setVar('scrRankingTeams', $scrRankingTeams);
+                $scrRanking = $this->ScrRanking->getScrRanking($year['id'], 3, 'DESC');
+                $this->viewBuilder()->setVar('scrRankingTeams', $scrRanking['teamYears']);
             }
 
             $this->pdfReturn();

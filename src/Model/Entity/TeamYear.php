@@ -13,7 +13,7 @@ use Cake\ORM\Entity;
  * @property int $team_id
  * @property int|null $endRanking
  * @property int|null $scrRanking
- * @property int|null $scrPoints
+ * @property float|null $scrPoints
  * @property int|null $scrMatchCount
  * @property int $canceled
  *

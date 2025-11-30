@@ -49,7 +49,7 @@ try {
             $html .= '<tr>';
             $html .= '<td width="20" align="right" class="ptr"><b>' . ($scr->scrRanking ?? 0) . '</b></td>';
             $html .= '<td class="ptr">' . $scr->team_name . '</td>';
-            $html .= '<td class="ptr" align="right">' . $scr->scrPoints . ' P.</td>';
+            $html .= '<td class="ptr" align="right">' . $scr->scrPoints . ' P/S</td>';
             $html .= '</tr>';
         }
         $html .= '</table>';

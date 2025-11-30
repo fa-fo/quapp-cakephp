@@ -81,10 +81,10 @@ class ScoutRatingsController extends AppController
                                 $factor = $match->resultAdmin == 0 ? $factor : $factor * .5;
 
                                 // remarks
-                                $thresholds = [7, 14];
+                                $lengthSteps = [7, 14];
                                 $remarksLength = strlen((string)$match->remarks);
-                                foreach ($thresholds as $t) {
-                                    if ($remarksLength > $t) {
+                                foreach ($lengthSteps as $l) {
+                                    if ($remarksLength > $l) {
                                         $factor += 0.1;
                                     }
                                 }
@@ -98,8 +98,9 @@ class ScoutRatingsController extends AppController
                         }
                     }
 
-                    $teamYear->set('scrPoints', $sumPoints);
-                    $teamYear->set('scrMatchCount', count($matches));
+                    $countMatches = count($matches);
+                    $teamYear->set('scrPoints', $countMatches > 0 ? round($sumPoints / $countMatches, 1) : 0);
+                    $teamYear->set('scrMatchCount', $countMatches);
                     $this->fetchTable('TeamYears')->save($teamYear);
                 }
             }
@@ -115,16 +116,16 @@ class ScoutRatingsController extends AppController
                 $teamYear->set('scrRanking', $c);
                 $this->fetchTable('TeamYears')->save($teamYear);
             }
-        }
 
-        $this->apiReturn(null);
+            $this->apiReturn(count($teamYears));
+        }
     }
 
 
-    public function getScrRanking(): void
+    public function getScrRanking(int $yearId = 0): void
     {
         $settings = $this->Cache->getSettings();
-        $return = $this->ScrRanking->getScrRanking($settings['currentYear_id']);
+        $return = $this->ScrRanking->getScrRanking($yearId ?: $settings['currentYear_id']);
 
         $this->apiReturn($return);
     }

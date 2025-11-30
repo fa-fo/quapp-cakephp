@@ -7,21 +7,27 @@ use Cake\Datasource\FactoryLocator;
 
 class ScrRankingComponent extends Component
 {
-    public function getScrRanking(int $yearId, int $limit = null, string $orderDir = 'ASC'): array|false
+    public function getScrRanking(int $yearId, int $limit = null, string $orderDir = 'ASC'): array
     {
-        $return = FactoryLocator::get('Table')->get('TeamYears')->find('all', array(
+        $teamYears = FactoryLocator::get('Table')->get('TeamYears')->find('all', array(
             'fields' => array('scrRanking', 'scrPoints', 'scrMatchCount', 'team_name' => 'Teams.name'),
             'conditions' => array('scrRanking IS NOT' => null, 'year_id' => $yearId),
             'contain' => array('Teams')
         ))->orderBy(array('scrRanking' => 'ASC'))->toArray();
 
         if ($limit) {
-            $return = array_slice($return, 0, $limit);
+            $teamYears = array_slice($teamYears, 0, $limit);
         }
         if ($orderDir == 'DESC') {
-            $return = array_reverse($return);
+            $teamYears = array_reverse($teamYears);
         }
 
-        return $return;
+        $years = FactoryLocator::get('Table')->get('Years')->find('all', array(
+            'conditions' => array('id >=' => 25),
+        ))->orderBy(array('id' => 'DESC'))->toArray();
+
+        $y = FactoryLocator::get('Table')->get('Years')->find()->where(['id' => $yearId])->first();
+
+        return array('teamYears' => $teamYears, 'years' => $years, 'year_name' => $y->name);
     }
 }

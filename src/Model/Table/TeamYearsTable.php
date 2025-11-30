@@ -74,7 +74,7 @@ class TeamYearsTable extends Table
             ->allowEmptyString('scrRanking');
 
         $validator
-            ->integer('scrPoints')
+            ->decimal('scrPoints')
             ->allowEmptyString('scrPoints');
 
         $validator
