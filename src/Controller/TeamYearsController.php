@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4;
+use App\Model\Entity\Match4eventLog;
 use App\Model\Entity\Setting;
 use App\Model\Entity\TeamYear;
 use Cake\I18n\DateTime;
@@ -14,7 +15,6 @@ use Cake\I18n\DateTime;
  * TeamYears Controller
  *
  * @property \App\Model\Table\TeamYearsTable $TeamYears
- * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\CalcComponent $Calc
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
@@ -411,6 +411,156 @@ class TeamYearsController extends AppController
         $str45 = $yearId * random_int(1, 3) % 100;
 
         return (int)($str123 . $str45);
+    }
+
+    public function setScrRanking(int $year_id = 0): void
+    {
+        $postData = $this->request->getData();
+
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->Cache->getSettings();
+            $year_id = $year_id ?: $settings['currentYear_id'];
+
+            $teamYears = $this->fetchTable('TeamYears')->find('all', array(
+                'contain' => array('Teams'),
+                'conditions' => array('TeamYears.year_id' => $year_id, 'Teams.hidden' => 0),
+            ))->toArray();
+
+            foreach ($teamYears as $teamYear) {
+                $scrData = $this->getScrData($teamYear, $year_id);
+
+                $teamYear->set('scrPoints', $scrData['scrPoints']);
+                $teamYear->set('scrMatchCount', $scrData['scrMatchCount']);
+                $this->fetchTable('TeamYears')->save($teamYear);
+            }
+
+            usort($teamYears, function ($a, $b) {
+                return $b->scrPoints <=> $a->scrPoints;
+            });
+
+            $c = 0;
+
+            foreach ($teamYears as $teamYear) {
+                $c++;
+                $teamYear->set('scrRanking', $c);
+                $this->fetchTable('TeamYears')->save($teamYear);
+            }
+
+            $this->apiReturn(count($teamYears));
+        }
+    }
+
+    public function getScrRanking(int $yearId = 0): void
+    {
+        $settings = $this->Cache->getSettings();
+        $return = $this->ScrRanking->getScrRanking($yearId ?: $settings['currentYear_id']);
+
+        $this->apiReturn($return);
+    }
+
+    public function getScrTeamLogs(int $team_id, int $year_id = 0): void
+    {
+        $postData = $this->request->getData();
+
+        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
+            $settings = $this->Cache->getSettings();
+            $year_id = $year_id ?: $settings['currentYear_id'];
+
+            $teamYear = $this->fetchTable('TeamYears')->find('all', array(
+                'contain' => array('Teams'),
+                'conditions' => array('TeamYears.team_id' => $team_id, 'TeamYears.year_id' => $year_id),
+            ))->first();
+
+            $scrData = $this->getScrData($teamYear, $year_id);
+
+            $this->apiReturn($scrData);
+        }
+    }
+
+    private function getScrData(TeamYear $teamYear, int $year_id): array
+    {
+        /**
+         * @var TeamYear $teamYear
+         */
+        $scrLogs = array();
+        $sumPoints = 0;
+        $prevRoundId = 0;
+        $return = array();
+
+        $conditionsArray = array(
+            'Groups.year_id' => $year_id,
+            'Matches.canceled' => 0,
+            'OR' => array(
+                'Matches.refereeTeamSubst_id' => $teamYear->team_id,
+                'AND' => array('Matches.refereeTeamSubst_id IS' => null, 'Matches.refereeTeam_id' => $teamYear->team_id)));
+
+        $matches = $this->MatchGet->getMatches($conditionsArray, 1, 0, 1);
+
+        if (is_array($matches)) {
+            foreach ($matches as $match) {
+                /**
+                 * @var Match4 $match
+                 */
+                $logs = $this->fetchTable('MatcheventLogs')->find('all', array(
+                    'contain' => array('Matchevents'),
+                    'conditions' => array('match_id' => $match->id, 'matchEvent_id IN' => array(1, 90, 98)),
+                ))->orderBy(array('MatcheventLogs.id' => 'ASC'))->all();
+
+                $wasLoggedIn = 0;
+                foreach ($logs as $log) {
+                    /**
+                     * @var Match4eventLog $log
+                     */
+                    $points = 0;
+                    $factor = 1;
+
+                    if ($log->matchevent->code == 'LOGIN') {
+                        $points = 50;
+                        $mt = DateTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime);
+                        $dateDiff = $log->datetime->diffInMinutes($mt, false);
+                        if ($dateDiff > 0 && $wasLoggedIn == 0) {
+                            $factor = $dateDiff > 4 ? $factor : $factor * $dateDiff * .2;
+                            $wasLoggedIn = 1;
+                        } else {
+                            $factor = 0;
+                        }
+                    } elseif ($log->matchevent->code == 'MATCH_CONCLUDE') {
+                        $points = 40;
+                        $factor = $match->isResultOk ? $factor : $factor * .5;
+                        $factor = $match->resultAdmin == 0 ? $factor : $factor * .5;
+
+                        // remarks
+                        $lengthSteps = [7, 14];
+                        $remarksLength = strlen((string)$match->remarks);
+                        foreach ($lengthSteps as $l) {
+                            if ($remarksLength > $l) {
+                                $factor += 0.1;
+                            }
+                        }
+                    } elseif ($log->matchevent->code == 'PHOTO_UPLOAD') {
+                        $points = 20;
+                        $factor = $log->playerNumber; // 1 or 0
+                    }
+
+                    if ($prevRoundId != $match->round_id) {
+                        $scrLogs[] = '';
+                    }
+                    $prevRoundId = $match->round_id;
+
+                    $sumPoints += (int)($points * $factor);
+                    $scrLogs[] = $log->datetime . ' -> Runde ' . $match->round_id . ' -> ' . $log->matchevent->code . ' -> ' . $points . ' * ' . $factor . ' = ' . (int)($points * $factor);
+                }
+            }
+
+            $countMatches = count($matches);
+            $return = array(
+                'scrMatchCount' => $countMatches,
+                'scrPoints' => $countMatches > 0 ? round($sumPoints / $countMatches, 1) : 0,
+                'scrLogs' => $scrLogs
+            );
+        }
+
+        return $return;
     }
 
 }
