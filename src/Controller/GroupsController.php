@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Year;
 
@@ -10,7 +11,6 @@ use App\Model\Entity\Year;
  * Groups Controller
  *
  * @property \App\Model\Table\GroupsTable $Groups
- * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\SecurityComponent $Security
@@ -167,7 +167,9 @@ class GroupsController extends AppController
                                 $newPlacenumber = $c % $teamsCountPerGroup + 1;
                                 $number = floor($c / $teamsCountPerGroup);
                             }
-
+                            /**
+                             * @var int $number
+                             */
                             $groupFillArray[$number]++;
                             $newGroupId = $this->GroupGet->getCurrentGroupId((int)$number);
 
@@ -188,6 +190,9 @@ class GroupsController extends AppController
                         }
 
                         foreach ($groups as $group) {
+                            /**
+                             * @var Group $group
+                             */
                             $avgRankingPointsPerYear[$group->name] = $this->getAvgRankingPointsPerYear($group->id);
                         }
 

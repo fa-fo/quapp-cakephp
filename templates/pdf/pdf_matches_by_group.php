@@ -1,5 +1,8 @@
 <?php
 
+use App\Model\Entity\Group;
+use App\Model\Entity\Match4;
+use App\Model\Entity\Round;
 use Cake\I18n\DateTime;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
@@ -13,6 +16,9 @@ try {
     $year = $year ?? array();
 
     foreach ($groups as $group) {
+        /**
+         * @var Group $group
+         */
         $p++;
         $html = '';
         $mpdf->AddPage('L');
@@ -30,14 +36,17 @@ try {
             </style>';
         }
 
-        foreach ($group['rounds'] as $round) {
-            if ($round['matches']) {
+        foreach ($group->rounds as $round) {
+            /**
+             * @var Round $round
+             */
+            if (is_array($round->matches)) {
                 if (($round->id - 1) % 8 == 0) {
                     if ($round->id != 1) {
                         $mpdf->AddPage('L');
                         $html = '';
                     }
-                    $html .= '<h2>Spielplan ' . ($year['teamsCount'] > 24 ? 'Gruppe ' . $group->name : '') . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
+                    $html .= '<h2>Spielplan ' . ($year['teamsCount'] > 24 ? 'Gruppe ' . $group->name : '') . ' <span>(' . $group->date->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
                     $html .= '<table border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">';
                     $html .= '<tr>';
                     $html .= '<th>&nbsp;</th>';
@@ -49,10 +58,13 @@ try {
                 }
                 $html .= '<tr>';
                 $html .= '<td width="75">'
-                    . '<span class="t">' . ($round['matches'][0]->matchStartTime ? DateTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') : '') . 'h:</span>'
+                    . '<span class="t">' . ($round->matches[0]->matchStartTime ? DateTime::createFromFormat('Y-m-d H:i:s', $round->matches[0]->matchStartTime)->i18nFormat('HH:mm') : '') . 'h:</span>'
                     . '<br/>Runde ' . $round->id . '</td>';
 
-                foreach ($round['matches'] as $match) {
+                foreach ($round->matches as $match) {
+                    /**
+                     * @var Match4 $match
+                     */
                     $html .= '<td class="r" width="200">';
 
                     $html .= '<table border="0" cellspacing="0" cellpadding="0" width="100%">';

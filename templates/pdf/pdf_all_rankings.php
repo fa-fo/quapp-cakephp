@@ -1,4 +1,8 @@
 <?php
+
+use App\Model\Entity\Group;
+use App\Model\Entity\GroupTeam;
+
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 $mpdf = new \Mpdf\Mpdf();
@@ -9,6 +13,9 @@ try {
     $year = $year ?? array();
 
     foreach ($groups as $group) {
+        /**
+         * @var Group $group
+         */
         $p++;
         $html = '';
         $mpdf->AddPage('L');
@@ -25,7 +32,7 @@ try {
             </style>';
         }
 
-        $html .= '<h1>Tabelle ' . ($year['teamsCount'] > 24 ? 'Gruppe ' . $group->name : '') . ' <span>(' . $group->day->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h1>';
+        $html .= '<h1>Tabelle ' . ($year['teamsCount'] > 24 ? 'Gruppe ' . $group->name : '') . ' <span>(' . $group->date->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h1>';
 
         $html .= '<table border="0"  cellspacing="0" cellpadding="8" align="center" width="100%">';
         $html .= '<tr>';
@@ -37,7 +44,10 @@ try {
         $html .= '<th>Punkte</th>';
         $html .= '</tr>';
 
-        foreach ($group['groupTeams'] as $gT) {
+        foreach ($group->groupTeams as $gT) {
+            /**
+             * @var GroupTeam $gT
+             */
             $html .= '<tr>';
             $html .= '<td>' . ($gT->calcRanking ?? 0) . '</td>';
             $html .= '<td>' . $gT->team->name . '</td>';

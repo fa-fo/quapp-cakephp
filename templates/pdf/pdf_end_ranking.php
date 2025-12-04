@@ -1,4 +1,7 @@
 <?php
+
+use App\Model\Entity\TeamYear;
+
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 $mpdf = new \Mpdf\Mpdf();
@@ -59,6 +62,9 @@ try {
     }
 
     foreach ($teamYears as $ty) {
+        /**
+         * @var TeamYear $ty
+         */
         if (in_array($c, $newPageArray)) {
             if ($c > 0) {
                 $html = '';
@@ -79,8 +85,8 @@ try {
         $html .= '<tr>';
         $html .= '<td width="50" align="right"><b>' . ($ty->endRanking ?? 0) . '</b></td>';
         $html .= '<td>' . ($ty->canceled ? '<s>' : '') . $ty->team->name . ' ' . ($ty->canceled ? '</s>' : '') . '</td>';
-        $html .= '<td width="50" align="center">' . ($ty['group_team']['calcRanking'] < 4 ? $ty['group_team']['calcPointsPlus'] . ':' . $ty['group_team']['calcPointsMinus'] : '') . '</td>';
-        $html .= '<td width="50" align="right"><i>' . ($ty->team->calcTotalRanking < 16 || $ty['group_team']['calcRanking'] < 4 ? $ty->team->calcTotalRanking . '.' : '') . '</i></td>';
+        $html .= '<td width="50" align="center">' . ($ty->group_team['calcRanking'] < 4 ? $ty->group_team['calcPointsPlus'] . ':' . $ty->group_team['calcPointsMinus'] : '') . '</td>';
+        $html .= '<td width="50" align="right"><i>' . ($ty->team->calcTotalRanking < 16 || $ty->group_team['calcRanking'] < 4 ? $ty->team->calcTotalRanking . '.' : '') . '</i></td>';
         $html .= '</tr>';
         if (in_array($c, $endTableArray)) {
             $html .= '</table>';

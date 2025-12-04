@@ -1,7 +1,11 @@
 <?php
-ini_set('max_execution_time', '300');
 
+use App\Model\Entity\Match4;
+use App\Model\Entity\Round;
+use App\Model\Entity\TeamYear;
 use Cake\I18n\DateTime;
+
+//ini_set('max_execution_time', '300');
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/pdf_functions.php';
@@ -15,16 +19,16 @@ try {
     $settings = $settings ?? array();
 
     foreach ($teamYears as $ty) {
-        if (!isset($ty['infos'])) {
+        /**
+         * @var TeamYear $ty
+         */
+        if (!isset($ty->infos)) {
             continue; // not the needed group
         }
 
         $p++;
         $html = '';
         $mpdf->AddPage('L');
-        $mpdf->SetDefaultBodyCSS('background', "url('img/logo2025.png')");
-        $mpdf->SetDefaultBodyCSS('background-position', "50px 152px");
-        $mpdf->SetDefaultBodyCSS('background-repeat', "no-repeat");
 
         if ($p == 1) {
             $html .= '<style type="text/css">
@@ -43,67 +47,76 @@ try {
             </style>';
         }
 
-        if (isset($ty['infos']['matches'][0])) {
-            $html .= '<h2>Mannschaftsspielplan am  ' . $ty['day']->i18nFormat('EEEE, d.MM.Y') . '</h2>';
+        if (isset($ty->infos['matches'][0])) {
+            $html .= '<h2>Mannschaftsspielplan am  ' . $ty->date->i18nFormat('EEEE, d.MM.Y') . '</h2>';
             $html .= getMatchHtml($ty, $settings);
         }
         $mpdf->WriteHTML($html);
 
         $mpdf->AddPage();
-        $html = '<h2>Spielplan Gruppe ' . $ty['group']->name . ' <span>(' . $ty['day']->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
+
+        $html = '<h2>Spielplan Gruppe ' . $ty->group->name . ' <span>(' . $ty->date->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
         $mpdf->WriteHTML($html);
 
-        foreach ($ty['group']['rounds'] as $round) {
-            if (($round->id - 1) % 8 == 0) {
-                $html = '<table class="group" border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">';
-                $html .= '<tr>';
-                $html .= '<th>&nbsp;</th>';
-                $html .= '<th><img src="img/bb.png" width="15">Basketball</th>';
-                $html .= '<th><img src="img/fb.png" width="15">Fußball</th>';
-                $html .= '<th><img src="img/hb.png" width="15">Handball</th>';
-                $html .= '<th><img src="img/vb.png" width="15">Volleyball</th>';
-                $html .= '</tr>';
-            }
-            $html .= '<tr>';
-            $html .= '<td width="75">'
-                . '<span class="t">' . ($round['matches'][0]->matchStartTime ? DateTime::createFromFormat('Y-m-d H:i:s', $round['matches'][0]->matchStartTime)->i18nFormat('HH:mm') : '') . 'h:</span>'
-                . '<br/>Runde ' . $round->id . '</td>';
-
-            foreach ($round['matches'] as $match) {
-                $html .= '<td class="r" width="200">';
-
-                $html .= '<table border="0" cellspacing="0" cellpadding="0" width="100%">';
-                $html .= '<tr>';
-                $html .= '<td class="m">';
-
-                $html .= '<table border="0" cellspacing="0" cellpadding="2" width="100%">';
-                $html .= '<tr>';
-                $html .= '<td>' . ellipsis($match->teams1->name) . '</td>';
-                $html .= '<td class="g" width="10">' . $match->resultGoals1 . '&nbsp;</td>';
-                $html .= '</tr>';
-                $html .= '<tr>';
-                $html .= '<td>' . ellipsis($match->teams2->name) . '</td>';
-                $html .= '<td class="g">' . $match->resultGoals2 . '&nbsp;</td>';
-                $html .= '</tr>';
-                $html .= '</table>';
-
-                $html .= '</td>';
-                $html .= '</tr>';
-                $html .= '<tr>';
-                $html .= '<td class="sr">' . ellipsis('SR: ' . ($match->teams3->name ?? ''), 26) . '</td>';
-                $html .= '</tr>';
-                $html .= '</table>';
-
-                $html .= '</td>';
-            }
-
-            $html .= '</tr>';
-            if ($round->id % 8 == 0) {
-                $html .= '</table>';
-                if ($round->id == 8) {
-                    $html .= '<br /><br />';
+        foreach ($ty->group->rounds as $round) {
+            /**
+             * @var Round $round
+             */
+            if (is_array($round->matches)) {
+                if (($round->id - 1) % 8 == 0) {
+                    $html = '<table class="group" border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">';
+                    $html .= '<tr>';
+                    $html .= '<th>&nbsp;</th>';
+                    $html .= '<th><img src="img/bb.png" width="15">Basketball</th>';
+                    $html .= '<th><img src="img/fb.png" width="15">Fußball</th>';
+                    $html .= '<th><img src="img/hb.png" width="15">Handball</th>';
+                    $html .= '<th><img src="img/vb.png" width="15">Volleyball</th>';
+                    $html .= '</tr>';
                 }
-                $mpdf->WriteHTML($html);
+                $html .= '<tr>';
+                $html .= '<td width="75">'
+                    . '<span class="t">' . ($round->matches[0]->matchStartTime ? DateTime::createFromFormat('Y-m-d H:i:s', $round->matches[0]->matchStartTime)->i18nFormat('HH:mm') : '') . 'h:</span>'
+                    . '<br/>Runde ' . $round->id . '</td>';
+
+                foreach ($round->matches as $match) {
+                    /**
+                     * @var Match4 $match
+                     */
+                    $html .= '<td class="r" width="200">';
+
+                    $html .= '<table border="0" cellspacing="0" cellpadding="0" width="100%">';
+                    $html .= '<tr>';
+                    $html .= '<td class="m">';
+
+                    $html .= '<table border="0" cellspacing="0" cellpadding="2" width="100%">';
+                    $html .= '<tr>';
+                    $html .= '<td>' . ellipsis($match->teams1->name, 21) . '</td>';
+                    $html .= '<td class="g" width="10">' . $match->resultGoals1 . '&nbsp;</td>';
+                    $html .= '</tr>';
+                    $html .= '<tr>';
+                    $html .= '<td>' . ellipsis($match->teams2->name, 21) . '</td>';
+                    $html .= '<td class="g">' . $match->resultGoals2 . '&nbsp;</td>';
+                    $html .= '</tr>';
+                    $html .= '</table>';
+
+                    $html .= '</td>';
+                    $html .= '</tr>';
+                    $html .= '<tr>';
+                    $html .= '<td class="sr">' . ellipsis('SR: ' . ($match->teams3->name ?? ''), 26) . '</td>';
+                    $html .= '</tr>';
+                    $html .= '</table>';
+
+                    $html .= '</td>';
+                }
+
+                $html .= '</tr>';
+                if ($round->id % 8 == 0) {
+                    $html .= '</table>';
+                    if ($round->id == 8) {
+                        $html .= '<br /><br />';
+                    }
+                    $mpdf->WriteHTML($html);
+                }
             }
         }
     }

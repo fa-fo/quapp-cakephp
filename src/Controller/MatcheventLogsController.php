@@ -13,7 +13,6 @@ use Cake\I18n\DateTime;
  * MatcheventLogs Controller
  *
  * @property \App\Model\Table\MatcheventLogsTable $MatcheventLogs
- * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
  * @property \App\Controller\Component\SecurityComponent $Security
@@ -532,14 +531,6 @@ class MatcheventLogsController extends AppController
                 /**
                  * @var \Cake\Database\Connection $conn
                  */
-                $sql = "DELETE scr FROM scout_ratings scr
-                        LEFT JOIN matchevent_logs ml ON ml.id = scr.matchevent_log_id
-                        LEFT JOIN `matches` m ON ml.match_id=m.id
-                        LEFT JOIN `groups` g ON m.group_id=g.id
-                        WHERE m.round_id = " . $round_id . "
-                        AND g.year_id = " . $settings['currentYear_id'] . " AND g.day_id = " . $settings['currentDay_id'];
-                $rc += $conn->execute($sql)->rowCount();
-
                 $sql = "DELETE ml FROM matchevent_logs ml
                         LEFT JOIN `matches` m ON ml.match_id=m.id
                         LEFT JOIN `groups` g ON m.group_id=g.id

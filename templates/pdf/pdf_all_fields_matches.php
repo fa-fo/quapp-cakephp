@@ -1,5 +1,6 @@
 <?php
 
+use App\Model\Entity\Match4;
 use Cake\I18n\DateTime;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
@@ -43,6 +44,9 @@ try {
             $html .= '</tr>';
 
             foreach ($fields['matches'] as $match) {
+                /**
+                 * @var Match4 $match
+                 */
                 $html .= '<tr>';
                 $html .= '<td>' . $match->round->id . '</td>';
                 $html .= '<td>' . DateTime::createFromFormat('Y-m-d H:i:s', $match->matchStartTime)->i18nFormat('HH:mm') . ' Uhr</td>';

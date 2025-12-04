@@ -15,10 +15,8 @@ use Cake\I18n\DateTime;
  * GroupTeams Controller
  *
  * @property \App\Model\Table\GroupTeamsTable $GroupTeams
- * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
- * @property \App\Controller\Component\RoundGetComponent $RoundGet
  * @property \App\Controller\Component\SecurityComponent $Security
  */
 class GroupTeamsController extends AppController
@@ -83,14 +81,14 @@ class GroupTeamsController extends AppController
             ));
 
             $year = $this->Cache->getCurrentYear()->toArray();
-            $day = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+            $date = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
             foreach ($groups as $group) {
                 /**
                  * @var Group $group
                  */
-                $group['groupTeams'] = $this->getRanking($group->toArray());
-                $group['day'] = $day;
+                $group->groupTeams = $this->getRanking($group->toArray());
+                $group->date = $date;
             }
 
             $this->viewBuilder()->setTemplatePath('pdf');

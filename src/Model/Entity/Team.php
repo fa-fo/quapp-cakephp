@@ -20,10 +20,6 @@ use Cake\ORM\Entity;
  * @property int $testTeam
  * @property int|null $calcPowerRankingPoints
  *
- * @property \App\Model\Entity\GroupTeam[] $group_teams
- * @property \App\Model\Entity\Match4[] $matches
- * @property \App\Model\Entity\Match4eventLog[] $match_event_logs
- * @property \App\Model\Entity\TeamYear[] $team_years
  * @property \App\Model\Entity\Team|null $prevTeam
  */
 class Team extends Entity
@@ -42,10 +38,6 @@ class Team extends Entity
         'calcTotalPointsPerYear' => true,
         'calcTotalChampionships' => true,
         'calcTotalRanking' => true,
-        'group_teams' => true,
-        'matches' => true,
-        'match_event_logs' => true,
-        'team_years' => true,
         'prevTeam_id' => true,
         'prevTeam' => true,
         'hidden' => true,

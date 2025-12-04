@@ -1,5 +1,6 @@
 <?php
 
+use App\Model\Entity\TeamYear;
 use Cake\I18n\DateTime;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
@@ -15,6 +16,9 @@ try {
     $settings = $settings ?? array();
 
     foreach ($teamYears as $ty) {
+        /**
+         * @var TeamYear $ty
+         */
         $p++;
         $html = '';
         $mpdf->AddPage('L');
@@ -30,8 +34,8 @@ try {
             </style>';
         }
 
-        if (isset($ty['infos']['matches'][0])) {
-            $html .= '<h2>Mannschaftsspielplan am  ' . DateTime::createFromFormat('Y-m-d H:i:s', $ty['infos']['matches'][0]->matchStartTime)->i18nFormat('d.MM.Y') . '</h2>';
+        if (isset($ty->infos['matches'][0])) {
+            $html .= '<h2>Mannschaftsspielplan am  ' . DateTime::createFromFormat('Y-m-d H:i:s', $ty->infos['matches'][0]->matchStartTime)->i18nFormat('d.MM.Y') . '</h2>';
             $html .= getMatchHtml($ty, $settings);
 
             $mpdf->WriteHTML($html);

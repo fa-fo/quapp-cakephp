@@ -17,7 +17,12 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Year $year
  * @property \App\Model\Entity\Day $day
  * @property \App\Model\Entity\GroupTeam[] $group_teams
- * @property \App\Model\Entity\Match4[] $matches
+ * @property \App\Model\Entity\Match4[]|bool $matches
+ *
+ * @property array $rounds
+ * @property array $groupTeams
+ * @property array $playOffTeams
+ * @property \Cake\I18n\DateTime $date
  */
 class Group extends Entity
 {

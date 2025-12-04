@@ -3,8 +3,12 @@ parameters:
     paths:
         - config/
         - src/
+        - templates/pdf
     excludePaths:
         - src/Console/Installer.php
+        - vendor
+        - tmp
+        - logs
     bootstrapFiles:
         - config/bootstrap.php
         - config/paths.php

@@ -13,7 +13,6 @@ use Cake\I18n\DateTime;
  * Years Controller
  *
  * @property \App\Model\Table\YearsTable $Years
- * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\CalcComponent $Calc
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\SecurityComponent $Security
@@ -414,7 +413,6 @@ class YearsController extends AppController
                 /**
                  * @var \Cake\Database\Connection $conn
                  */
-                $rc += $conn->execute("DELETE scr FROM scout_ratings scr LEFT JOIN matchevent_logs ml ON ml.id = scr.matchevent_log_id LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE m FROM `matches` m LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE gt FROM group_teams gt LEFT JOIN `groups` g ON gt.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
@@ -450,7 +448,6 @@ class YearsController extends AppController
                 /**
                  * @var \Cake\Database\Connection $conn
                  */
-                $rc += $conn->execute("DELETE scr FROM scout_ratings scr LEFT JOIN matchevent_logs ml ON ml.id = scr.matchevent_log_id LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE ml FROM matchevent_logs ml LEFT JOIN `matches` m ON ml.match_id=m.id LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $rc += $conn->execute("DELETE m FROM `matches` m LEFT JOIN `groups` g ON m.group_id=g.id LEFT JOIN years y ON g.year_id=y.id WHERE y.id = " . $settings['currentYear_id'])->rowCount();
                 $this->apiReturn(array('rows affected' => $rc));

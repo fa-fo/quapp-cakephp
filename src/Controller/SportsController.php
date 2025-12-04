@@ -9,7 +9,6 @@ use Cake\Http\Client;
  * Sports Controller
  *
  * @property \App\Model\Table\SportsTable $Sports
- * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\SecurityComponent $Security
  */

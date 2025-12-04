@@ -11,10 +11,13 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property \Cake\I18n\DateTime $timeStartDay1
  * @property \Cake\I18n\DateTime $timeStartDay2
- *
- * @property \App\Model\Entity\Match4[] $matches
- * @property \App\Model\Entity\Match4schedulingPattern[] $matchscheduling_pattern
  * @property int $autoUpdateResults
+ *
+ * @property array|bool $matches
+ * @property int $matchesCount
+ * @property int $matchesConfirmed
+ * @property int $matchesWithoutReferee
+ * @property string $timeStart
  */
 class Round extends Entity
 {

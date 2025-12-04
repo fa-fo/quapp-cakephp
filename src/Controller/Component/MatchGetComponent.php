@@ -24,23 +24,21 @@ class MatchGetComponent extends Component
         $rounds = FactoryLocator::get('Table')->get('Rounds')->find('all', array(
             'fields' => array('id', 'timeStartDay' . $group['day_id'], 'autoUpdateResults'),
             'order' => array('id' => 'ASC')
-        ))->toArray();
+        ))->all();
 
-        if (count($rounds) > 0) {
-            foreach ($rounds as $round) {
-                /**
-                 * @var Round $round
-                 */
-                $conditionsArray = array(
-                    'group_id' => $group['id'],
-                    'round_id' => $round['id'],
-                );
+        foreach ($rounds as $round) {
+            /**
+             * @var Round $round
+             */
+            $conditionsArray = array(
+                'group_id' => $group['id'],
+                'round_id' => $round->id,
+            );
 
-                $round['matches'] = $this->getMatches($conditionsArray);
-            }
+            $round->matches = $this->getMatches($conditionsArray);
         }
 
-        return $rounds;
+        return $rounds->toArray();
     }
 
     public function getMatchesByTeam(int $team_id, int $year_id, int $day_id, int $adminView = 0): array

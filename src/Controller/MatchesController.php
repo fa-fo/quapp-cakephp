@@ -13,13 +13,11 @@ use Cake\I18n\DateTime;
  * Matches Controller
  *
  * @property \App\Model\Table\MatchesTable $Matches
- * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\CalcComponent $Calc
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\PlayOffComponent $PlayOff
  * @property \App\Controller\Component\MatchTimelineImageComponent $MatchTimelineImage
- * @property \App\Controller\Component\RoundGetComponent $RoundGet
  * @property \App\Controller\Component\SecurityComponent $Security
  */
 class MatchesController extends AppController
@@ -97,14 +95,14 @@ class MatchesController extends AppController
             ));
 
             $year = $this->Cache->getCurrentYear()->toArray();
-            $day = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+            $date = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
             foreach ($groups as $group) {
                 /**
                  * @var Group $group
                  */
-                $group['rounds'] = $this->MatchGet->getMatchesByGroup($group->toArray());
-                $group['day'] = $day;
+                $group->rounds = $this->MatchGet->getMatchesByGroup($group->toArray());
+                $group->date = $date;
             }
 
             $this->viewBuilder()->setTemplatePath('pdf');
@@ -152,17 +150,17 @@ class MatchesController extends AppController
                         'Groups.year_id' => $year_id,
                         'Groups.day_id' => $day_id,
                         'round_id' => $round_id,
-                        'group_id' => $group['id'],
+                        'group_id' => $group->id,
                     );
 
                     // use parameter for same sort as Excel: $sortBySportId=!$includeLogs
-                    $group['matches'] = $this->MatchGet->getMatches($conditionsArray, $includeLogs, 1, $adminView);
+                    $group->matches = $this->MatchGet->getMatches($conditionsArray, $includeLogs, 1, $adminView);
 
                     if ($isPlayOffRound && $includeLogs) {
                         $year = $this->Cache->getCurrentYear();
-                        $group['playOffTeams'] = $this->PlayOff->getPlayOffWinLose($year);
+                        $group->playOffTeams = $this->PlayOff->getPlayOffWinLose($year);
 
-                        $group['playOffTeams']['all'] = $this->fetchTable('GroupTeams')->find('all', array(
+                        $group->playOffTeams['all'] = $this->fetchTable('GroupTeams')->find('all', array(
                             'contain' => array(
                                 'Groups' => array('fields' => array('year_id', 'day_id')),
                                 'Teams' => array('fields' => array('id', 'name'))
@@ -722,24 +720,5 @@ class MatchesController extends AppController
 
         $this->apiReturn(count($matches));
     }
-
-    private function getDayIdByGroupId(int $group_id): int|bool
-    {
-        $group = $this->fetchTable('Groups')->find()->where(['id' => $group_id])->first();
-        /**
-         * @var Group $group
-         */
-        return $group->get('day_id');
-    }
-
-    private function getYearIdByGroupId(int|bool $group_id): int|bool
-    {
-        $group = $this->fetchTable('Groups')->find()->where(['id' => $group_id])->first();
-        /**
-         * @var Group $group
-         */
-        return $group->get('year_id');
-    }
-
 }
 

@@ -14,9 +14,6 @@ use Cake\ORM\Entity;
  * @property int $goalFactor
  * @property string|null $color
  * @property string|null $icon
- *
- * @property \App\Model\Entity\Match4[] $matches
- * @property \App\Model\Entity\Match4schedulingPattern[] $matchscheduling_pattern
  */
 class Sport extends Entity
 {
@@ -33,7 +30,5 @@ class Sport extends Entity
         'goalFactor' => true,
         'color' => true,
         'icon' => true,
-        'matches' => true,
-        'matchscheduling_pattern' => true,
     ];
 }

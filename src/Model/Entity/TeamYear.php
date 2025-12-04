@@ -19,6 +19,11 @@ use Cake\ORM\Entity;
  *
  * @property \App\Model\Entity\Year $year
  * @property \App\Model\Entity\Team $team
+ *
+ * @property array $infos
+ * @property array $group_team
+ * @property \Cake\I18n\DateTime $date
+ * @property \App\Model\Entity\Group $group
  */
 class TeamYear extends Entity
 {

@@ -20,11 +20,12 @@ use Cake\ORM\Entity;
  * @property int|null $calcPointsPlus
  * @property int|null $calcPointsMinus
  * @property int $canceled
- * @property int|null $prevPlaceNumber
- * @property int|null $prevGroupId
  *
  * @property \App\Model\Entity\Group $group
  * @property \App\Model\Entity\Team $team
+ *
+ * @property int|null $prevPlaceNumber
+ * @property int|null $prevGroupId
  */
 class GroupTeam extends Entity
 {

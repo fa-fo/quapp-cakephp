@@ -9,7 +9,6 @@ use App\Model\Entity\Team;
  * Teams Controller
  *
  * @property \App\Model\Table\TeamsTable $Teams
- * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\SecurityComponent $Security
  */
@@ -157,7 +156,7 @@ class TeamsController extends AppController
     public function getTestTeamNames(): void
     {
         $return['teamNames'] = '';
-        $year = $this->Cache->getCurrentYear();
+        $year = $this->Cache->getCurrentYear()->toArray();
 
         $teams = $this->Teams->find('all', array(
             'conditions' => array('hidden' => 0),

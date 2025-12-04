@@ -40,7 +40,6 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Team $teams2
  * @property \App\Model\Entity\Team $teams3
  * @property \App\Model\Entity\Team|null $teams4
- * @property \App\Model\Entity\Match4eventLog[] $match_event_logs
  */
 class Match4 extends Entity
 {
@@ -74,7 +73,6 @@ class Match4 extends Entity
         'team2' => true,
         'team3' => true,
         'team4' => true,
-        'match_event_logs' => true,
         'isRefereeCanceled' => true,
         'matchStartTime' => true,
         'isResultOk' => true,

@@ -9,8 +9,6 @@ use App\Model\Entity\Round;
  * Rounds Controller
  *
  * @property \App\Model\Table\RoundsTable $Rounds
- * @property \App\Controller\Component\CacheComponent $Cache
- * @property \App\Controller\Component\RoundGetComponent $RoundGet
  */
 class RoundsController extends AppController
 {
@@ -47,25 +45,26 @@ class RoundsController extends AppController
                     'conditions' => $conditionsArray
                 ));
 
-                $r['matchesCount'] = $query1->count();
+                $r->matchesCount = $query1->count();
 
                 $query2 = $this->fetchTable('Matches')->find('all', array(
                     'contain' => array('Groups'),
                     'conditions' => array_merge($conditionsArray, array('resultTrend IS NOT' => null))
                 ));
 
-                $r['matchesConfirmed'] = $query2->count();
+                $r->matchesConfirmed = $query2->count();
 
                 $query3 = $this->fetchTable('Matches')->find('all', array(
                     'contain' => array('Groups'),
                     'conditions' => array_merge($conditionsArray, array('canceled' => 0, 'refereeTeam_id IS' => null, 'OR' => array('refereeName IS' => null, 'refereeName' => '')))
                 ));
 
-                $r['matchesWithoutReferee'] = $query3->count();
+                $r->matchesWithoutReferee = $query3->count();
             }
 
-            $r['timeStart'] = $day . ' ' . $r['timeStartDay' . $day_id]->i18nFormat('HH:mm:ss');
-            unset($r['timeStartDay' . $day_id]); // no need
+            $property = 'timeStartDay' . $day_id;
+            $r->timeStart = $day . ' ' . $r->{$property}->i18nFormat('HH:mm:ss');
+            unset($r->{$property}); // no need
         }
 
         $year['currentRoundId'] = $this->RoundGet->getCurrentRoundId($year_id, $day_id, (int)$offset);

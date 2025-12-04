@@ -105,7 +105,7 @@ class TeamYearsController extends AppController
                 /**
                  * @var Group $group
                  */
-                $group['rounds'] = $this->MatchGet->getMatchesByGroup($group->toArray());
+                $group->rounds = $this->MatchGet->getMatchesByGroup($group->toArray());
             }
 
             $teamYears = $this->TeamYears->find('all', array(
@@ -122,9 +122,9 @@ class TeamYearsController extends AppController
                 $g = $this->GroupGet->getGroupByTeamId($ty->team_id, $settings['currentYear_id'], $settings['currentDay_id']);
                 $gN = $this->GroupGet->getGroupPosNumber($g->id);
 
-                $ty['infos'] = $this->MatchGet->getMatchesByTeam($ty->team_id, $settings['currentYear_id'], $settings['currentDay_id'], 1);
-                $ty['day'] = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
-                $ty['group'] = $groups[$gN];
+                $ty->infos = $this->MatchGet->getMatchesByTeam($ty->team_id, $settings['currentYear_id'], $settings['currentDay_id'], 1);
+                $ty->date = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                $ty->group = $groups[$gN];
             }
 
             $this->viewBuilder()->setTemplatePath('pdf');
@@ -207,46 +207,6 @@ class TeamYearsController extends AppController
         $this->apiReturn($teamYear);
     }
 
-    // deprecated! use instead:  matches/refereeCanceledMatches
-    public function refereeCanceledTeamsMatches(): void
-    {
-        $settings = $this->Cache->getSettings();
-        $return['matches'] = array();
-
-        $teamYears = $this->TeamYears->find('all', array(
-            'conditions' => array('canceled' => 1, 'year_id' => $settings['currentYear_id'])
-        ))->toArray();
-
-        if ($teamYears) {
-            foreach ($teamYears as $ty) {
-                $day_id = $settings['currentDay_id'];
-
-                $conditionsArray = array(
-                    'resultTrend IS' => null,
-                    'canceled' => 0,
-                    'Groups.year_id' => $ty->get('year_id'),
-                    'Groups.day_id' => $day_id,
-                    'OR' => array(
-                        'refereeTeam_id' => $ty->get('team_id'),
-                        'refereeTeam_id IS' => null,
-                    )
-                );
-
-                $matches = $this->MatchGet->getMatches($conditionsArray, 0, 1, 1);
-
-                if (is_array($matches)) {
-                    $return['matches'] = array_merge($return['matches'], $matches);
-                }
-            }
-
-            usort($return['matches'], function ($a, $b) {
-                return $a['matchStartTime'] <=> $b['matchStartTime'];
-            });
-        }
-
-        $this->apiReturn($return);
-    }
-
     public function getEndRanking(string $year_id = '', string $adminView = ''): void
     {
         $settings = $this->Cache->getSettings();
@@ -291,9 +251,12 @@ class TeamYearsController extends AppController
             ))->toArray();
 
             foreach ($teamYears as $ty) {
-                $ty['group_team'] = $this->fetchTable('GroupTeams')->find('all', array(
+                /**
+                 * @var TeamYear $ty
+                 */
+                $ty->group_team = $this->fetchTable('GroupTeams')->find('all', array(
                     'contain' => array('Groups' => array('fields' => array('name', 'year_id', 'day_id'))),
-                    'conditions' => array('team_id' => $ty['team_id'], 'Groups.year_id' => $year['id'], 'Groups.day_id' => $settings['currentDay_id']),
+                    'conditions' => array('team_id' => $ty->team_id, 'Groups.year_id' => $year['id'], 'Groups.day_id' => $settings['currentDay_id']),
                     'order' => array('GroupTeams.id' => 'DESC')
                 ))->first()->toArray();
             }
@@ -548,7 +511,7 @@ class TeamYearsController extends AppController
                     $prevRoundId = $match->round_id;
 
                     $sumPoints += (int)($points * $factor);
-                    $scrLogs[] = $log->datetime . ' -> Runde ' . $match->round_id . ' -> ' . $log->matchevent->code . ' -> ' . $points . ' * ' . $factor . ' = ' . (int)($points * $factor);
+                    $scrLogs[] = $log->datetime->i18nFormat('yyyy-MM-dd HH:mm:ss') . ' -> Runde ' . $match->round_id . ' -> ' . $log->matchevent->code . ' -> ' . $points . ' * ' . $factor . ' = ' . (int)($points * $factor);
                 }
             }
 
