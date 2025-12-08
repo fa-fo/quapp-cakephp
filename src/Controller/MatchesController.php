@@ -390,9 +390,10 @@ class MatchesController extends AppController
                         $newLog->set('matchEvent_id', $this->fetchTable('Matchevents')->find()->where(['code' => 'RESULT_CONFIRM'])->first()->get('id'));
                         $this->fetchTable('MatcheventLogs')->save($newLog);
 
-                        // create timeline image
-                        $this->loadComponent('MatchTimelineImage');
-                        $this->MatchTimelineImage->createMatchTimelineImage($match, $settings['currentYear_id']);
+                        if ($settings['useLiveScouting']) {
+                            $this->loadComponent('MatchTimelineImage');
+                            $this->MatchTimelineImage->createMatchTimelineImage($match, $settings['currentYear_id']);
+                        }
 
                         $return[$c] = $match->toArray();
 

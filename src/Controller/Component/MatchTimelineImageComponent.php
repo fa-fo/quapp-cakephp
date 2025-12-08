@@ -55,8 +55,9 @@ class MatchTimelineImageComponent extends Component
 
         // ball image
         $widthBall = 12;
-        $imgBall = imagecreatefrompng(__DIR__ . '/../../../webroot/img/' . strtolower($match->sport->code) . '.png');
-
+        if ($match->sport->code != '') {
+            $imgBall = imagecreatefrompng(__DIR__ . '/../../../webroot/img/' . strtolower($match->sport->code) . '.png');
+        }
 
         $matchStartTime = false; // temp
         $matchTimeInSeconds = 20 * 60; // temp
