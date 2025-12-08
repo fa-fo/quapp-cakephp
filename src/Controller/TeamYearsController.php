@@ -392,9 +392,11 @@ class TeamYearsController extends AppController
             foreach ($teamYears as $teamYear) {
                 $scrData = $this->getScrData($teamYear, $year_id);
 
-                $teamYear->set('scrPoints', $scrData['scrPoints']);
-                $teamYear->set('scrMatchCount', $scrData['scrMatchCount']);
-                $this->fetchTable('TeamYears')->save($teamYear);
+                if ($scrData) {
+                    $teamYear->set('scrPoints', $scrData['scrPoints']);
+                    $teamYear->set('scrMatchCount', $scrData['scrMatchCount']);
+                    $this->fetchTable('TeamYears')->save($teamYear);
+                }
             }
 
             usort($teamYears, function ($a, $b) {
