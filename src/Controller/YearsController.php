@@ -437,6 +437,7 @@ class YearsController extends AppController
                 }
 
                 Cache::delete('app_settings');
+                Cache::delete('app_year');
 
                 // reset all-time stats
                 $this->Calc->updateCalcTotal($settings['currentYear_id'] - 1);
