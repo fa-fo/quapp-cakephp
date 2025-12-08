@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Setting;
 use Cake\Cache\Cache;
@@ -234,6 +235,7 @@ class YearsController extends AppController
         $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
             'contain' => array(
                 'Groups' => array('fields' => array('year_id', 'day_id')),
+                'Teams'
             ),
             'conditions' => $conditionsArray,
         ))->toArray();
@@ -260,7 +262,10 @@ class YearsController extends AppController
 
         if (is_array($matches)) {
             foreach ($groupTeams as $gt) {
-                if ($gt->canceled == 0) {
+                /**
+                 * @var GroupTeam $gt
+                 */
+                if ($gt->team->hidden == 0) {
                     $sumCalcMatches += $gt->calcCountMatches;
                 }
             }
@@ -278,6 +283,9 @@ class YearsController extends AppController
                     $matches1 = $this->MatchGet->getMatches($conditionsArray, 0, 3, 1); // sortBy 3: get midday matches first
                     if (is_array($matches1)) {
                         foreach ($matches1 as $m1) {
+                            /**
+                             * @var Match4 $m1
+                             */
                             if (!$m1->isRefereeCanceled) {
                                 // check if ref's team is already in play in same round with non-canceled match
                                 $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id'], 'round_id' => $m->round_id, 'Matches.canceled' => 0,
@@ -307,6 +315,9 @@ class YearsController extends AppController
                     $matches1 = $this->MatchGet->getMatches($conditionsArray, 0, 0, 1);
                     if (is_array($matches1)) {
                         foreach ($matches1 as $m1) {
+                            /**
+                             * @var Match4 $m1
+                             */
                             // check if other team is already in play in the same round with non-canceled match
                             $otherTeam = $m1->canceled == 1 ? $m1->team2_id : $m1->team1_id;
                             $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id'], 'round_id' => $m->round_id, 'Matches.canceled' => 0,
