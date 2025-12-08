@@ -501,8 +501,9 @@ class MatchesController extends AppController
                                     'conditions' => array('group_id' => $group->id, 'placeNumber' => $matchscheduling->placenumberTeam2)
                                 ))->first();
 
-                                $groupteam3 = $matchscheduling->placenumberRefereeTeam ? $this->fetchTable('GroupTeams')->find('all', array(
-                                    'conditions' => array('group_id' => $this->GroupGet->getRefereeGroup($group)->id, 'placeNumber' => $matchscheduling->placenumberRefereeTeam)
+                                $refGroup = $this->GroupGet->getRefereeGroup($group);
+                                $groupteam3 = $refGroup && $matchscheduling->placenumberRefereeTeam ? $this->fetchTable('GroupTeams')->find('all', array(
+                                    'conditions' => array('group_id' => $refGroup->id, 'placeNumber' => $matchscheduling->placenumberRefereeTeam)
                                 ))->first() : null;
 
                                 /**
@@ -516,7 +517,7 @@ class MatchesController extends AppController
                                 $match->set('sport_id', $matchscheduling->sport_id);
                                 $match->set('team1_id', $groupteam1->team_id);
                                 $match->set('team2_id', $groupteam2->team_id);
-                                $match->set('refereeTeam_id', $groupteam3 ? $groupteam3->team_id : null);
+                                $match->set('refereeTeam_id', $groupteam3?->team_id);
 
                                 if ($settings['useLiveScouting']) {
                                     $match->set('refereePIN', $this->createUniquePIN($matchscheduling->sport_id, $group->id, $matchscheduling->round_id));
@@ -694,7 +695,7 @@ class MatchesController extends AppController
                     /**
                      * @var Match4 $m
                      */
-                    if ($m->resultTrend === null || $m->resultGoals1 === null || $m->resultGoals2 === null) {
+                    if ($m->resultTrend === null && $m->team1_id > 0 && $m->team2_id > 0) {
                         $sportsFactor = $m->sport->goalFactor;
                         /*
                         $factor1 = ($m->teams1)->calcTotalPointsPerYear ? (int)(($m->teams1)->calcTotalPointsPerYear) / 7 : 1;
@@ -704,8 +705,8 @@ class MatchesController extends AppController
                         $m->set('resultGoals2', (int)round(random_int(0, 44) / $sportsFactor * $factor2) * $sportsFactor);
                         */
 
-                        $m->set('resultGoals1', (int)max((($m->teams1->calcPowerRankingPoints ?? 0) - ($m->teams2->calcPowerRankingPoints ?? 0)) / 2, 0) * $sportsFactor);
-                        $m->set('resultGoals2', (int)max((($m->teams2->calcPowerRankingPoints ?? 0) - ($m->teams1->calcPowerRankingPoints ?? 0)) / 2, 0) * $sportsFactor);
+                        $m->set('resultGoals1', (int)max((($m->teams1->calcPowerRankingPoints ?? 0) - ($m->teams2->calcPowerRankingPoints ?? 0)) / 2, random_int(0, 4)) * $sportsFactor);
+                        $m->set('resultGoals2', (int)max((($m->teams2->calcPowerRankingPoints ?? 0) - ($m->teams1->calcPowerRankingPoints ?? 0)) / 2, random_int(0, 4)) * $sportsFactor);
 
                         $diff = (int)($m->resultGoals1 - $m->resultGoals2);
                         $m->set('resultTrend', $diff > 0 ? 1 : ($diff < 0 ? 2 : 0));
