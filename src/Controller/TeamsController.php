@@ -80,12 +80,13 @@ class TeamsController extends AppController
     public function all(): void
     {
         $settings = $this->Cache->getSettings();
+        $year = $this->Cache->getCurrentYear();
 
-        if ($settings['currentDay_id'] == 2 && $settings['alwaysAutoUpdateResults'] == 1 && $settings['showEndRanking'] == 0) {
+        if ($settings['currentDay_id'] == $year->daysCount && $settings['alwaysAutoUpdateResults'] == 1 && $settings['showEndRanking'] == 0) {
             $teams = null;
             $teams['showRanking'] = 0;
         } else {
-            $conditionsArray = array('Teams.calcTotalRanking IS NOT' => null, 'Teams.calcTotalRankingPoints IS NOT' => null, 'Teams.hidden' => 0, 'Teams.testTeam' => 0);
+            $conditionsArray = array('Teams.calcTotalRanking IS NOT' => null, 'Teams.hidden' => 0, 'Teams.testTeam' => 0);
 
             $teams = $this->Cache->getTeams($conditionsArray, array(), 'app_calc_total');
         }
