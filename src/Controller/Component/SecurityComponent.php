@@ -4,6 +4,7 @@ namespace App\Controller\Component;
 
 use App\Model\Entity\Login;
 use App\Model\Entity\Match4event;
+use Cake\Cache\Cache;
 use Cake\Controller\Component;
 use Cake\Datasource\FactoryLocator;
 
@@ -99,4 +100,26 @@ class SecurityComponent extends Component
         return true;
     }
 
+    public function setSetting(string $name = '', int $value = -1): bool
+    {
+        $return = false;
+        $postData = $this->getController()->getRequest()->getData();
+        $value = $postData['value'] ?? $value;
+
+        if ($name != '' && $value > -1 && isset($postData['password'])
+            && $this->checkUsernamePassword('admin', $postData['password'])) {
+
+            $setting = FactoryLocator::get('Table')->get('Settings')->find('all')->where(['name' => $name])->first();
+
+            if ($setting) {
+                $return = true;
+                $setting->set('value', (int)$value);
+                FactoryLocator::get('Table')->get('Settings')->save($setting);
+
+                Cache::delete('app_settings');
+            }
+        }
+
+        return $return;
+    }
 }

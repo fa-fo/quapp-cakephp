@@ -67,74 +67,37 @@ class YearsController extends AppController
 
     public function setCurrentDayIncrement(): void
     {
+        $settings = $this->Cache->getSettings();
         $year = $this->Cache->getCurrentYear();
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->Cache->getSettings();
 
             if ($settings['currentDay_id'] < $year->daysCount) {
-                $currentDay_id = $this->fetchTable('Settings')->find('all')->where(['name' => 'currentDay_id'])->first();
-                /**
-                 * @var Setting $currentDay_id
-                 */
-                $currentDay_id->set('value', $settings['currentDay_id'] + 1);
-                $this->fetchTable('Settings')->save($currentDay_id);
+                $this->Security->setSetting('currentDay_id', $settings['currentDay_id'] + 1);
+                $this->Security->setSetting('alwaysAutoUpdateResults', 0);
 
-                $alwaysAutoUpdateResults = $this->fetchTable('Settings')->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();
-                /**
-                 * @var Setting $alwaysAutoUpdateResults
-                 */
-                $alwaysAutoUpdateResults->set('value', 0);
-                $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
-
-                Cache::delete('app_settings');
+                $settings = $this->Cache->getSettings();
             }
         }
 
-        $this->apiReturn($year);
+        $this->apiReturn($settings);
     }
 
     public function setAlwaysAutoUpdateResults(): void
     {
-        $postData = $this->request->getData();
-        $alwaysAutoUpdateResults = false;
+        $return = $this->Security->setSetting('alwaysAutoUpdateResults', 1);
+        $this->Calc->getCalcRanking();
 
-        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
-            $alwaysAutoUpdateResults = $this->fetchTable('Settings')->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();
-            /**
-             * @var Setting $alwaysAutoUpdateResults
-             */
-            $alwaysAutoUpdateResults->set('value', 1);
-            $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
-
-            Cache::delete('app_settings');
-
-            $this->Calc->getCalcRanking();
-        }
-
-        $this->apiReturn($alwaysAutoUpdateResults);
+        $this->apiReturn($return);
     }
 
     public function showEndRanking(string $show = ''): void
     {
-        $postData = $this->request->getData();
-        $showEndRanking = false;
+        $return = $this->Security->setSetting('showEndRanking', (int)$show);
+        $this->Calc->getCalcRanking();
 
-        if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
-            $showEndRanking = $this->fetchTable('Settings')->find('all')->where(['name' => 'showEndRanking'])->first();
-            /**
-             * @var Setting $showEndRanking
-             */
-            $showEndRanking->set('value', (int)$show);
-            $this->fetchTable('Settings')->save($showEndRanking);
-
-            Cache::delete('app_settings');
-
-            $this->Calc->getCalcRanking();
-        }
-
-        $this->apiReturn($showEndRanking);
+        $this->apiReturn($return);
     }
 
     public function reCalcRanking(string $team1_id = '', string $team2_id = ''): void
@@ -170,37 +133,14 @@ class YearsController extends AppController
                 $newYear->set('teamsCount', $postData['teamsCount']);
                 $this->Years->save($newYear);
 
-                $currentYear_id = $this->fetchTable('Settings')->find('all')->where(['name' => 'currentYear_id'])->first();
-                /**
-                 * @var Setting $currentYear_id
-                 */
-                $currentYear_id->set('value', $newYear->id);
-                $this->fetchTable('Settings')->save($currentYear_id);
-
-                $currentDay_id = $this->fetchTable('Settings')->find('all')->where(['name' => 'currentDay_id'])->first();
-                /**
-                 * @var Setting $currentDay_id
-                 */
-                $currentDay_id->set('value', 1);
-                $this->fetchTable('Settings')->save($currentDay_id);
+                $this->Security->setSetting('currentYear_id', $newYear->id);
+                $this->Security->setSetting('currentDay_id', 1);
+                $this->Security->setSetting('showEndRanking', 0);
 
                 if ($settings['usePlayOff'] == 0) {
-                    $alwaysAutoUpdateResults = $this->fetchTable('Settings')->find('all')->where(['name' => 'alwaysAutoUpdateResults'])->first();
-                    /**
-                     * @var Setting $alwaysAutoUpdateResults
-                     */
-                    $alwaysAutoUpdateResults->set('value', 0);
-                    $this->fetchTable('Settings')->save($alwaysAutoUpdateResults);
+                    $this->Security->setSetting('alwaysAutoUpdateResults', 0);
                 }
 
-                $showEndRanking = $this->fetchTable('Settings')->find('all')->where(['name' => 'showEndRanking'])->first();
-                /**
-                 * @var Setting $showEndRanking
-                 */
-                $showEndRanking->set('value', 0);
-                $this->fetchTable('Settings')->save($showEndRanking);
-
-                Cache::delete('app_settings');
                 Cache::delete('app_year');
             }
         }

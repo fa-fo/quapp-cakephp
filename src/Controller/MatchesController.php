@@ -400,6 +400,11 @@ class MatchesController extends AppController
                         if ($match->round->autoUpdateResults) {
                             $calcRanking = $this->Calc->getCalcRanking($match->team1_id, $match->team2_id, $c == $count);
                             $return['calcRanking'][$c] = $calcRanking;
+
+                            if ($match->isPlayOff % 10 == 2) { // Finale
+                                $return['calcTotal'][$c] = $this->Calc->updateCalcTotal($settings['currentYear_id']);
+                                $return['showEndRanking'][$c] = $this->Security->setSetting('showEndRanking', 1);
+                            }
                         }
                     }
                 }

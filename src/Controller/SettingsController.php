@@ -13,21 +13,10 @@ use Cake\Cache\Cache;
  */
 class SettingsController extends AppController
 {
-    public function setSetting(string $name = ''): void
+    public function adminSet(string $name = ''): void
     {
-        $setting = false;
-        $postData = $this->request->getData();
-        $value = $postData['value'] ?? '';
+        $return = $this->Security->setSetting($name);
 
-        if ($name != '' && $value != '' && isset($postData['password'])
-            && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
-            $setting = $this->Settings->find('all')->where(['name' => $name])->first();
-            $setting->set('value', $value);
-            $this->Settings->save($setting);
-
-            Cache::delete('app_settings');
-        }
-
-        $this->apiReturn($setting);
+        $this->apiReturn($return);
     }
 }
