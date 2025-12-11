@@ -401,9 +401,13 @@ class MatchesController extends AppController
                             $calcRanking = $this->Calc->getCalcRanking($match->team1_id, $match->team2_id, $c == $count);
                             $return['calcRanking'][$c] = $calcRanking;
 
-                            if ($match->isPlayOff % 10 == 2) { // Finale
-                                $return['calcTotal'][$c] = $this->Calc->updateCalcTotal($settings['currentYear_id']);
-                                $return['showEndRanking'][$c] = $this->Security->setSetting('showEndRanking', 1);
+                            if ($match->isPlayOff && $match->isPlayOff % 10 < 4) {
+                                $matches2PlayOff = $this->fetchTable('Matches')->find('all', conditions: ['isPlayOff >' => (int)($settings['currentYear_id'] . '0'), 'resultTrend IS' => null])->all();
+
+                                if ($matches2PlayOff->count() == 0) {
+                                    $return['setEndRankingAndCalcTotal'][$c] = $this->Calc->setCalcEndRanking();
+                                    $return['showEndRanking'][$c] = $this->Security->setSetting('showEndRanking', 1);
+                                }
                             }
                         }
                     }

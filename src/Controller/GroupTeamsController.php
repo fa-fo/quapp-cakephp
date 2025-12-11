@@ -232,7 +232,7 @@ class GroupTeamsController extends AppController
 
             if (!$existingMatches) {
                 $groups = $this->fetchTable('Groups')->find('all', array(
-                    'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
+                    'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id'], 'Groups.teamsCount >' => 4),
                     'order' => array('id' => 'ASC')
                 ));
 
@@ -396,7 +396,7 @@ class GroupTeamsController extends AppController
 
             if (!$existingMatches) {
                 $groups = $this->fetchTable('Groups')->find('all', array(
-                    'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
+                    'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id'], 'Groups.teamsCount >' => 4),
                     'order' => array('id' => 'ASC')
                 ));
 

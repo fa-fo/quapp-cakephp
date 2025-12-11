@@ -279,65 +279,14 @@ class TeamYearsController extends AppController
 
     public function setEndRanking(): void
     {
+        $return = 0;
         $postData = $this->request->getData();
-        $rowsCount = 0;
 
         if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->Cache->getSettings();
-            $year = $this->Cache->getCurrentYear();
-
-            if ($settings['currentDay_id'] === $year->daysCount) {
-                $teamYears = $this->TeamYears->find('all', array(
-                    'conditions' => array('year_id' => $year->id)
-                ));
-
-                if ($teamYears->count() > 0) {
-                    foreach ($teamYears as $ty) { // set null because of unique values
-                        /**
-                         * @var TeamYear $ty
-                         */
-                        $ty->set('endRanking', null);
-                        $this->TeamYears->save($ty);
-                    }
-
-                    $poArray = $settings['usePlayOff'] > 0 ? $this->PlayOff->getPlayOffRanking($year) : array();
-
-                    $gtArray = $this->fetchTable('GroupTeams')->find('all', array(
-                        'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
-                        'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id'], 'team_id NOT IN' => $poArray ?: array(0)),
-                        'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcRanking' => 'ASC')
-                    ))->toArray();
-                    foreach ($gtArray as $k => $v) {
-                        $gtArray[$k] = $v['team_id'];
-                    }
-
-                    foreach ($teamYears as $ty) {
-                        /**
-                         * @var TeamYear $ty
-                         */
-                        $key1 = array_search($ty->team_id, $poArray) ?: 0;
-                        $key2 = array_search($ty->team_id, $gtArray) ?: 0;
-
-                        $endRanking = $key1 ?: (count($poArray) + (int)$key2 + 1);
-
-                        /*  was:
-                            $groupCountTeams = ($groupteam->group)->teamsCount;
-                            $endRanking = $this->GroupGet->getGroupPosNumber($groupteam->group_id) * $groupCountTeams + $groupteam->calcRanking;
-                        */
-
-                        if ($endRanking) {
-                            $ty->set('endRanking', $endRanking);
-                            $this->TeamYears->save($ty);
-                        }
-                    }
-                }
-            }
-
-            // update all-time ranking
-            $rowsCount = $this->Calc->updateCalcTotal($settings['currentYear_id']);
+            $return = $this->Calc->setCalcEndRanking();
         }
 
-        $this->apiReturn($rowsCount);
+        $this->apiReturn($return);
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Controller\Component;
 use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4;
 use App\Model\Entity\Team;
+use App\Model\Entity\TeamYear;
 use App\Model\Entity\Year;
 use Cake\Cache\Cache;
 use Cake\Controller\Component;
@@ -14,10 +15,11 @@ use Cake\Datasource\FactoryLocator;
 /**
  * @property CacheComponent $Cache
  * @property MatchGetComponent $MatchGet
+ * @property PlayOffComponent $PlayOff
  */
 class CalcComponent extends Component
 {
-    protected array $components = ['Cache', 'MatchGet'];
+    protected array $components = ['Cache', 'MatchGet', 'PlayOff'];
 
     public function getCalcRanking(int $team1_id = 0, int $team2_id = 0, bool $doSetRanking = true): array
     {
@@ -96,13 +98,13 @@ class CalcComponent extends Component
         }
 
         if ($doSetRanking) {
-            $this->setRanking($year);
+            $this->setCalcRanking($year);
         }
 
         return array('countMatches' => $countMatches, 'countGroupTeams' => $groupTeams->count(), 'doSetRanking' => $doSetRanking);
     }
 
-    private function setRanking(Year $year): void
+    private function setCalcRanking(Year $year): void
     {
         $settings = $this->Cache->getSettings();
         $groupTeams = FactoryLocator::get('Table')->get('GroupTeams')->find('all', array(
@@ -145,6 +147,62 @@ class CalcComponent extends Component
         }
 
         return $gmp;
+    }
+
+    public function setCalcEndRanking(): int
+    {
+        $settings = $this->Cache->getSettings();
+        $year = $this->Cache->getCurrentYear();
+
+        if ($settings['currentDay_id'] === $year->daysCount) {
+            $teamYears = FactoryLocator::get('Table')->get('TeamYears')->find('all', array(
+                'conditions' => array('year_id' => $year->id)
+            ))->all();
+
+            if ($teamYears->count() > 0) {
+                foreach ($teamYears as $ty) { // set null because of unique values
+                    /**
+                     * @var TeamYear $ty
+                     */
+                    $ty->set('endRanking', null);
+                    FactoryLocator::get('Table')->get('TeamYears')->save($ty);
+                }
+
+                $poArray = $settings['usePlayOff'] > 0 ? $this->PlayOff->getPlayOffRanking($year) : array();
+
+                $gtArray = FactoryLocator::get('Table')->get('GroupTeams')->find('all', array(
+                    'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
+                    'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id'], 'team_id NOT IN' => $poArray ?: array(0)),
+                    'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcRanking' => 'ASC')
+                ))->toArray();
+                foreach ($gtArray as $k => $v) {
+                    $gtArray[$k] = $v['team_id'];
+                }
+
+                foreach ($teamYears as $ty) {
+                    /**
+                     * @var TeamYear $ty
+                     */
+                    $key1 = array_search($ty->team_id, $poArray) ?: 0;
+                    $key2 = array_search($ty->team_id, $gtArray) ?: 0;
+
+                    $endRanking = $key1 ?: (count($poArray) + (int)$key2 + 1);
+
+                    /*  was:
+                        $groupCountTeams = ($groupteam->group)->teamsCount;
+                        $endRanking = $this->GroupGet->getGroupPosNumber($groupteam->group_id) * $groupCountTeams + $groupteam->calcRanking;
+                    */
+
+                    if ($endRanking) {
+                        $ty->set('endRanking', $endRanking);
+                        FactoryLocator::get('Table')->get('TeamYears')->save($ty);
+                    }
+                }
+            }
+        }
+
+        // update all-time ranking
+        return $this->updateCalcTotal($settings['currentYear_id']);
     }
 
     public function updateCalcTotal(int $yearId): int
