@@ -5,7 +5,6 @@ namespace App\Controller;
 
 use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4;
-use App\Model\Entity\Setting;
 use Cake\Cache\Cache;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\DateTime;
@@ -34,19 +33,6 @@ class YearsController extends AppController
 
         // todo: after V2.0 complete rollout: simplify: $this->apiReturn(array('isStart' => '1'));  // SIC!
         // todo: deprecated: after V2.0.1 complete rollout: function not needed anymore
-    }
-
-    public function updateTeamsCount(): void
-    {
-        $conn = ConnectionManager::get('default');
-        /**
-         * @var \Cake\Database\Connection $conn
-         */
-        $stmt = $conn->execute(file_get_contents(__DIR__ . "/sql/update_years_teamsCount.sql"));
-
-        Cache::delete('app_year');
-
-        $this->apiReturn($stmt->rowCount());
     }
 
     public function all(): void
