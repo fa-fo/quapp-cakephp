@@ -261,14 +261,6 @@ class MatchGetComponent extends Component
 
     private function getCalcFromLogs(array $logs): array
     {
-        /**
-         * @var array{
-         *   maxOffset: int,
-         *   minOffset: int,
-         *   photos: array<int, array<string, int>>,
-         *   score: array<int, int>
-         * } $calc
-         */
         $calc = array();
         $calc['maxOffset'] = 0;
         $calc['minOffset'] = 9999;
@@ -281,7 +273,7 @@ class MatchGetComponent extends Component
         $matcheventFoulPersonal = false;
 
         foreach ($logs as $l) {
-            if (isset($l['matchevent'])) {
+            if (isset($l['matchevent']) && is_array($calc['score']) && is_array($calc['photos'])) {
                 $code = (string)($l['matchevent']->code);
                 $teamId = (int)($l['team_id'] ?? 0);
 
@@ -293,55 +285,58 @@ class MatchGetComponent extends Component
                         $calc['foulOutLogIds'] ??= array();
                         $calc['doubleYellowLogIds'] ??= array();
                         $calc[$code] ??= array();
-                        $calc[$code][$teamId] ??= array();
 
-                        $code .= '_V2';
-                        $calc[$code][$teamId][$l['playerNumber']]['count'] ??= 0;
-                        $calc[$code]['name'] = $l['matchevent']->name;
+                        if (is_array($calc[$code])) {
+                            $calc[$code][$teamId] ??= array();
 
-                        if ($l['matchevent']->showOnSportsOnly == 1) { // BB only
-                            $calc['FOUL_PERSONAL_V2'][$teamId][$l['playerNumber']]['count'] ??= 0; // needed for later increment
+                            $code .= '_V2';
+                            $calc[$code][$teamId][$l['playerNumber']]['count'] ??= 0;
+                            $calc[$code]['name'] = $l['matchevent']->name;
 
-                            if (str_starts_with($code, 'FOUL_PERSONAL')) {
-                                $matcheventFoulPersonal = $l['matchevent'];
-                            }
-                            if (str_starts_with($code, 'FOUL_TECH_FLAGR')) { // add tech. foul to pers. foul count
-                                if ($calc['FOUL_PERSONAL_V2'][$teamId][$l['playerNumber']]['count'] >= 0) { // add only if not foul-out yet
-                                    $calc['FOUL_PERSONAL_V2'][$teamId][$l['playerNumber']]['count']++;
+                            if ($l['matchevent']->showOnSportsOnly == 1) { // BB only
+                                $calc['FOUL_PERSONAL_V2'][$teamId][$l['playerNumber']]['count'] ??= 0; // needed for later increment
+
+                                if (str_starts_with($code, 'FOUL_PERSONAL')) {
+                                    $matcheventFoulPersonal = $l['matchevent'];
+                                }
+                                if (str_starts_with($code, 'FOUL_TECH_FLAGR')) { // add tech. foul to pers. foul count
+                                    if ($calc['FOUL_PERSONAL_V2'][$teamId][$l['playerNumber']]['count'] >= 0) { // add only if not foul-out yet
+                                        $calc['FOUL_PERSONAL_V2'][$teamId][$l['playerNumber']]['count']++;
+                                    }
                                 }
                             }
-                        }
 
-                        if ($calc[$code][$teamId][$l['playerNumber']]['count'] >= 0) { // add only if not foul-out yet
-                            $calc[$code][$teamId][$l['playerNumber']]['count']++;
-                        }
+                            if ($calc[$code][$teamId][$l['playerNumber']]['count'] >= 0) { // add only if not foul-out yet
+                                $calc[$code][$teamId][$l['playerNumber']]['count']++;
+                            }
 
-                        if ($l['matchevent']->playerFouledOutAfter
-                            && $calc[$code][$teamId][$l['playerNumber']]['count'] >= $l['matchevent']->playerFouledOutAfter) {
-                            // set negative value as marker to foul-out players
-                            $calc[$code][$teamId][$l['playerNumber']]['count'] *= -1;
-                            $calc['foulOutLogIds'][] = $l['id'];
-                        }
-
-                        if ($l['matchevent']->showOnSportsOnly == 1) { // BB only
-                            // needed for case PF+PF+TF: set negative value as marker to foul-out players
-                            if ($matcheventFoulPersonal
-                                && $calc['FOUL_PERSONAL_V2'][$teamId][$l['playerNumber']]['count'] >= $matcheventFoulPersonal->playerFouledOutAfter) {
-                                $calc['FOUL_PERSONAL_V2'][$teamId][$l['playerNumber']]['count'] *= -1;
+                            if ($l['matchevent']->playerFouledOutAfter
+                                && $calc[$code][$teamId][$l['playerNumber']]['count'] >= $l['matchevent']->playerFouledOutAfter) {
+                                // set negative value as marker to foul-out players
+                                $calc[$code][$teamId][$l['playerNumber']]['count'] *= -1;
                                 $calc['foulOutLogIds'][] = $l['id'];
                             }
-                        }
 
-                        if (str_starts_with($code, 'FOUL_CARD_YELLOW') && $calc[$code][$teamId][$l['playerNumber']]['count'] > 1) {
-                            $calc['doubleYellowLogIds'][] = $l['id'];
-                        }
+                            if ($l['matchevent']->showOnSportsOnly == 1) { // BB only
+                                // needed for case PF+PF+TF: set negative value as marker to foul-out players
+                                if ($matcheventFoulPersonal
+                                    && $calc['FOUL_PERSONAL_V2'][$teamId][$l['playerNumber']]['count'] >= $matcheventFoulPersonal->playerFouledOutAfter) {
+                                    $calc['FOUL_PERSONAL_V2'][$teamId][$l['playerNumber']]['count'] *= -1;
+                                    $calc['foulOutLogIds'][] = $l['id'];
+                                }
+                            }
 
-                        if ($l['matchevent']->playerFoulSuspMinutes) {  // Fouls with suspension
-                            $rtime = DateTime::createFromFormat('Y-m-d H:i:s', $l['datetimeSent']->i18nFormat('yyyy-MM-dd HH:mm:ss'));
-                            $rtime = $rtime->addMinutes($l['matchevent']->playerFoulSuspMinutes);
+                            if (str_starts_with($code, 'FOUL_CARD_YELLOW') && $calc[$code][$teamId][$l['playerNumber']]['count'] > 1) {
+                                $calc['doubleYellowLogIds'][] = $l['id'];
+                            }
 
-                            if ($rtime > DateTime::now()) {
-                                $calc[$code][$teamId][$l['playerNumber']]['reEntryTime'][$l['id']] = $rtime->diffInSeconds(DateTime::now());
+                            if ($l['matchevent']->playerFoulSuspMinutes) {  // Fouls with suspension
+                                $rtime = DateTime::createFromFormat('Y-m-d H:i:s', $l['datetimeSent']->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                                $rtime = $rtime->addMinutes($l['matchevent']->playerFoulSuspMinutes);
+
+                                if ($rtime > DateTime::now()) {
+                                    $calc[$code][$teamId][$l['playerNumber']]['reEntryTime'][$l['id']] = $rtime->diffInSeconds(DateTime::now());
+                                }
                             }
                         }
                     }
