@@ -12,13 +12,15 @@ class CacheComponent extends Component
     public function getSettings(): array
     {
         return Cache::remember('app_settings', function () {
-
-
             $settings = FactoryLocator::get('Table')->get('Settings')->find('list', [
                 'keyField' => 'name', 'valueField' => 'value'
             ])->toArray();
 
             $settings['roundsCount'] = FactoryLocator::get('Table')->get('Rounds')->find('all')->count();
+
+            $settings['groupsCount'] = FactoryLocator::get('Table')->get('Groups')->find('all', array(
+                'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'name !=' => 'Endrunde'),
+            ))->count();
 
             return $settings;
         });
