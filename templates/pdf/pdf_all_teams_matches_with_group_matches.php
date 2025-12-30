@@ -78,33 +78,36 @@ try {
                     . '<span class="t">' . ($round->matches[0]->matchStartTime ? DateTime::createFromFormat('Y-m-d H:i:s', $round->matches[0]->matchStartTime)->i18nFormat('HH:mm') : '') . 'h:</span>'
                     . '<br/>Runde ' . $round->id . '</td>';
 
-                foreach ($round->matches as $match) {
-                    /**
-                     * @var Match4 $match
-                     */
+                for ($sportId = 1; $sportId <= 4; $sportId++) {
                     $html .= '<td class="r" width="200">';
+                    $match = getSportsMatch($round->matches, $sportId);
 
-                    $html .= '<table border="0" cellspacing="0" cellpadding="0" width="100%">';
-                    $html .= '<tr>';
-                    $html .= '<td class="m">';
+                    if ($match) {
+                        /**
+                         * @var Match4 $match
+                         */
+                        $html .= '<table border="0" cellspacing="0" cellpadding="0" width="100%">';
+                        $html .= '<tr>';
+                        $html .= '<td class="m">';
 
-                    $html .= '<table border="0" cellspacing="0" cellpadding="2" width="100%">';
-                    $html .= '<tr>';
-                    $html .= '<td>' . ellipsis($match->teams1->name, 21) . '</td>';
-                    $html .= '<td class="g" width="10">' . $match->resultGoals1 . '&nbsp;</td>';
-                    $html .= '</tr>';
-                    $html .= '<tr>';
-                    $html .= '<td>' . ellipsis($match->teams2->name, 21) . '</td>';
-                    $html .= '<td class="g">' . $match->resultGoals2 . '&nbsp;</td>';
-                    $html .= '</tr>';
-                    $html .= '</table>';
+                        $html .= '<table border="0" cellspacing="0" cellpadding="2" width="100%">';
+                        $html .= '<tr>';
+                        $html .= '<td>' . ellipsis($match->teams1->name, 21) . '</td>';
+                        $html .= '<td class="g" width="10">' . $match->resultGoals1 . '&nbsp;</td>';
+                        $html .= '</tr>';
+                        $html .= '<tr>';
+                        $html .= '<td>' . ellipsis($match->teams2->name, 21) . '</td>';
+                        $html .= '<td class="g">' . $match->resultGoals2 . '&nbsp;</td>';
+                        $html .= '</tr>';
+                        $html .= '</table>';
 
-                    $html .= '</td>';
-                    $html .= '</tr>';
-                    $html .= '<tr>';
-                    $html .= '<td class="sr">' . ellipsis('SR: ' . ($match->teams3->name ?? ''), 26) . '</td>';
-                    $html .= '</tr>';
-                    $html .= '</table>';
+                        $html .= '</td>';
+                        $html .= '</tr>';
+                        $html .= '<tr>';
+                        $html .= '<td class="sr">' . ellipsis('SR: ' . ($match->teams3->name ?? ''), 26) . '</td>';
+                        $html .= '</tr>';
+                        $html .= '</table>';
+                    }
 
                     $html .= '</td>';
                 }
