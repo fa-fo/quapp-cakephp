@@ -15,6 +15,7 @@ try {
     $teamYears = $teamYears ?? array();
     $year = $year ?? array();
     $scrRankingTeams = $scrRankingTeams ?? array();
+    $settings = $settings ?? array();
 
     $fontSize = 14;
     $padding = 4;
@@ -28,7 +29,7 @@ try {
         p {margin: 0; padding: 0; font-size: 10px}
         </style>';
 
-    if ($year['teamsCount'] > 24) {
+    if ($settings['groupsCount'] > 1) {
         $newPageArray = array(0, $year['teamsCount'] / 2);
         $endPageArray = array($year['teamsCount'] / 2, $year['teamsCount']);
         $breakArray = array($year['teamsCount'] / 4, $year['teamsCount'] / 4 * 3);
@@ -76,7 +77,7 @@ try {
             $html .= '<p>&nbsp;</p>';
         }
         if (in_array($c, $newTableArray)) {
-            if ($year['teamsCount'] > 24) {
+            if ($settings['groupsCount'] > 1) {
                 $html .= '<p>Gruppe ' . $alphabet[(int)(($year['teamsCount'] - $c - 1) / 16)] . ':</p>';
             }
             $html .= '<table border="0"  cellspacing="0" cellpadding="2" align="center" width="100%">';

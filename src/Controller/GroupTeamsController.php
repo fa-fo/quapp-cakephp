@@ -94,7 +94,7 @@ class GroupTeamsController extends AppController
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('groups', $groups);
-            $this->viewBuilder()->setVar('year', $year);
+            $this->viewBuilder()->setVar('settings', $settings);
 
             $this->pdfReturn();
         } else {

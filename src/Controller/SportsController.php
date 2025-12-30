@@ -75,7 +75,6 @@ class SportsController extends AppController
 
         if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
-            $year = $this->Cache->getCurrentYear()->toArray();
 
             $sports = $this->Sports->find('all', array(
                 'conditions' => array('name !=' => 'Multi'),
@@ -103,7 +102,7 @@ class SportsController extends AppController
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('sports', $sports);
-            $this->viewBuilder()->setVar('year', $year);
+            $this->viewBuilder()->setVar('settings', $settings);
 
             $this->pdfReturn();
         } else {

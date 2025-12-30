@@ -9,6 +9,7 @@ $mpdf = new \Mpdf\Mpdf();
 
 try {
     $p = 0;
+    $settings = $settings ?? array();
     $sports = $sports ?? array();
     $year = $year ?? array();
     $fontSize = 14;
@@ -30,7 +31,7 @@ try {
 
             $html .= '<h1>'
                 . $fields['matches'][0]->sport->code
-                . ($year['teamsCount'] > 24 ? ' ' . $fields['matches'][0]->group_name . ' ' : '')
+                . ($settings['groupsCount'] > 1 ? ' ' . $fields['matches'][0]->group_name . ' ' : '')
                 . '-Feldspielplan am  '
                 . ($fields['matches'][0]->matchStartTime ? DateTime::createFromFormat('Y-m-d H:i:s', $fields['matches'][0]->matchStartTime)->i18nFormat('d.MM.Y') : '') . '</h1>';
 

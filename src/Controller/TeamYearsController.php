@@ -265,6 +265,7 @@ class TeamYearsController extends AppController
 
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
+            $this->viewBuilder()->setVar('settings', $settings);
             $this->viewBuilder()->setVar('teamYears', $teamYears);
             $this->viewBuilder()->setVar('year', $year);
 
