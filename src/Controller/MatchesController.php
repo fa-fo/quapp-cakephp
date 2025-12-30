@@ -94,6 +94,7 @@ class MatchesController extends AppController
                 'order' => array('name' => 'ASC')
             ));
 
+            $sports = $this->fetchTable('Sports')->find('all', array('conditions' => array('name !=' => 'Multi'), 'order' => array('id' => 'ASC')))->all();
             $year = $this->Cache->getCurrentYear()->toArray();
             $date = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
 
@@ -108,7 +109,8 @@ class MatchesController extends AppController
             $this->viewBuilder()->setTemplatePath('pdf');
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('groups', $groups);
-            $this->viewBuilder()->setVar('year', $year);
+            $this->viewBuilder()->setVar('settings', $settings);
+            $this->viewBuilder()->setVar('sports', $sports);
 
             $this->pdfReturn();
         } else {

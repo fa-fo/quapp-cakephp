@@ -94,6 +94,7 @@ class TeamYearsController extends AppController
         if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
             $year = $this->Cache->getCurrentYear()->toArray();
+            $sports = $this->fetchTable('Sports')->find('all', array('conditions' => array('name !=' => 'Multi'), 'order' => array('id' => 'ASC')))->all();
 
             $groups = $this->fetchTable('Groups')->find('all', array(
                 'fields' => array('id', 'name', 'year_id', 'day_id'),
@@ -131,6 +132,7 @@ class TeamYearsController extends AppController
             $this->viewBuilder()->enableAutoLayout(false);
             $this->viewBuilder()->setVar('teamYears', $teamYears);
             $this->viewBuilder()->setVar('settings', $settings);
+            $this->viewBuilder()->setVar('sports', $sports);
 
             $this->pdfReturn();
         } else {

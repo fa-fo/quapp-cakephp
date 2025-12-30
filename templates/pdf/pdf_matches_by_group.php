@@ -13,7 +13,8 @@ $mpdf = new \Mpdf\Mpdf();
 try {
     $p = 0;
     $groups = $groups ?? array();
-    $year = $year ?? array();
+    $settings = $settings ?? array();
+    $sports = $sports ?? array();
 
     foreach ($groups as $group) {
         /**
@@ -45,16 +46,14 @@ try {
                     if ($round->id != 1) {
                         $mpdf->AddPage('L');
                     }
-                    $html .= '<h2>Spielplan ' . ($year['teamsCount'] > 24 ? 'Gruppe ' . $group->name : '') . ' <span>(' . $group->date->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
+                    $html .= '<h2>Spielplan ' . ($settings['groupsCount'] > 1 ? 'Gruppe ' . $group->name : '') . ' <span>(' . $group->date->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
                     $html .= '<table border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">';
                     $html .= '<tr>';
                     $html .= '<th>&nbsp;</th>';
 
-                    // todo: make sports dynamic:
-                    $html .= '<th><img src="img/bb.png" width="15">Basketball</th>';
-                    $html .= '<th><img src="img/fb.png" width="15">Fußball</th>';
-                    $html .= '<th><img src="img/hb.png" width="15">Handball</th>';
-                    $html .= '<th><img src="img/vb.png" width="15">Volleyball</th>';
+                    foreach ($sports as $sport) {
+                        $html .= '<th><img src="img/' . strtolower($sport->code) . '.png" width="15">' . $sport->name . '</th>';
+                    }
                     $html .= '</tr>';
                 }
                 $html .= '<tr>';
@@ -62,7 +61,7 @@ try {
                     . '<span class="t">' . ($round->matches[0]->matchStartTime ? DateTime::createFromFormat('Y-m-d H:i:s', $round->matches[0]->matchStartTime)->i18nFormat('HH:mm') : '') . 'h:</span>'
                     . '<br/>Runde ' . $round->id . '</td>';
 
-                for ($sportId = 1; $sportId <= 4; $sportId++) {
+                for ($sportId = 1; $sportId <= count($sports); $sportId++) {
                     $html .= '<td class="r" width="200">';
                     $match = getSportsMatch($round->matches, $sportId);
 

@@ -15,8 +15,9 @@ $mpdf = new \Mpdf\Mpdf();
 try {
     $mpdf->showImageErrors = true;
     $p = 0;
-    $teamYears = $teamYears ?? array();
     $settings = $settings ?? array();
+    $sports = $sports ?? array();
+    $teamYears = $teamYears ?? array();
 
     foreach ($teamYears as $ty) {
         /**
@@ -55,7 +56,7 @@ try {
 
         $mpdf->AddPage();
 
-        $html = '<h2>Spielplan Gruppe ' . $ty->group->name . ' <span>(' . $ty->date->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
+        $html = '<h2>Spielplan ' . ($settings['groupsCount'] > 1 ? 'Gruppe ' . $ty->group->name : '') . ' <span>(' . $ty->date->i18nFormat('EEEE, dd.MM.yyyy') . ')</span></h2>';
         $mpdf->WriteHTML($html);
 
         foreach ($ty->group->rounds as $round) {
@@ -67,10 +68,9 @@ try {
                     $html = '<table class="group" border="0"  cellspacing="0" cellpadding="2" align="left" width="100%">';
                     $html .= '<tr>';
                     $html .= '<th>&nbsp;</th>';
-                    $html .= '<th><img src="img/bb.png" width="15">Basketball</th>';
-                    $html .= '<th><img src="img/fb.png" width="15">Fußball</th>';
-                    $html .= '<th><img src="img/hb.png" width="15">Handball</th>';
-                    $html .= '<th><img src="img/vb.png" width="15">Volleyball</th>';
+                    foreach ($sports as $sport) {
+                        $html .= '<th><img src="img/' . strtolower($sport->code) . '.png" width="15">' . $sport->name . '</th>';
+                    }
                     $html .= '</tr>';
                 }
                 $html .= '<tr>';
@@ -78,7 +78,7 @@ try {
                     . '<span class="t">' . ($round->matches[0]->matchStartTime ? DateTime::createFromFormat('Y-m-d H:i:s', $round->matches[0]->matchStartTime)->i18nFormat('HH:mm') : '') . 'h:</span>'
                     . '<br/>Runde ' . $round->id . '</td>';
 
-                for ($sportId = 1; $sportId <= 4; $sportId++) {
+                for ($sportId = 1; $sportId <= count($sports); $sportId++) {
                     $html .= '<td class="r" width="200">';
                     $match = getSportsMatch($round->matches, $sportId);
 
@@ -119,8 +119,13 @@ try {
                         $html .= '<br /><br />';
                     }
                     $mpdf->WriteHTML($html);
+                    $html = '';
                 }
             }
+        }
+        if ($html != '') {
+            $html .= '</table>';
+            $mpdf->WriteHTML($html);
         }
     }
 
