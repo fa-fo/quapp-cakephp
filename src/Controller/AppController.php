@@ -32,6 +32,7 @@ use Cake\View\JsonView;
  * @link https://book.cakephp.org/4/en/controllers.html#the-app-controller
  * @property \App\Controller\Component\CacheComponent $Cache
  * @property \App\Controller\Component\RoundGetComponent $RoundGet
+ * @property \App\Controller\Component\YearGetComponent $YearGet
  */
 class AppController extends Controller
 {
@@ -55,6 +56,7 @@ class AppController extends Controller
         $this->loadComponent('ScrRanking');
         $this->loadComponent('RoundGet');
         $this->loadComponent('Security');
+        $this->loadComponent('YearGet');
     }
 
     public function viewClasses(): array
@@ -82,22 +84,7 @@ class AppController extends Controller
 
             // only for archive
             if (($year_id && $year_id != $year['id']) || ($day_id && $day_id != $year['settings']['currentDay_id'])) {
-                $yearSelected = $this->fetchTable('Years')->find('all', array(
-                    'fields' => array('id', 'name', $day_id ? 'day' . $day_id : 'day1'),
-                    'conditions' => array('id' => $year_id)
-                ))->first()->toArray();
-
-                if ($day_id) {
-                    $yearSelected['day'] = $yearSelected['day' . $day_id];
-                    unset($yearSelected['day' . $day_id]);
-                } else {
-                    $yearSelected['daysWithGroups'] = $this->fetchTable('Groups')->find('all', array(
-                        'conditions' => array('year_id' => $yearSelected['id']),
-                        'group' => 'day_id'
-                    ))->count();
-                }
-
-                $return = array_merge($return, array('yearSelected' => $yearSelected));
+                $return = array_merge($return, array('yearSelected' => $this->YearGet->getYear($year_id, $day_id)));
             }
 
             if (is_array($return['object']) && ($return['object']['currentRoundId'] ?? 0) > 0) {
