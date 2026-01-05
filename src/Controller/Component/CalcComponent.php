@@ -78,10 +78,16 @@ class CalcComponent extends Component
                             $calcGoalsReceived += $this->getFactorsLeastCommonMultiple();
                             $calcPointsMinus += 2;
                         } else {
-                            $calcGoalsScored += $gt->team_id == $m->team1_id ? $m->resultGoals1 : $m->resultGoals2;
-                            $calcGoalsReceived += $gt->team_id == $m->team1_id ? $m->resultGoals2 : $m->resultGoals1;
-                            $calcPointsPlus += $gt->team_id == $m->team1_id ? ($m->resultGoals1 > $m->resultGoals2 ? 2 : ($m->resultGoals1 < $m->resultGoals2 ? 0 : 1)) : ($m->resultGoals1 > $m->resultGoals2 ? 0 : ($m->resultGoals1 < $m->resultGoals2 ? 2 : 1));
-                            $calcPointsMinus += $gt->team_id == $m->team1_id ? ($m->resultGoals1 > $m->resultGoals2 ? 0 : ($m->resultGoals1 < $m->resultGoals2 ? 2 : 1)) : ($m->resultGoals1 > $m->resultGoals2 ? 2 : ($m->resultGoals1 < $m->resultGoals2 ? 0 : 1));
+                            $isHomeTeam = ($gt->team_id == $m->team1_id);
+
+                            $calcGoalsScored += $isHomeTeam ? $m->resultGoals1 : $m->resultGoals2;
+                            $calcGoalsReceived += $isHomeTeam ? $m->resultGoals2 : $m->resultGoals1;
+
+                            $goalDiff = ($isHomeTeam ? $m->resultGoals1 : $m->resultGoals2)
+                                - ($isHomeTeam ? $m->resultGoals2 : $m->resultGoals1);
+
+                            $calcPointsPlus += [-1 => 0, 0 => 1, 1 => 2][$goalDiff <=> 0];
+                            $calcPointsMinus += [-1 => 2, 0 => 1, 1 => 0][$goalDiff <=> 0];
                         }
                     }
                 }
@@ -170,14 +176,13 @@ class CalcComponent extends Component
 
                 $poArray = $settings['usePlayOff'] > 0 ? $this->PlayOff->getPlayOffRanking($year) : array();
 
-                $gtArray = FactoryLocator::get('Table')->get('GroupTeams')->find('all', array(
+                $gtArray = FactoryLocator::get('Table')->get('GroupTeams')->find('list', array(
+                    'valueField' => 'team_id',
                     'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
                     'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id'], 'team_id NOT IN' => $poArray ?: array(0)),
                     'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcRanking' => 'ASC')
                 ))->toArray();
-                foreach ($gtArray as $k => $v) {
-                    $gtArray[$k] = $v['team_id'];
-                }
+                $gtArray = array_values($gtArray); // set counter from 0 as key
 
                 foreach ($teamYears as $ty) {
                     /**
@@ -186,17 +191,8 @@ class CalcComponent extends Component
                     $key1 = array_search($ty->team_id, $poArray) ?: 0;
                     $key2 = array_search($ty->team_id, $gtArray) ?: 0;
 
-                    $endRanking = $key1 ?: (count($poArray) + (int)$key2 + 1);
-
-                    /*  was:
-                        $groupCountTeams = ($groupteam->group)->teamsCount;
-                        $endRanking = $this->GroupGet->getGroupPosNumber($groupteam->group_id) * $groupCountTeams + $groupteam->calcRanking;
-                    */
-
-                    if ($endRanking) {
-                        $ty->set('endRanking', $endRanking);
-                        FactoryLocator::get('Table')->get('TeamYears')->save($ty);
-                    }
+                    $ty->set('endRanking', $key1 ?: (count($poArray) + (int)$key2 + 1));
+                    FactoryLocator::get('Table')->get('TeamYears')->save($ty);
                 }
             }
         }
