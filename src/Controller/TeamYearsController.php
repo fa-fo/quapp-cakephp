@@ -407,6 +407,7 @@ class TeamYearsController extends AppController
         $conditionsArray = array(
             'Groups.year_id' => $year_id,
             'Matches.canceled' => 0,
+            'Matches.resultTrend IS NOT' => null,
             'OR' => array(
                 'Matches.refereeTeamSubst_id' => $teamYear->team_id,
                 'AND' => array('Matches.refereeTeamSubst_id IS' => null, 'Matches.refereeTeam_id' => $teamYear->team_id)));
