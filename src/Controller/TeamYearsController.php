@@ -197,9 +197,13 @@ class TeamYearsController extends AppController
                     /**
                      * @var Match4 $m
                      */
-                    $a = $m->team1_id == $teamYear->team_id ? 1 : 2;
-                    $canceled = $undo && $m->canceled ? $m->canceled - $a : (!$undo ? $a + $m->canceled : $m->canceled);
+                    $isHome = ($m->team1_id == $teamYear->team_id) ? 1 : 2;
 
+                    $canceled = $m->canceled + match (true) {
+                            $undo && $m->canceled => -$isHome,  // undo: subtract 1 or 2
+                            !$undo => $isHome,                  // add 1 or 2
+                            default => 0                        // no change
+                        };
                     $m->set('canceled', $canceled);
                     $this->fetchTable('Matches')->save($m);
                 }

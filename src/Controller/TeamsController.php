@@ -115,7 +115,7 @@ class TeamsController extends AppController
         if (is_array($matches)) {
             foreach ($matches as $m) {
                 // reverse trend for away team
-                $trend = $m->resultTrend ? abs($m->resultTrend - ($id == $m->team2_id ? 3 : 0)) : 0;
+                $trend = $m->resultTrend ? ($id == $m->team2_id ? 3 - $m->resultTrend : $m->resultTrend) : 0;
 
                 $return['total'][$trend] ??= 0;
                 $return['total'][$trend]++;
