@@ -256,9 +256,9 @@ class MatcheventLogsController extends AppController
     private function getMatchAndLogs(int $match_id, int $includeLogs): array|null
     {
         $conditionsArray = array('Matches.id' => $match_id);
-        $match_array = $this->MatchGet->getMatches($conditionsArray, $includeLogs);
+        $matches = $this->MatchGet->getMatches($conditionsArray, $includeLogs);
 
-        return is_array($match_array) ? $match_array[0]->toArray() : null;
+        return $matches ? $matches[0]->toArray() : null;
     }
 
     private function savePhoto(string $photoDataBase64, int $match_id, int $id): void
@@ -456,9 +456,6 @@ class MatcheventLogsController extends AppController
                     /**
                      * @var Match4 $m
                      */
-                    $pt = $this->fetchTable('PushTokens')->find('all')
-                        ->where(['my_year_id >=' => $settings['currentYear_id'] - 1])
-                        ->orderBy('rand()')->first();
 
                     // LOGIN
                     $newLog = $this->MatcheventLogs->newEmptyEntity();

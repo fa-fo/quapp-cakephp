@@ -80,7 +80,7 @@ class MatchGetComponent extends Component
         return $return;
     }
 
-    public function getMatches(array $conditionsArray, int $includeLogs = 0, int $sortBy = 1, int $adminView = 0): bool|array
+    public function getMatches(array $conditionsArray, int $includeLogs = 0, int $sortBy = 1, int $adminView = 0): array|false
     {
         $query = FactoryLocator::get('Table')->get('Matches')->find('all', array(
             'contain' => array(
