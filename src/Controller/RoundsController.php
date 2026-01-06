@@ -16,16 +16,13 @@ class RoundsController extends AppController
     {
         // only current day !!!
         $settings = $this->Cache->getSettings();
-        $year_id = $settings['currentYear_id'];
-        $day_id = $settings['currentDay_id'];
-
         $currentYear = $this->Cache->getCurrentYear()->toArray();
-        $day = $currentYear['day' . $day_id]->i18nFormat('yyyy-MM-dd');
+        $day = $currentYear['day' . $settings['currentDay_id']]->i18nFormat('yyyy-MM-dd');
         $adminView = (int)$adminView;
 
         $year = array();
         $year['rounds'] = $this->Rounds->find('all', array(
-            'fields' => array('id', 'timeStartDay' . $day_id),
+            'fields' => array('id', 'timeStartDay' . $settings['currentDay_id']),
             'order' => array('id' => 'ASC')
         ))->toArray();
 
@@ -35,39 +32,33 @@ class RoundsController extends AppController
              */
             if ($adminView) {
                 $conditionsArray = array(
-                    'Groups.year_id' => $year_id,
-                    'Groups.day_id' => $day_id,
+                    'Groups.year_id' => $settings['currentYear_id'],
+                    'Groups.day_id' => $settings['currentDay_id'],
                     'round_id' => $r->id,
                 );
 
-                $query1 = $this->fetchTable('Matches')->find('all', array(
+                $r->matchesCount = $this->fetchTable('Matches')->find('all', array(
                     'contain' => array('Groups'),
                     'conditions' => $conditionsArray
-                ));
+                ))->count();
 
-                $r->matchesCount = $query1->count();
-
-                $query2 = $this->fetchTable('Matches')->find('all', array(
+                $r->matchesConfirmed = $this->fetchTable('Matches')->find('all', array(
                     'contain' => array('Groups'),
                     'conditions' => array_merge($conditionsArray, array('resultTrend IS NOT' => null))
-                ));
+                ))->count();
 
-                $r->matchesConfirmed = $query2->count();
-
-                $query3 = $this->fetchTable('Matches')->find('all', array(
+                $r->matchesWithoutReferee = $this->fetchTable('Matches')->find('all', array(
                     'contain' => array('Groups'),
                     'conditions' => array_merge($conditionsArray, array('canceled' => 0, 'refereeTeam_id IS' => null, 'OR' => array('refereeName IS' => null, 'refereeName' => '')))
-                ));
-
-                $r->matchesWithoutReferee = $query3->count();
+                ))->count();
             }
 
-            $property = 'timeStartDay' . $day_id;
+            $property = 'timeStartDay' . $settings['currentDay_id'];
             $r->timeStart = $day . ' ' . $r->{$property}->i18nFormat('HH:mm:ss');
             unset($r->{$property}); // no need
         }
 
-        $year['currentRoundId'] = $this->RoundGet->getCurrentRoundId($year_id, $day_id, (int)$offset);
+        $year['currentRoundId'] = $this->RoundGet->getCurrentRoundId($settings['currentYear_id'], $settings['currentDay_id'], (int)$offset);
         $this->apiReturn($year);
     }
 }
