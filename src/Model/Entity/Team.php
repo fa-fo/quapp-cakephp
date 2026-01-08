@@ -12,13 +12,13 @@ use Cake\ORM\Entity;
  * @property string $name
  * @property int|null $calcTotalYears
  * @property int|null $calcTotalRankingPoints
- * @property string|null $calcTotalPointsPerYear
+ * @property float|null $calcTotalPointsPerYear
  * @property int|null $calcTotalChampionships
  * @property int|null $calcTotalRanking
  * @property int|null $prevTeam_id
  * @property int $hidden
  * @property int $testTeam
- * @property int|null $calcPowerRankingPoints
+ * @property float $calcPowerRankingPoints
  *
  * @property \App\Model\Entity\Team|null $prevTeam
  */

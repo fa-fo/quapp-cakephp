@@ -160,8 +160,8 @@ class TeamsController extends AppController
         $year = $this->Cache->getCurrentYear()->toArray();
 
         $teams = $this->Teams->find('all', array(
-            'conditions' => array('hidden' => 0),
-            'order' => array('testTeam' => 'DESC', 'calcTotalRanking IS NOT NULL' => 'DESC', 'calcTotalRanking' => 'ASC', 'id' => 'ASC'),
+            'conditions' => array('OR' => array('testTeam' => 1, 'calcTotalRanking IS NOT' => null)),
+            'order' => array('testTeam' => 'DESC', 'calcTotalRanking' => 'ASC', 'id' => 'ASC'),
         ))->limit($year['teamsCount']);
 
         if ($teams->count() == 0) {

@@ -354,7 +354,6 @@ class GroupTeamsController extends AppController
                         // temp set because of unique values
                         foreach ($groupTeams as $gt) {
                             if ($gt->newPlaceNumber != $gt->placeNumber) {
-
                                 $gt->set('placeNumber', (int)(1000 + $gt->newPlaceNumber));
                                 $this->GroupTeams->save($gt);
                             }
@@ -389,28 +388,22 @@ class GroupTeamsController extends AppController
 
         if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
-            $year = $this->Cache->getCurrentYear();
 
-            $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']);
-            $existingMatches = $this->MatchGet->getMatches($conditionsArray);
+            $groups = $this->fetchTable('Groups')->find('all', array(
+                'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'Groups.teamsCount >' => 4),
+                'order' => array('id' => 'ASC')
+            ));
 
-            if (!$existingMatches) {
-                $groups = $this->fetchTable('Groups')->find('all', array(
-                    'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id'], 'Groups.teamsCount >' => 4),
-                    'order' => array('id' => 'ASC')
-                ));
+            $groupsCount = $groups->count();
+            if ($groupsCount > 0) {
+                $groupTeams = $this->GroupTeams->find('all', array(
+                    'contain' => array('Groups', 'Teams'),
+                    'conditions' => array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']),
+                    'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.id' => 'ASC')
+                ))->all();
 
-                $groupsCount = $groups->count();
-                if ($groupsCount > 0) {
-                    $groupTeams = $this->GroupTeams->find('all', array(
-                        'contain' => array('Groups', 'Teams'),
-                        'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']),
-                        'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.id' => 'ASC')
-                    ))->all();
-
-                    // check has to be after all set
-                    $checkings = $this->getCountCheckings($groupTeams, $groupsCount, $settings['currentDay_id'], 1);
-                }
+                // check has to be after all set
+                $checkings = $this->getCountCheckings($groupTeams, $groupsCount, $settings['currentDay_id'], 1);
             }
         }
 
@@ -515,7 +508,7 @@ class GroupTeamsController extends AppController
                 $avgOpponentRankingPointsPerYear[$groupName] = array('max' => max($avgOpponentRankingPointsPerYear[$groupName] ?? array(0)), 'min' => min($avgOpponentRankingPointsPerYear[$groupName] ?? array(0)));
 
                 foreach ($currentOpponentTeamRankingPower[$groupName] as $placenumber => $prArray) {
-                    $prArray = array_filter($prArray); // filter null
+                    $prArray = array_filter($prArray); // filter 0.0
                     if (count($prArray) > 0) {
                         $avgOpponentRankingPower[$groupName][$placenumber] = round(array_sum($prArray) / count($prArray), 2);
                     }
@@ -525,12 +518,10 @@ class GroupTeamsController extends AppController
 
                 if ($currentDay_id > 1) {
                     foreach ($currentOpponentTeamPrevRankings[$groupName] as $placenumber => $orArray) {
-                        if (count($orArray) > 0) {
-                            $avgOpponentPrevDayRanking[$groupName][$placenumber] = array_sum($orArray) / count($orArray);
-                        }
+                        $avgOpponentPrevDayRanking[$groupName][$placenumber] = array_sum($orArray) / count($orArray);
                     }
 
-                    $avgOpponentPrevDayRanking[$groupName] = array('max' => max($avgOpponentPrevDayRanking[$groupName] ?? array(0)), 'min' => min($avgOpponentPrevDayRanking[$groupName] ?? array(0)));
+                    $avgOpponentPrevDayRanking[$groupName] = array('max' => max($avgOpponentPrevDayRanking[$groupName]), 'min' => min($avgOpponentPrevDayRanking[$groupName]));
                 }
             }
         }

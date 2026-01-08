@@ -5,7 +5,6 @@ namespace App\Controller;
 
 use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
-use App\Model\Entity\Year;
 
 /**
  * Groups Controller
@@ -89,7 +88,7 @@ class GroupsController extends AppController
         $this->apiReturn(count($groups));
     }
 
-    // order by points per year (day 1 only)
+    // assign groupTeams to groups
     public function sortAfterAddAllGroupTeams(string $mode = 'standard'): void
     {
         $return = array();
@@ -97,39 +96,27 @@ class GroupsController extends AppController
 
         if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
-            $year = $this->Cache->getCurrentYear();
-            /**
-             * @var Year $year
-             */
 
             if ($settings['currentDay_id'] == 1) {
-                $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']);
+                $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']);
                 $existingMatches = $this->MatchGet->getMatches($conditionsArray);
 
                 if (!$existingMatches) {
                     $groups = $this->Groups->find('all', array(
-                        'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
+                        'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id']),
                         'order' => array('id' => 'ASC')
                     ));
 
                     $groupsCount = $groups->count();
 
                     if ($groupsCount > 0) {
-                        $avgRankingPointsPerYear = array();
                         $teamsCountPerGroup = ($groups->toArray())[0]->teamsCount;
 
-                        switch ($mode) {
-                            case 'random':
-                                $orderArray = array('Teams.calcTotalPointsPerYear' => 'DESC');
-                                break;
-                            case 'power':
-                                $orderArray = array('Teams.calcPowerRankingPoints' => 'DESC');
-                                break;
-                            case 'standard':
-                            default:
-                                $orderArray = array('GroupTeams.id' => 'ASC'); // like originally inserted
-                                break;
-                        }
+                        $orderArray = match ($mode) {
+                            'random' => array('Teams.calcTotalPointsPerYear' => 'DESC'),
+                            'power' => array('Teams.calcPowerRankingPoints' => 'DESC'),
+                            default => array('GroupTeams.id' => 'ASC'), // like originally inserted
+                        };
 
                         $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
                             'fields' => array(
@@ -140,38 +127,39 @@ class GroupsController extends AppController
                                 'Groups' => array('fields' => array('name', 'year_id', 'day_id')),
                                 'Teams' => array('fields' => array('calcTotalPointsPerYear')),
                             ),
-                            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']),
+                            'conditions' => array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']),
                             'order' => $orderArray
                         ))->all();
 
                         $c = 0;
-                        $groupFillArray = array_fill(0, $groupsCount, 0); // temp array for 4 groups
+                        $groupFillArray = array_fill(0, $groupsCount, 0); // temp array for ($groupsCount, e.g. 4 or 6) groups
 
                         foreach ($groupTeams as $gt) {
                             if ($mode == 'random') { // numbered by draw
-                                $newPlacenumber = floor($c / $groupsCount) + 1; // teamsCountPerGroup cups for draw, countGroups (4 or 6) teams in each cup
+                                $newPlacenumber = floor($c / $groupsCount) + 1; // teamsCountPerGroup cups for draw, $groupsCount teams in each cup
 
                                 do {
-                                    $number = random_int(0, $groupsCount - 1); // groups A...D..F
-                                } while ($groupFillArray[$number] >= $newPlacenumber);
+                                    $gNumber = random_int(0, $groupsCount - 1); // groups A...D..F
+                                } while ($groupFillArray[$gNumber] >= $newPlacenumber);
 
                             } else if ($mode == 'power') {
-                                if ($c % 8 < 4) {
-                                    $number = $c % 4;
-                                } else {
-                                    $number = 3 - $c % 4;
+                                if ($c % ($groupsCount * 2) < $groupsCount) { // even cup: gNumber left to right
+                                    $gNumber = $c % $groupsCount;
+                                } else { // odd cup: gNumber right to left
+                                    $gNumber = ($groupsCount - 1) - ($c % $groupsCount);
                                 }
-                                $newPlacenumber = floor($c / 4) + 1;
+                                $gNumber = ($gNumber + 2) % $groupsCount; // group offset
+                                $newPlacenumber = floor($c / $groupsCount) + 1;
 
                             } else { // $mode == 'standard' -> simply numbered by counter
                                 $newPlacenumber = $c % $teamsCountPerGroup + 1;
-                                $number = floor($c / $teamsCountPerGroup);
+                                $gNumber = floor($c / $teamsCountPerGroup);
                             }
                             /**
-                             * @var int $number
+                             * @var int $gNumber
                              */
-                            $groupFillArray[$number]++;
-                            $newGroupId = $this->GroupGet->getCurrentGroupId((int)$number);
+                            $groupFillArray[$gNumber]++;
+                            $newGroupId = $this->GroupGet->getCurrentGroupId($gNumber);
 
                             $gt->set('group_id', $newGroupId);
                             $gt->set('calcRanking', null); // because of unique value per group
@@ -189,14 +177,7 @@ class GroupsController extends AppController
                             $this->fetchTable('GroupTeams')->save($gt);
                         }
 
-                        foreach ($groups as $group) {
-                            /**
-                             * @var Group $group
-                             */
-                            $avgRankingPointsPerYear[$group->name] = $this->getAvgRankingPointsPerYear($group->id);
-                        }
-
-                        $return = array('avgRankingPointsPerYear' => $avgRankingPointsPerYear);
+                        $return = array('avgRankingPoints' => $this->getAvgRanking($groups));
                     }
                 }
             }
@@ -205,58 +186,62 @@ class GroupsController extends AppController
         $this->apiReturn($return);
     }
 
-
-    /* not used?
-    public function getRankingPointsPerYear(string $id = '', string $year_id = '', string $day_id = ''): void
+    public function checkAfterAddAllGroupTeams(): void
     {
-        $id = (int)$id;
         $settings = $this->Cache->getSettings();
-        $year_id = (int)$year_id ?: $settings['currentYear_id'];
-        $day_id = (int)$day_id ?: $settings['currentDay_id'];
-
-        $avgRankingPointsPerYear = array();
-        $condGtArray = $id ? array('id' => $id) : array();
 
         $groups = $this->Groups->find('all', array(
-            'conditions' => array_merge($condGtArray, array('year_id' => $year_id, 'day_id' => $day_id)),
+            'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id']),
             'order' => array('id' => 'ASC')
         ));
 
-        $countGroups = $groups->count();
+        $return = array('avgRankingPoints' => $this->getAvgRanking($groups));
 
-        if ($countGroups > 0) {
-            foreach ($groups as $group) {
-                $avgRankingPointsPerYear[$group->name] = $this->getAvgRankingPointsPerYear($group->id);
-            }
-        }
-
-        $this->apiReturn(array('avgRankingPointsPerYear' => $avgRankingPointsPerYear));
+        $this->apiReturn($return);
     }
-*/
 
-    private function getAvgRankingPointsPerYear(int $id): ?float
+    private function getAvgRanking(\Cake\ORM\Query\SelectQuery $groups): array
+    {
+        $avgRankingPoints = array();
+
+        foreach ($groups as $group) {
+            /**
+             * @var Group $group
+             */
+            $avgRankingPoints[$group->name] = $this->getAvgRankingPoints($group->id);
+        }
+        return $avgRankingPoints;
+    }
+
+    private function getAvgRankingPoints(int $id): array
     {
         $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
             'contain' => array(
-                'Teams' => array('fields' => array('name', 'calcTotalPointsPerYear'))
+                'Teams' => array('fields' => array('name', 'calcTotalPointsPerYear', 'calcPowerRankingPoints'))
             ),
             'conditions' => array('GroupTeams.group_id' => $id),
             'order' => array('GroupTeams.id' => 'ASC')
         ))->toArray();
 
-        $countGroupTeams = count($groupTeams);
-        $rankingPointsPerYear = 0;
+        $count1 = 0;
+        $count2 = 0;
+        $rankingPoints = 0;
+        $powerPoints = 0;
 
-        if ($countGroupTeams > 0) {
-            foreach ($groupTeams as $gt) {
-                if (($gt->team) && ($gt->team)->calcTotalPointsPerYear) {
-                    $rankingPointsPerYear += ($gt->team)->calcTotalPointsPerYear;
-                }
-            }
+        foreach ($groupTeams as $gt) {
+            /**
+             * @var GroupTeam $gt
+             */
+            $count1 += ($gt->team)->calcTotalPointsPerYear ? 1 : 0;
+            $rankingPoints += ($gt->team)->calcTotalPointsPerYear ?? 0;
 
-            return round($rankingPointsPerYear / $countGroupTeams, 2);
+            $count2 += ($gt->team)->calcPowerRankingPoints ? 1 : 0;
+            $powerPoints += ($gt->team)->calcPowerRankingPoints ?? 0;
         }
 
-        return null;
+        $avgRankingPointsPerYear = $count1 ? round($rankingPoints / $count1, 2) : 0;
+        $avgRankingPointsPower = $count2 ? round($powerPoints / $count2, 2) : 0;
+
+        return array('avgRankingPointsPerYear' => $avgRankingPointsPerYear, 'avgRankingPointsPower' => $avgRankingPointsPower);
     }
 }
