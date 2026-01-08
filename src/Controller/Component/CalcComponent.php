@@ -271,4 +271,19 @@ class CalcComponent extends Component
         return $oldNameId;
     }
 
+    public function stdDeviation(array $array, float $mean): float
+    {
+        $n = count($array);
+        if ($n < 2) {
+            return 0.0;
+        }
+
+        $sumSquares = 0;
+
+        foreach ($array as $value) {
+            $sumSquares += ($value - $mean) ** 2;
+        }
+
+        return sqrt($sumSquares / ($n - 1));
+    }
 }

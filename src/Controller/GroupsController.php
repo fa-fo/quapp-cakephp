@@ -10,6 +10,7 @@ use App\Model\Entity\GroupTeam;
  * Groups Controller
  *
  * @property \App\Model\Table\GroupsTable $Groups
+ * @property \App\Controller\Component\CalcComponent $Calc
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\SecurityComponent $Security
@@ -223,25 +224,41 @@ class GroupsController extends AppController
             'order' => array('GroupTeams.id' => 'ASC')
         ))->toArray();
 
-        $count1 = 0;
-        $count2 = 0;
-        $rankingPoints = 0;
-        $powerPoints = 0;
+        $rankingPoints = array();
+        $powerPoints = array();
 
         foreach ($groupTeams as $gt) {
             /**
              * @var GroupTeam $gt
              */
-            $count1 += ($gt->team)->calcTotalPointsPerYear ? 1 : 0;
-            $rankingPoints += ($gt->team)->calcTotalPointsPerYear ?? 0;
-
-            $count2 += ($gt->team)->calcPowerRankingPoints ? 1 : 0;
-            $powerPoints += ($gt->team)->calcPowerRankingPoints ?? 0;
+            if (($gt->team)->calcTotalPointsPerYear) {
+                $rankingPoints[] = ($gt->team)->calcTotalPointsPerYear;
+            }
+            if (($gt->team)->calcPowerRankingPoints) {
+                $powerPoints[] = ($gt->team)->calcPowerRankingPoints;
+            }
         }
 
-        $avgRankingPointsPerYear = $count1 ? round($rankingPoints / $count1, 2) : 0;
-        $avgRankingPointsPower = $count2 ? round($powerPoints / $count2, 2) : 0;
+        $statArray1 = $this->getStatistics($rankingPoints, 'PerYear');
+        $statArray2 = $this->getStatistics($powerPoints, 'Power');
 
-        return array('avgRankingPointsPerYear' => $avgRankingPointsPerYear, 'avgRankingPointsPower' => $avgRankingPointsPower);
+        return array_merge($statArray1, $statArray2);
+    }
+
+    private function getStatistics(array $array, string $sName): array
+    {
+        $return = array();
+
+        if (count($array) > 0) {
+            $mean = array_sum($array) / count($array);
+
+            $return = array(
+                'c' . $sName => count($array),
+                'avg' . $sName => number_format($mean, 1),
+                'stdDev' . $sName => number_format($this->Calc->stdDeviation($array, $mean), 1)
+            );
+        }
+
+        return $return;
     }
 }

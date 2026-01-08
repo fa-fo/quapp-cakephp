@@ -15,6 +15,7 @@ use Cake\I18n\DateTime;
  * GroupTeams Controller
  *
  * @property \App\Model\Table\GroupTeamsTable $GroupTeams
+ * @property \App\Controller\Component\CalcComponent $Calc
  * @property \App\Controller\Component\GroupGetComponent $GroupGet
  * @property \App\Controller\Component\MatchGetComponent $MatchGet
  * @property \App\Controller\Component\SecurityComponent $Security
@@ -498,30 +499,11 @@ class GroupTeamsController extends AppController
             }
 
             if ($mode == 1) {
-                foreach ($currentOpponentTeamRankingPointsPerYear[$groupName] as $placenumber => $opArray) {
-                    $opArray = array_filter($opArray); // filter null
-                    if (count($opArray) > 0) {
-                        $avgOpponentRankingPointsPerYear[$groupName][$placenumber] = round(array_sum($opArray) / count($opArray), 2);
-                    }
-                }
-
-                $avgOpponentRankingPointsPerYear[$groupName] = array('max' => max($avgOpponentRankingPointsPerYear[$groupName] ?? array(0)), 'min' => min($avgOpponentRankingPointsPerYear[$groupName] ?? array(0)));
-
-                foreach ($currentOpponentTeamRankingPower[$groupName] as $placenumber => $prArray) {
-                    $prArray = array_filter($prArray); // filter 0.0
-                    if (count($prArray) > 0) {
-                        $avgOpponentRankingPower[$groupName][$placenumber] = round(array_sum($prArray) / count($prArray), 2);
-                    }
-                }
-
-                $avgOpponentRankingPower[$groupName] = array('max' => max($avgOpponentRankingPower[$groupName] ?? array(0)), 'min' => min($avgOpponentRankingPower[$groupName] ?? array(0)));
+                $avgOpponentRankingPointsPerYear[$groupName] = $this->getStatistics($currentOpponentTeamRankingPointsPerYear[$groupName]);
+                $avgOpponentRankingPower[$groupName] = $this->getStatistics($currentOpponentTeamRankingPower[$groupName]);
 
                 if ($currentDay_id > 1) {
-                    foreach ($currentOpponentTeamPrevRankings[$groupName] as $placenumber => $orArray) {
-                        $avgOpponentPrevDayRanking[$groupName][$placenumber] = array_sum($orArray) / count($orArray);
-                    }
-
-                    $avgOpponentPrevDayRanking[$groupName] = array('max' => max($avgOpponentPrevDayRanking[$groupName]), 'min' => min($avgOpponentPrevDayRanking[$groupName]));
+                    $avgOpponentPrevDayRanking[$groupName] = $this->getStatistics($currentOpponentTeamPrevRankings[$groupName], 3);
                 }
             }
         }
@@ -540,6 +522,33 @@ class GroupTeamsController extends AppController
             'avgOpponentPrevDayRanking' => $avgOpponentPrevDayRanking,
         );
     }
+
+    private function getStatistics(array $currentOpponentArray, int $precision = 1): array
+    {
+        $return = array();
+        $avgOpponent = array();
+
+        foreach ($currentOpponentArray as $placenumber => $vArray) {
+            $vArray = array_filter($vArray); // filter 0.0 and null
+            if (count($vArray) > 0) {
+                $avgOpponent[$placenumber] = array_sum($vArray) / count($vArray);
+            }
+        }
+
+        if (count($avgOpponent) > 0) {
+            $mean = array_sum($avgOpponent) / count($avgOpponent);
+
+            $return = array(
+                'max' => number_format(max($avgOpponent), $precision),
+                'min' => number_format(min($avgOpponent), $precision),
+                'avg' => number_format($mean, $precision),
+                'stdDev' => number_format($this->Calc->stdDeviation($avgOpponent, $mean), $precision)
+            );
+        }
+
+        return $return;
+    }
+
 
     private function getMode4Base1(int $ranking): int
     {
