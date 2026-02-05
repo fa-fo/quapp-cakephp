@@ -22,10 +22,10 @@ use Cake\I18n\DateTime;
  */
 class MatchesController extends AppController
 {
-    public function byId(string $id = ''): void
+    public function byId(string $id = '', string $adminView = ''): void
     {
         $conditionsArray = array('Matches.id' => (int)$id);
-        $match = $this->MatchGet->getMatches($conditionsArray, 1);
+        $match = $this->MatchGet->getMatches($conditionsArray, 1, 1, (int)$adminView);
 
         $this->apiReturn($match);
     }
