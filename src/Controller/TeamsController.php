@@ -99,14 +99,15 @@ class TeamsController extends AppController
         $id = (int)$id;
         $return = array();
         $settings = $this->Cache->getSettings();
+        $team = $this->Teams->find()->where(['id' => $id])->first();
 
         $conditionsArray = array(
-            'Years.id !=' => $settings['alwaysAutoUpdateResults'] && !$settings['isTest'] ? 0 : $settings['currentYear_id'],
+            'Years.id !=' => $settings['showEndRanking'] && !$settings['isTest'] ? 0 : $settings['currentYear_id'],
             'canceled' => 0,
             'resultTrend <' => 3,
             'OR' => array(
-                'team1_id' => $id,
-                'team2_id' => $id,
+                'team1_id IN' => array($id, $team->prevTeam_id),
+                'team2_id IN' => array($id, $team->prevTeam_id),
             ),
         );
 
@@ -115,11 +116,10 @@ class TeamsController extends AppController
         if (is_array($matches)) {
             foreach ($matches as $m) {
                 // reverse trend for away team
-                $trend = $m->resultTrend ? ($id == $m->team2_id ? 3 - $m->resultTrend : $m->resultTrend) : 0;
+                $trend = $m->resultTrend ? (in_array($m->team2_id, array($id, $team->prevTeam_id)) ? 3 - $m->resultTrend : $m->resultTrend) : 0;
 
                 $return['total'][$trend] ??= 0;
                 $return['total'][$trend]++;
-                $return[$m->sport->id] ??= array();
                 $return[$m->sport->id][$trend] ??= 0;
                 $return[$m->sport->id][$trend]++;
             }
@@ -138,14 +138,16 @@ class TeamsController extends AppController
         $id = (int)$id;
         $sport_id = (int)$sport_id;
         $settings = $this->Cache->getSettings();
+        $team = $this->Teams->find()->where(['id' => $id])->first();
+
         $conditionsArray = array(
             'Years.id !=' => $settings['alwaysAutoUpdateResults'] && !$settings['isTest'] ? 0 : $settings['currentYear_id'],
             'canceled' => 0,
             'resultTrend <' => 3,
             'sport_id' => $sport_id,
             'OR' => array(
-                'team1_id' => $id,
-                'team2_id' => $id,
+                'team1_id IN' => array($id, $team->prevTeam_id),
+                'team2_id IN' => array($id, $team->prevTeam_id),
             ),
         );
 
