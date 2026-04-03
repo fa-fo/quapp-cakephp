@@ -14,6 +14,16 @@ use Cake\Http\Client;
  */
 class SportsController extends AppController
 {
+    public function all(): void
+    {
+        $sports = $this->Sports->find('all', array(
+            'conditions' => array('name !=' => 'Multi'),
+            'order' => array('name' => 'ASC')
+        ));
+
+        $this->apiReturn($sports);
+    }
+
     public function getResourceContent(string $id): void
     {
         $id = (int)$id;

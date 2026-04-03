@@ -3,6 +3,7 @@
 namespace App\Controller\Component;
 
 use App\Model\Entity\Group;
+use App\Model\Entity\Match4;
 use App\Model\Entity\Round;
 use App\Model\Entity\TeamYear;
 use Cake\Controller\Component;
@@ -471,5 +472,43 @@ class MatchGetComponent extends Component
             return 0; // show Schedule
         }
         return $showTime; // do not show schedule
+    }
+
+    public function isRefereePref(\Cake\ORM\Entity $match, int $newRefereeTeam_id = 0): bool
+    {
+        /**
+         * @var Match4 $match
+         */
+        $pref = null;
+
+        if ($match->refereeTeam_id || $newRefereeTeam_id) {
+            $settings = $this->Cache->getSettings();
+
+            $teamYear = FactoryLocator::get('Table')->get('TeamYears')->find('all', array(
+                'conditions' => array('team_id' => $newRefereeTeam_id ?: $match->refereeTeam_id, 'year_id' => $settings['currentYear_id'])
+            ))->first();
+
+            $pref = $teamYear?->refereePref;
+        }
+
+        return is_null($pref) || str_contains((string)$pref, (string)$match->sport->id);
+    }
+
+    public function countTeamRefereeBySport(int $newRefereeTeam_id, int $sport_id): int
+    {
+        $settings = $this->Cache->getSettings();
+
+        $conditionsArray = array(
+            'Groups.year_id' => $settings['currentYear_id'],
+            'Groups.day_id' => $settings['currentDay_id'],
+            'refereeTeam_id' => $newRefereeTeam_id,
+            'sport_id' => $sport_id,
+            'Matches.canceled' => 0,
+        );
+
+        return FactoryLocator::get('Table')->get('Matches')->find('all', array(
+            'contain' => array('Groups'),
+            'conditions' => $conditionsArray,
+        ))->count();
     }
 }

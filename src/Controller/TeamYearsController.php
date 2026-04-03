@@ -27,11 +27,11 @@ class TeamYearsController extends AppController
     // getCurrentTeams
     public function all(): void
     {
-        $year = $this->Cache->getCurrentYear();
+        $settings = $this->Cache->getSettings();
 
         $teamYears = $this->TeamYears->find('all', array(
-            'fields' => array('id', 'team_id', 'canceled'),
-            'conditions' => array('year_id' => $year->id, 'OR' => array('Teams.hidden' => 0, 'canceled' => 0)),
+            'fields' => array('id', 'team_id', 'refereePref', 'canceled'),
+            'conditions' => array('year_id' => $settings['currentYear_id'], 'OR' => array('Teams.hidden' => 0, 'canceled' => 0)),
             'contain' => array('Teams' => array('fields' => array('name'))),
             'order' => array('Teams.name' => 'ASC')
         ))->toArray();
@@ -330,6 +330,24 @@ class TeamYearsController extends AppController
         $str45 = $yearId * random_int(1, 3) % 100;
 
         return (int)($str123 . $str45);
+    }
+
+    public function saveRefereePref(string $id): void
+    {
+        $teamYear = array();
+        $id = (int)$id;
+        $postData = $this->request->getData();
+
+        if (isset($postData['refereePref']) && isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
+            $teamYear = $this->TeamYears->find()->where(['id' => $id])->first();
+
+            if ($teamYear) {
+                $teamYear->set('refereePref', (int)$postData['refereePref']);
+                $this->TeamYears->save($teamYear);
+            }
+        }
+
+        $this->apiReturn($teamYear);
     }
 
     public function setScrRanking(int $year_id = 0): void

@@ -681,6 +681,75 @@ class MatchesController extends AppController
         }
     }
 
+    // change referees to improve preferees
+    public function changeRefereesByPrefs(): void
+    {
+        $settings = $this->Cache->getSettings();
+        $postData = $this->request->getData();
+        $countRefsChanged = 0;
+
+        if ($settings['useRefereePref'] && isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
+            $conditionsArray = array(
+                'Groups.year_id' => $settings['currentYear_id'],
+                'Groups.day_id' => $settings['currentDay_id'],
+                'Matches.refereeTeam_id IS NOT' => null,
+            );
+            $matches = $this->MatchGet->getMatches($conditionsArray);
+
+            if (is_array($matches)) {
+                foreach ($matches as $m1) {
+                    /**
+                     * @var Match4 $m1
+                     */
+
+                    // set because refereeTeam_id may have changed in loop before
+                    $m1->set('refereeTeam_id', $this->Matches->find()->where(['id' => $m1->id])->first()->get('refereeTeam_id'));
+
+                    if (!$this->MatchGet->isRefereePref($m1)) {
+                        $conditionsArray = array(
+                            'Groups.year_id' => $settings['currentYear_id'],
+                            'Groups.day_id' => $settings['currentDay_id'],
+                            'Matches.group_id' => $m1->group_id,
+                            'Matches.round_id' => $m1->round_id,
+                            'Matches.sport_id !=' => $m1->sport_id,
+                            'Matches.refereeTeam_id !=' => $m1->refereeTeam_id,
+                            'Matches.refereeTeam_id IS NOT' => null,
+                        );
+                        $matches2 = $this->MatchGet->getMatches($conditionsArray);
+                        if (is_array($matches2)) {
+                            foreach ($matches2 as $m2) {
+                                /**
+                                 * @var Match4 $m2
+                                 */
+                                $newRef1 = $m2->refereeTeam_id;
+                                $newRef2 = $m1->refereeTeam_id;
+
+                                if ($this->MatchGet->isRefereePref($m1, $newRef1) && $this->MatchGet->isRefereePref($m2, $newRef2)) {
+                                    if ($this->MatchGet->countTeamRefereeBySport($newRef1, $m1->sport_id) < 3) {
+                                        $m1->set('refereeTeam_id', null); // temp because of unique value
+                                        $m2->set('refereeTeam_id', null); // temp because of unique value
+
+                                        if ($this->Matches->save($m1) && $this->Matches->save($m2)) {
+                                            $m1->set('refereeTeam_id', $newRef1);
+                                            $m2->set('refereeTeam_id', $newRef2);
+                                            $this->Matches->save($m1);
+                                            $this->Matches->save($m2);
+
+                                            $countRefsChanged++;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->apiReturn(array('countRefsChanged' => $countRefsChanged));
+    }
+
     /**
      * @throws \Exception
      */

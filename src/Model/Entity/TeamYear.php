@@ -11,6 +11,8 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property int $year_id
  * @property int $team_id
+ * @property string|null $refereePIN
+ * @property int|null $refereePref
  * @property int|null $endRanking
  * @property int|null $scrRanking
  * @property float|null $scrPoints
@@ -37,6 +39,8 @@ class TeamYear extends Entity
     protected array $_accessible = [
         'year_id' => true,
         'team_id' => true,
+        'refereePIN' => true,
+        'refereePref' => true,
         'endRanking' => true,
         'scrRanking' => true,
         'scrPoints' => true,

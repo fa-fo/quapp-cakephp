@@ -527,7 +527,8 @@ VALUES (1, 'isTest', 1),
        (19, 'useResourceContentApi', 0),
        (20, 'showArchieve', 1),
        (21, 'useScoutRatings', 1),
-       (22, 'useAutoReload', 1);
+       (22, 'useAutoReload', 1),
+       (23, 'useRefereePref', 0);
 
 
 CREATE TABLE `sports`
@@ -574,6 +575,7 @@ CREATE TABLE `team_years`
     `year_id`       int(11) NOT NULL,
     `team_id`       int(11) NOT NULL,
     `refereePIN`    varchar(5)       DEFAULT NULL,
+    `refereePref`   int(11)          DEFAULT NULL,
     `endRanking`    int(11)          DEFAULT NULL,
     `scrRanking`    int(11)          DEFAULT NULL,
     `scrPoints`     decimal(4, 1)    DEFAULT NULL,

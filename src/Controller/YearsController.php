@@ -174,9 +174,14 @@ class YearsController extends AppController
         $sumMatchesByTeam = array();
         $sumMatchesByTeamPerOpponent = array();
         $maxMatchesByTeamPerOpponent = array();
+
         $sumMatchesByTeamPerSport = array();
         $maxMatchesByTeamPerSport = array();
         $minMatchesByTeamPerSport = array();
+
+        $sumMatchesByRefereeTeamPerSport = array();
+        $maxMatchesByRefereeTeamPerSport = array();
+
         $sumJobsByTeamPerRound = array();
         $maxJobsByTeamPerRound = array();
 
@@ -184,6 +189,7 @@ class YearsController extends AppController
         $matchesTeamsChangeable = array();
         $missingRefereesCount = 0;
         $matchesWith1CanceledCount = 0;
+        $matchesWithNotRefereePref = 0;
         $matchResultCount = 0;
 
         if (is_array($matches)) {
@@ -263,6 +269,11 @@ class YearsController extends AppController
                     }
                 }
 
+                // search for optimize refereePreferences
+                if ($settings['useRefereePref'] && !$this->MatchGet->isRefereePref($m)) {
+                    $matchesWithNotRefereePref++;
+                }
+
                 $matchResultCount += ($m->resultTrend !== null ? 1 : 0);
 
                 if ($m->team1_id && $m->team2_id && !$m->isPlayOff) {
@@ -283,6 +294,11 @@ class YearsController extends AppController
                         $sumJobsByTeamPerRound[$m->round_id][$k] += $v;
                     }
                 }
+
+                if ($m->refereeTeam_id) {
+                    $sumMatchesByRefereeTeamPerSport[$m->sport_id][$m->refereeTeam_id] ??= 0;
+                    $sumMatchesByRefereeTeamPerSport[$m->sport_id][$m->refereeTeam_id]++;
+                }
             }
         }
 
@@ -295,6 +311,9 @@ class YearsController extends AppController
         }
         foreach ($sumJobsByTeamPerRound as $k => $v) {
             $maxJobsByTeamPerRound[$k] = max($v);
+        }
+        foreach ($sumMatchesByRefereeTeamPerSport as $k => $v) {
+            $maxMatchesByRefereeTeamPerSport[$k] = max($v);
         }
 
         // roundsWithPossibleLogsDelete: select for possible logs delete
@@ -323,12 +342,14 @@ class YearsController extends AppController
         $status['maxMatchesByTeamPerSport'] = !empty($maxMatchesByTeamPerSport) ? max($maxMatchesByTeamPerSport) : 0;
         $status['minMatchesByTeamPerSport'] = !empty($minMatchesByTeamPerSport) ? min($minMatchesByTeamPerSport) : 0;
         $status['maxJobsByTeamPerRound'] = !empty($maxJobsByTeamPerRound) ? max($maxJobsByTeamPerRound) : 0;
+        $status['maxMatchesByRefereeTeamPerSport'] = !empty($maxMatchesByRefereeTeamPerSport) ? max($maxMatchesByRefereeTeamPerSport) : 0;
 
         $status['missingRefereesCount'] = $missingRefereesCount;
         $status['matchesRefChangeable'] = $matchesRefChangeable;
 
         $status['matchesWith1CanceledCount'] = $matchesWith1CanceledCount;
         $status['matchesTeamsChangeable'] = $matchesTeamsChangeable;
+        $status['matchesWithNotRefereePref'] = $matchesWithNotRefereePref;
 
         $status['roundsWithPossibleLogsDelete'] = array_column($roundsWithPossibleLogsDelete, 'round_id');
 
@@ -493,4 +514,5 @@ class YearsController extends AppController
 
         $this->apiReturn($found);
     }
+
 }
