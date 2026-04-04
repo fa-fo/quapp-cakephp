@@ -395,7 +395,7 @@ class MatcheventLogsController extends AppController
                 'Matchevents',
                 'Matches' => array('fields' => array('resultGoals1' => 'resultGoals1', 'resultGoals2' => 'resultGoals2')),
                 'Matches.Rounds' => array('fields' => array('round_id' => 'Rounds.id')),
-                'Matches.Groups' => array('fields' => array('group_name' => 'Groups.name')),
+                'Matches.Groups' => array('fields' => array('group_name' => 'Groups.name', 'day_id' => 'day_id')),
                 'Matches.Sports' => array('fields' => array('sport_name' => 'Sports.name')),
                 'Matches.Teams1' => array('fields' => array('team1_name' => 'Teams1.name', 'team1_id' => 'Teams1.id')),
                 'Matches.Teams2' => array('fields' => array('team2_name' => 'Teams2.name', 'team2_id' => 'Teams2.id')),
