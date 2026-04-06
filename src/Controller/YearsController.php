@@ -105,32 +105,34 @@ class YearsController extends AppController
         $newYear = false;
 
         if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->Cache->getSettings();
-            $ytime = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $year['daysCount']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
-            $ytime = $ytime->addHours(24); // start of next day after last day of the tournament
-            $now = DateTime::now();
+            if ((int)$postData['name'] > (int)$year['name']) {
+                $settings = $this->Cache->getSettings();
+                $ytime = DateTime::createFromFormat('Y-m-d H:i:s', $year['day' . $year['daysCount']]->i18nFormat('yyyy-MM-dd HH:mm:ss'));
+                $ytime = $ytime->addHours(24); // start of next day after last day of the tournament
+                $now = DateTime::now();
 
-            if ($settings['currentDay_id'] == $year['daysCount'] && ($settings['isTest'] || $now > $ytime)) {
-                $newYear = $this->Years->newEmptyEntity();
-                $newYear->set('name', $postData['name']);
-                $newYear->set('day1', $postData['day1']);
-                $newYear->set('day2', $postData['day2'] != '' ? $postData['day2'] : null);
-                $newYear->set('daysCount', $postData['daysCount']);
-                $newYear->set('teamsCount', $postData['teamsCount']);
-                $this->Years->save($newYear);
+                if ($settings['currentDay_id'] == $year['daysCount'] && ($settings['isTest'] || $now > $ytime)) {
+                    // check if new year already exists
+                    $newYear = $this->Years->find('all')->where(['name' => $postData['name']])->first();
+                    $newYear = $newYear ?: $this->Years->newEmptyEntity();
 
-                $this->Security->setSetting('currentYear_id', $newYear->id);
-                $this->Security->setSetting('currentDay_id', 1);
-                $this->Security->setSetting('showEndRanking', 0);
+                    $newYear->set('name', $postData['name']);
+                    $newYear->set('day1', $postData['day1']);
+                    $newYear->set('day2', $postData['day2'] != '' ? $postData['day2'] : null);
+                    $newYear->set('daysCount', $postData['daysCount']);
+                    $newYear->set('teamsCount', $postData['teamsCount']);
+                    $this->Years->save($newYear);
 
-                if ($settings['usePlayOff'] == 0) {
-                    $this->Security->setSetting('alwaysAutoUpdateResults', 0);
+                    $this->Security->setSetting('currentYear_id', $newYear->id);
+                    $this->Security->setSetting('currentDay_id', 1);
+                    $this->Security->setSetting('showEndRanking', 0);
+
+                    if ($settings['usePlayOff'] == 0) {
+                        $this->Security->setSetting('alwaysAutoUpdateResults', 0);
+                    }
                 }
-
-                Cache::delete('app_year');
             }
         }
-
         $this->apiReturn($newYear);
     }
 
