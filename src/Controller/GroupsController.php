@@ -156,11 +156,8 @@ class GroupsController extends AppController
                                 $newPlacenumber = $c % $teamsCountPerGroup + 1;
                                 $gNumber = floor($c / $teamsCountPerGroup);
                             }
-                            /**
-                             * @var int $gNumber
-                             */
-                            $groupFillArray[$gNumber]++;
-                            $newGroupId = $this->GroupGet->getCurrentGroupId($gNumber);
+                            $groupFillArray[(int)$gNumber]++;
+                            $newGroupId = $this->GroupGet->getCurrentGroupId((int)$gNumber);
 
                             $gt->set('group_id', $newGroupId);
                             $gt->set('calcRanking', null); // because of unique value per group
