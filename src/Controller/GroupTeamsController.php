@@ -498,12 +498,13 @@ class GroupTeamsController extends AppController
             }
         }
 
-        $countDoubleMatches = array(
+        $countDoubleMatches = $mode == 1 ? array(
             'countPrevYearsMatches' => $countPrevYearsMatches,
             'countPrevYearsMatchesSameSport' => $countPrevYearsMatchesSameSport,
-            'countPrevLastYearMatchesSameSport' => $countPrevLastYearMatchesSameSport,
             'countPrevLastDayMatches' => $countPrevLastDayMatches,
-        );
+        ) : array();
+
+        $countDoubleMatches = array_merge($countDoubleMatches, array('countPrevLastYearMatchesSameSport' => $countPrevLastYearMatchesSameSport));
 
         return array(
             'countDoubleMatches' => $countDoubleMatches,
