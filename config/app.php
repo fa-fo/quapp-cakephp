@@ -98,6 +98,13 @@ return [
         'default' => [
             'className' => FileEngine::class,
             'path' => CACHE,
+            'prefix' => 'default_',
+            'url' => env('CACHE_DEFAULT_URL', null),
+        ],
+        'mem' => [
+            'className' => FileEngine::class,
+            'path' => CACHE,
+            'prefix' => 'mem_',
             'url' => env('CACHE_DEFAULT_URL', null),
         ],
 

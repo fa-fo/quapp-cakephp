@@ -251,7 +251,7 @@ class CalcComponent extends Component
             FactoryLocator::get('Table')->get('Teams')->save($t);
         }
 
-        Cache::delete('app_calc_total');
+        Cache::delete('app_calc_total', ($_GET['place'] ?? 'default'));
 
         return $c;
     }

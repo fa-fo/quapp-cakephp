@@ -116,8 +116,8 @@ class SecurityComponent extends Component
                 $setting->set('value', (int)$value);
                 FactoryLocator::get('Table')->get('Settings')->save($setting);
 
-                Cache::delete('app_settings');
-                Cache::delete('app_year');
+                Cache::delete('app_settings', ($_GET['place'] ?? 'default'));
+                Cache::delete('app_year', ($_GET['place'] ?? 'default'));
             }
         }
 

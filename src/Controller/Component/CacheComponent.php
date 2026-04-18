@@ -23,7 +23,7 @@ class CacheComponent extends Component
             ))->count();
 
             return $settings;
-        });
+        }, ($_GET['place'] ?? 'default'));
     }
 
     public function getCurrentYear(): Year
@@ -34,7 +34,7 @@ class CacheComponent extends Component
             return FactoryLocator::get('Table')->get('Years')->find('all', [
                 'conditions' => array('id' => $settings['currentYear_id']),
             ])->first();
-        });
+        }, ($_GET['place'] ?? 'default'));
 
         /**
          * @var Year $year
@@ -47,7 +47,7 @@ class CacheComponent extends Component
         if ($cacheKey != '') {
             $teams = Cache::remember($cacheKey, function () use ($conditionsArray, $containArray) {
                 return $this->getTeamsResultSet($conditionsArray, $containArray);
-            });
+            }, ($_GET['place'] ?? 'default'));
         } else {
             $teams = $this->getTeamsResultSet($conditionsArray, $containArray);
         }

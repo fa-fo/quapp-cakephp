@@ -385,8 +385,8 @@ class YearsController extends AppController
                     $rc += $conn->execute("UPDATE settings SET value=0 WHERE name = 'alwaysAutoUpdateResults'")->rowCount();
                 }
 
-                Cache::delete('app_settings');
-                Cache::delete('app_year');
+                Cache::delete('app_settings', ($_GET['place'] ?? 'default'));
+                Cache::delete('app_year', ($_GET['place'] ?? 'default'));
 
                 // reset all-time stats
                 $this->Calc->updateCalcTotal($settings['currentYear_id'] - 1);
