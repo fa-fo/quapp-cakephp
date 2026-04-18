@@ -49,13 +49,16 @@ try {
             /**
              * @var GroupTeam $gT
              */
+            $style = 'style="border-bottom:' . (($gT->showBorderBottom ?? 0) + 1) . 'px ' . ($gT->showBorderBottom ? 'solid' : 'dotted') . '
+            ;border-top:' . (($gT->showBorderTop ?? 0) + 1) . 'px ' . ($gT->showBorderTop ? 'solid' : 'dotted') . '"';
+
             $html .= '<tr>';
-            $html .= '<td>' . ($gT->calcRanking ?? 0) . '</td>';
-            $html .= '<td>' . $gT->team->name . '</td>';
-            $html .= '<td>' . ($gT->calcCountMatches ?? 0) . '</td>';
-            $html .= '<td>' . ($gT->calcGoalsScored ?? 0) . ':' . ($gT->calcGoalsReceived ?? 0) . '</td>';
-            $html .= '<td>' . ($gT->calcGoalsDiff > 0 ? '+' : '') . ($gT->calcGoalsDiff ?? 0) . '</td>';
-            $html .= '<td>' . ($gT->calcPointsPlus ?? 0) . ':' . ($gT->calcPointsMinus ?? 0) . '</td>';
+            $html .= '<td ' . $style . '>' . ($gT->calcRanking ?? 0) . '</td>';
+            $html .= '<td ' . $style . '>' . $gT->team->name . '</td>';
+            $html .= '<td ' . $style . '>' . ($gT->calcCountMatches ?? 0) . '</td>';
+            $html .= '<td ' . $style . '>' . ($gT->calcGoalsScored ?? 0) . ':' . ($gT->calcGoalsReceived ?? 0) . '</td>';
+            $html .= '<td ' . $style . '>' . ($gT->calcGoalsDiff > 0 ? '+' : '') . ($gT->calcGoalsDiff ?? 0) . '</td>';
+            $html .= '<td ' . $style . '>' . ($gT->calcPointsPlus ?? 0) . ':' . ($gT->calcPointsMinus ?? 0) . '</td>';
             $html .= '</tr>';
         }
 
@@ -67,5 +70,3 @@ try {
 } catch (\Mpdf\MpdfException $e) {
     echo $e->getMessage();
 }
-
-

@@ -141,6 +141,33 @@ class CalcComponent extends Component
 
             FactoryLocator::get('Table')->get('GroupTeams')->save($gt);
         }
+
+        if ($settings['groupsCount'] > 2 && $settings['groupsCount'] % 4 != 0) {
+            $this->setCalcRankingSameRank($year, $settings);
+        }
+    }
+
+    private function setCalcRankingSameRank(Year $year, array $settings): void
+    {
+        // set calc Ranking for same rank overall groups
+        $groupTeams = FactoryLocator::get('Table')->get('GroupTeams')->find('all', array(
+            'contain' => array('Groups' => array('fields' => array('id', 'year_id', 'day_id'))),
+            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']),
+            'order' => array('calcRanking' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcPointsPlus' => 'DESC', 'GroupTeams.calcGoalsDiff' => 'DESC', 'GroupTeams.calcGoalsScored' => 'DESC')
+        ))->all();
+
+        $rank = 0;
+        $countRanking = 0;
+        foreach ($groupTeams as $gt) {
+            /**
+             * @var GroupTeam $gt
+             */
+            $countRanking = ($rank == $gt->calcRanking ? $countRanking + 1 : 1);
+            $rank = $gt->calcRanking;
+
+            $gt->set('calcRankingSameRank', $countRanking);
+            FactoryLocator::get('Table')->get('GroupTeams')->save($gt);
+        }
     }
 
     public function getFactorsLeastCommonMultiple(): \GMP|int

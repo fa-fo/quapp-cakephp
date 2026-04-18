@@ -13,6 +13,7 @@ use Cake\ORM\Entity;
  * @property int $placeNumber
  * @property int $team_id
  * @property int|null $calcRanking
+ * @property int|null $calcRankingSameRank
  * @property int|null $calcCountMatches
  * @property int|null $calcGoalsScored
  * @property int|null $calcGoalsReceived
@@ -26,6 +27,8 @@ use Cake\ORM\Entity;
  *
  * @property int|null $prevPlaceNumber
  * @property int|null $prevGroupId
+ * @property int|null $showBorderBottom
+ * @property int|null $showBorderTop
  */
 class GroupTeam extends Entity
 {
@@ -41,6 +44,7 @@ class GroupTeam extends Entity
         'placeNumber' => true,
         'team_id' => true,
         'calcRanking' => true,
+        'calcRankingSameRank' => true,
         'calcCountMatches' => true,
         'calcGoalsScored' => true,
         'calcGoalsReceived' => true,

@@ -60,7 +60,7 @@ class GroupTeamsController extends AppController
 
     private function getRanking(array $group): array
     {
-        return $this->GroupTeams->find('all', array(
+        $groupTeams = $this->GroupTeams->find('all', array(
             'contain' => array(
                 'Groups' => array('fields' => array('group_id' => 'Groups.id', 'group_name' => 'Groups.name', 'year_id', 'day_id')),
                 'Teams' => array('fields' => array('name'))
@@ -68,6 +68,44 @@ class GroupTeamsController extends AppController
             'conditions' => array('GroupTeams.group_id' => $group['id'], 'Groups.year_id' => $group['year_id'], 'Groups.day_id' => $group['day_id'], 'Teams.hidden' => 0),
             'order' => array('Groups.id' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcRanking' => 'ASC', 'Teams.name' => 'ASC')
         ))->toArray();
+
+        if ($group['day_id'] == 1) {
+            $this->getRankingBorders($groupTeams);
+        }
+
+        return $groupTeams;
+    }
+
+    private function getRankingBorders(array $groupTeams): void
+    {
+        $settings = $this->Cache->getSettings();
+
+        foreach ($groupTeams as $gt) {
+            /**
+             * @var GroupTeam $gt
+             */
+            if ($gt->calcRanking > 0) {
+                if ($settings['usePlayOff'] > 0 && $gt->calcRanking == $settings['usePlayOff']) {
+                    $gt->showBorderBottom = 1;
+                }
+                if ($settings['usePlayOff'] == 0) {
+                    if ($gt->calcRanking % 4 == 0 && $gt->calcRankingSameRank == null) { // regular QuattFo
+                        $gt->showBorderBottom = 1;
+                    }
+
+                    if ($gt->calcRankingSameRank) { // for Memmelsdorf
+                        // ranking => max. sameRank for Border-Bottom (0 = always)
+                        $borderBottomRules = [3 => 5, 6 => 3, 8 => 0, 11 => 5, 14 => 3, 16 => 0];
+                        $rule = $borderBottomRules[$gt->calcRanking] ?? false;
+
+                        if ($rule !== false) {
+                            $gt->showBorderBottom = ($rule == 0 || $gt->calcRankingSameRank < $rule) ? 1 : 0;
+                            $gt->showBorderTop = ($rule != 0 && $gt->calcRankingSameRank >= $rule) ? 1 : 0;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public function pdfAllRankings(): void

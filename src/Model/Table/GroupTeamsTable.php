@@ -76,6 +76,10 @@ class GroupTeamsTable extends Table
             ->allowEmptyString('calcRanking');
 
         $validator
+            ->integer('calcRankingSameRank')
+            ->allowEmptyString('calcRankingSameRank');
+
+        $validator
             ->integer('calcCountMatches')
             ->allowEmptyString('calcCountMatches');
 

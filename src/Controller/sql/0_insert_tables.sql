@@ -44,18 +44,19 @@ CREATE TABLE `groups`
 
 CREATE TABLE `group_teams`
 (
-    `id`                int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    `group_id`          int(11) NOT NULL,
-    `placeNumber`       int(11) NOT NULL,
-    `team_id`           int(11) NOT NULL,
-    `calcRanking`       int(11)          DEFAULT NULL,
-    `calcCountMatches`  int(11)          DEFAULT NULL,
-    `calcGoalsScored`   int(11)          DEFAULT NULL,
-    `calcGoalsReceived` int(11)          DEFAULT NULL,
-    `calcGoalsDiff`     int(11)          DEFAULT NULL,
-    `calcPointsPlus`    int(11)          DEFAULT NULL,
-    `calcPointsMinus`   int(11)          DEFAULT NULL,
-    `canceled`          int(11) NOT NULL DEFAULT 0
+    `id`                  int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `group_id`            int(11) NOT NULL,
+    `placeNumber`         int(11) NOT NULL,
+    `team_id`             int(11) NOT NULL,
+    `calcRanking`         int(11)          DEFAULT NULL,
+    `calcRankingSameRank` int(11)          DEFAULT NULL,
+    `calcCountMatches`    int(11)          DEFAULT NULL,
+    `calcGoalsScored`     int(11)          DEFAULT NULL,
+    `calcGoalsReceived`   int(11)          DEFAULT NULL,
+    `calcGoalsDiff`       int(11)          DEFAULT NULL,
+    `calcPointsPlus`      int(11)          DEFAULT NULL,
+    `calcPointsMinus`     int(11)          DEFAULT NULL,
+    `canceled`            int(11) NOT NULL DEFAULT 0
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
   COLLATE = utf8_general_ci;
