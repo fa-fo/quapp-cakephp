@@ -70,13 +70,13 @@ class GroupTeamsController extends AppController
         ))->toArray();
 
         if ($group['day_id'] == 1) {
-            $this->getRankingBorders($groupTeams);
+            $this->getRankingBorders($groupTeams, $group['teamsCount']);
         }
 
         return $groupTeams;
     }
 
-    private function getRankingBorders(array $groupTeams): void
+    private function getRankingBorders(array $groupTeams, int $teamsPerGroup): void
     {
         $settings = $this->Cache->getSettings();
 
@@ -88,19 +88,27 @@ class GroupTeamsController extends AppController
                 if ($settings['usePlayOff'] > 0 && $gt->calcRanking == $settings['usePlayOff']) {
                     $gt->showBorderBottom = 1;
                 }
-                if ($settings['usePlayOff'] == 0) {
-                    if ($gt->calcRanking % 4 == 0 && $gt->calcRankingSameRank == null) { // regular QuattFo
-                        $gt->showBorderBottom = 1;
-                    }
 
-                    if ($gt->calcRankingSameRank) { // for Memmelsdorf
+                if ($settings['usePlayOff'] == 0) {
+                    if ($gt->calcRankingSameRank == null) { // regular QuattFo
+                        $gt->showBorderBottom = $gt->calcRanking % 4 ? 0 : 1;
+                    } else { // for Memmelsdorf
                         // ranking => max. sameRank for Border-Bottom (0 = always)
-                        $borderBottomRules = [3 => 5, 6 => 3, 8 => 0, 11 => 5, 14 => 3, 16 => 0];
+                        // 80 teams, 5 groups -> $borderBottomRules = [4 => 2, 7 => 3, 10 => 4, 13 => 5, 16 => 6];
+                        // 96 teams, 6 groups -> $borderBottomRules = [3 => 5, 6 => 3, 8 => 7, 11 => 5, 14 => 3, 16 => 7];
+                        $borderBottomRules = array();
+
+                        for ($i = 1; $i <= $settings['groupsCount']; $i++) {
+                            $ceil = (int)ceil($teamsPerGroup * $i / $settings['groupsCount']);
+                            $mod = $teamsPerGroup * $i % $settings['groupsCount'];
+                            $borderBottomRules[$ceil] = $mod === 0 ? $settings['groupsCount'] + 1 : $mod + 1;
+                        }
+
                         $rule = $borderBottomRules[$gt->calcRanking] ?? false;
 
                         if ($rule !== false) {
-                            $gt->showBorderBottom = ($rule == 0 || $gt->calcRankingSameRank < $rule) ? 1 : 0;
-                            $gt->showBorderTop = ($rule != 0 && $gt->calcRankingSameRank >= $rule) ? 1 : 0;
+                            $gt->showBorderBottom = ($gt->calcRankingSameRank < $rule) ? 1 : 0;
+                            $gt->showBorderTop = ($gt->calcRankingSameRank >= $rule) ? 1 : 0;
                         }
                     }
                 }
