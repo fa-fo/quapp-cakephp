@@ -231,11 +231,7 @@ class GroupTeamsController extends AppController
     {
         $settings = $this->Cache->getSettings();
         $groupTeams = array();
-        $orderArray = array('GroupTeams.calcRanking' => 'ASC', 'GroupTeams.group_id' => 'ASC'); // standard for 64 teams
-
-        if ($year->teamsCount > 64) {
-            $orderArray = array('GroupTeams.calcRanking' => 'ASC', 'GroupTeams.calcPointsPlus' => 'ASC', 'GroupTeams.calcGoalsDiff' => 'ASC', 'GroupTeams.calcGoalsScored' => 'ASC', 'GroupTeams.group_id' => 'ASC');
-        }
+        $orderArray = array('GroupTeams.calcRanking' => 'ASC', 'GroupTeams.calcPointsPlus' => 'ASC', 'GroupTeams.calcGoalsDiff' => 'ASC', 'GroupTeams.calcGoalsScored' => 'ASC', 'GroupTeams.group_id' => 'ASC');
 
         $prevGroupTeams = $this->GroupTeams->find('all', array(
             'contain' => array('Groups' => array('fields' => array('year_id', 'day_id'))),
@@ -266,40 +262,32 @@ class GroupTeamsController extends AppController
     }
 
 
-    public function sortPlaceNumberAfterAddAll(string $mode = 'none', string $rgMode = '1100'): void
+    public function sortPlaceNumberAfterAddAll(string $mode = 'none', string $doPrecheck = '0'): void
     {
         $doCount = 0;
-        $checkings = array();
+        $checks = array();
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
-            $year = $this->Cache->getCurrentYear();
 
-            $conditionsArray = array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']);
+            $conditionsArray = array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']);
             $existingMatches = $this->MatchGet->getMatches($conditionsArray);
 
             if (!$existingMatches) {
                 $groups = $this->fetchTable('Groups')->find('all', array(
-                    'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id'], 'Groups.teamsCount >' => 4),
+                    'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'Groups.teamsCount >' => 4),
                     'order' => array('id' => 'ASC')
                 ));
 
                 $groupsCount = $groups->count();
                 if ($groupsCount > 0) {
                     $teamsCountPerGroup = ($groups->toArray())[0]->teamsCount;
+                    $checks = (int)$doPrecheck > 0 ? $this->doPlaceNumberCheck(0) : array();
 
                     do {
                         $doCount++;
                         $rand4_array = array();
-
-                        $ar = $checkings['countDoubleMatches']['countPrevLastYearMatchesSameSport'] ?? 0;
-                        $rgMode = '';
-                        if (is_array($ar)) {
-                            foreach ($ar as $r) {
-                                $rgMode .= ($r > 0 ? 1 : 0);
-                            }
-                        }
 
                         if ($mode == 'random4') {
                             $ra = range(0, 3);
@@ -335,24 +323,24 @@ class GroupTeamsController extends AppController
                             }
                         }
 
-                        $options = array('sortmode' => $mode, 'rgMode' => $rgMode, 'year_id' => $year->id, 'currentDay_id' => $settings['currentDay_id'],
+                        $options = array('sortmode' => $mode, 'checks' => $checks, 'settings' => $settings,
                             'rand4_array' => $rand4_array, 'rand2_array' => $rand2_array, 'groupsCount' => $groupsCount, 'teamsCountPerGroup' => $teamsCountPerGroup);
 
                         $groupTeams = $this->GroupTeams->find('all', array(
                             'contain' => array('Groups', 'Teams'),
-                            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']),
+                            'conditions' => array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']),
                             'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.id' => 'ASC')
                         ))->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($options) {
                             return $results->map(function ($row, $counter = 0) use ($options) {
                                 //Adding Calculated Fields
                                 // initial and for day 1: just some values to use switch options
-                                $prevRankingInTeam = (($counter % 64) % $options['teamsCountPerGroup']) % 4;
+                                $prevRankingInQuartet = (($counter % 64) % $options['teamsCountPerGroup']) % 4;
                                 $prevGroupPosNumber = (int)floor((($counter % ($options['teamsCountPerGroup'] * 4)) % $options['teamsCountPerGroup']) / 4);
 
-                                if ($options['currentDay_id'] > 1) {
+                                if ($options['settings']['currentDay_id'] > 1) {
                                     $prevGroupteam = $this->GroupTeams->find('all', array(
                                         'contain' => array('Groups' => array('fields' => array('year_id', 'day_id'))),
-                                        'conditions' => array('GroupTeams.team_id' => $row['team_id'], 'Groups.year_id' => $options['year_id'], 'Groups.day_id' => ($options['currentDay_id'] - 1)),
+                                        'conditions' => array('GroupTeams.team_id' => $row['team_id'], 'Groups.year_id' => $options['settings']['currentYear_id'], 'Groups.day_id' => ($options['settings']['currentDay_id'] - 1)),
                                     ))->first();
                                     /**
                                      * @var GroupTeam $prevGroupteam
@@ -361,7 +349,7 @@ class GroupTeamsController extends AppController
                                     $row['prevGroupId'] = $prevGroupteam->group_id;
 
                                     if ($options['groupsCount'] <= 4) { // not compatible with 96 teams modus
-                                        $prevRankingInTeam = ($prevGroupteam->calcRanking - 1) % 4;
+                                        $prevRankingInQuartet = ($prevGroupteam->calcRanking - 1) % 4;
                                         $prevGroupPosNumber = $this->GroupGet->getGroupPosNumber($prevGroupteam->group_id) % 4;
                                     }
                                 }
@@ -378,10 +366,10 @@ class GroupTeamsController extends AppController
                                         $row['newPlaceNumber'] = ($counter % $options['teamsCountPerGroup']) + 1;
                                         break;
                                     case 'standard':  // group before ranking
-                                        $row['newPlaceNumber'] = (int)($prevRankingInTeam + 1 + $prevGroupPosNumber * 4);
+                                        $row['newPlaceNumber'] = (int)($prevRankingInQuartet + 1 + $prevGroupPosNumber * 4);
                                         break;
                                     case 'ranking': // ranking before group
-                                        $row['newPlaceNumber'] = (int)(($prevRankingInTeam) * 4 + 1 + $prevGroupPosNumber);
+                                        $row['newPlaceNumber'] = (int)(($prevRankingInQuartet) * 4 + 1 + $prevGroupPosNumber);
                                         break;
                                     case 'random4':
                                         $row['newPlaceNumber'] = $this->getNewPlaceNumberRandom4($row['placeNumber'], $groupPosNumber, $options['rand4_array']);
@@ -391,8 +379,10 @@ class GroupTeamsController extends AppController
                                         break;
                                 }
 
-                                if (substr($options['rgMode'], $groupPosNumber, 1) == '0') {
-                                    $row['newPlaceNumber'] = $row['placeNumber'];
+                                if (($options['checks']['countDoubleMatches']['countPrevLastYearMatchesSameSport'][$groupPosNumber] ?? 1) == 0
+                                    && ($options['checks']['countDoubleMatches']['countPrevLastDayMatches'][$groupPosNumber] ?? 1) == 0
+                                ) {
+                                    $row['newPlaceNumber'] = $row['placeNumber']; // no change: already optimized by random
                                 }
 
                                 $counter++; // sic! is used
@@ -416,51 +406,63 @@ class GroupTeamsController extends AppController
                         }
 
                         // check has to be after all set
-                        $checkings = $this->getCountCheckings($groupTeams, $groupsCount, 0);
+                        $checks = $this->getPlaceNumberChecks($groupTeams, $groupsCount, 0);
 
-                    } while (($options['currentDay_id'] == 1 && array_sum($checkings['countDoubleMatches']['countPrevLastYearMatchesSameSport']) > 0 && $doCount < 100 && $options['sortmode'] == 'random2')
-                    || ($options['currentDay_id'] == 2 && array_sum($checkings['countDoubleMatches']['countPrevLastYearMatchesSameSport']) > 0 && $doCount < 100 && $options['sortmode'] == 'random4'));
+                    } while (
+                        ($options['settings']['currentDay_id'] == 1 && $options['sortmode'] == 'random2' && array_sum($checks['countDoubleMatches']['countPrevLastYearMatchesSameSport']) > 0 && $doCount < 100)
+                        || ($options['settings']['currentDay_id'] == 2 && $options['sortmode'] == 'random4' && array_sum($checks['countDoubleMatches']['countPrevLastYearMatchesSameSport']) > 0 && $doCount < 100)
+                        || ($options['settings']['currentDay_id'] == 2 && $options['sortmode'] == 'random2' && (array_sum($checks['countDoubleMatches']['countPrevLastYearMatchesSameSport']) > 0 || array_sum($checks['countDoubleMatches']['countPrevLastDayMatches']) > 0) && $doCount < 100)
+                    );
                 }
             }
         }
 
-        $checkings['doCount'] = $doCount;
+        $checks['doCount'] = $doCount;
 
-        $this->apiReturn($checkings);
+        $this->apiReturn($checks);
     }
 
 
     public function checkPlaceNumberAfterAddAll(): void
     {
-        $checkings = array();
+        $checks = array();
         $postData = $this->request->getData();
 
         if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
-            $settings = $this->Cache->getSettings();
-
-            $groups = $this->fetchTable('Groups')->find('all', array(
-                'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'Groups.teamsCount >' => 4),
-                'order' => array('id' => 'ASC')
-            ));
-
-            $groupsCount = $groups->count();
-            if ($groupsCount > 0) {
-                $groupTeams = $this->GroupTeams->find('all', array(
-                    'contain' => array('Groups', 'Teams'),
-                    'conditions' => array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']),
-                    'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.id' => 'ASC')
-                ))->all();
-
-                // check has to be after all set
-                $checkings = $this->getCountCheckings($groupTeams, $groupsCount, 1);
-            }
+            $checks = $this->doPlaceNumberCheck();
         }
 
-        $this->apiReturn($checkings);
+        $this->apiReturn($checks);
     }
 
-    // if mode == 0: only countPrevLastYearMatchesSameSport
-    private function getCountCheckings(ResultSetInterface $groupTeams, int $groupsCount, int $mode = 1): array
+
+    private function doPlaceNumberCheck(int $mode = 1): array
+    {
+        $checks = array();
+        $settings = $this->Cache->getSettings();
+
+        $groups = $this->fetchTable('Groups')->find('all', array(
+            'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id'], 'Groups.teamsCount >' => 4),
+            'order' => array('id' => 'ASC')
+        ));
+
+        $groupsCount = $groups->count();
+        if ($groupsCount > 0) {
+            $groupTeams = $this->GroupTeams->find('all', array(
+                'contain' => array('Groups', 'Teams'),
+                'conditions' => array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']),
+                'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.id' => 'ASC')
+            ))->all();
+
+            // check has to be after all set
+            $checks = $this->getPlaceNumberChecks($groupTeams, $groupsCount, $mode);
+        }
+
+        return $checks;
+    }
+
+    // if mode == 0: only countPrevLastYearMatchesSameSport and countPrevLastDayMatches
+    private function getPlaceNumberChecks(ResultSetInterface $groupTeams, int $groupsCount, int $mode = 1): array
     {
         $settings = $this->Cache->getSettings();
         $year = $this->Cache->getCurrentYear();
@@ -468,7 +470,7 @@ class GroupTeamsController extends AppController
         $countPrevYearsMatches = 0;
         $countPrevYearsMatchesSameSport = 0;
         $countPrevLastYearMatchesSameSport = array_pad(array(), $groupsCount, 0);
-        $countPrevLastDayMatches = 0;
+        $countPrevLastDayMatches = array_pad(array(), $groupsCount, 0);
 
         $currentOpponentTeamRankingPointsPerYear = array();
         $currentOpponentTeamRankingPower = array();
@@ -509,6 +511,12 @@ class GroupTeamsController extends AppController
                     ->find('all', array('contain' => array('Groups'), 'conditions' => array_merge($conditionsArray, array('Groups.year_id' => $year->id - 1, 'sport_id' => $msc->sport_id))))
                     ->count();
 
+                if ($settings['currentDay_id'] > 1) {
+                    $countPrevLastDayMatches[$g] += $this->fetchTable('Matches')
+                        ->find('all', array('contain' => array('Groups'), 'conditions' => array_merge($conditionsArray, array('Groups.year_id' => $year->id, 'Groups.day_id' => ($settings['currentDay_id'] - 1)))))
+                        ->count();
+                }
+
                 if ($mode == 1) {
                     $countPrevYearsMatches += $this->fetchTable('Matches')
                         ->find('all', array('contain' => array('Groups'), 'conditions' => array_merge($conditionsArray, array('Groups.year_id !=' => $year->id))))
@@ -524,10 +532,6 @@ class GroupTeamsController extends AppController
                     $currentOpponentTeamRankingPower[$groupName][$msc->placenumberTeam2][] = ($gtArray[$groupName][$msc->placenumberTeam1]->team)->calcPowerRankingPoints;
 
                     if ($settings['currentDay_id'] > 1) {
-                        $countPrevLastDayMatches += $this->fetchTable('Matches')
-                            ->find('all', array('contain' => array('Groups'), 'conditions' => array_merge($conditionsArray, array('Groups.year_id' => $year->id, 'Groups.day_id' => ($settings['currentDay_id'] - 1)))))
-                            ->count();
-
                         $currentOpponentTeamPrevRankings[$groupName][$msc->placenumberTeam2][] = $this->getOpponentTeamPrevRankings($gtArray[$groupName][$msc->placenumberTeam1], $settings);
                         $currentOpponentTeamPrevRankings[$groupName][$msc->placenumberTeam1][] = $this->getOpponentTeamPrevRankings($gtArray[$groupName][$msc->placenumberTeam2], $settings);
                     }
@@ -544,13 +548,16 @@ class GroupTeamsController extends AppController
             }
         }
 
-        $countDoubleMatches = $mode == 1 ? array(
+        $array0 = array(
+            'countPrevLastYearMatchesSameSport' => $countPrevLastYearMatchesSameSport,
+            'countPrevLastDayMatches' => $countPrevLastDayMatches,
+        );
+        $array1 = $mode == 1 ? array(
             'countPrevYearsMatches' => $countPrevYearsMatches,
             'countPrevYearsMatchesSameSport' => $countPrevYearsMatchesSameSport,
-            'countPrevLastDayMatches' => $countPrevLastDayMatches,
         ) : array();
 
-        $countDoubleMatches = array_merge($countDoubleMatches, array('countPrevLastYearMatchesSameSport' => $countPrevLastYearMatchesSameSport));
+        $countDoubleMatches = array_merge($array0, $array1);
 
         return array(
             'countDoubleMatches' => $countDoubleMatches,
@@ -595,14 +602,7 @@ class GroupTeamsController extends AppController
         /**
          * @var GroupTeam $currentOpponentPrevGroupteam
          */
-
-        return $this->getMode4Base1($currentOpponentPrevGroupteam->calcRanking);
-    }
-
-
-    private function getMode4Base1(int $ranking): int
-    {
-        return ($ranking - 1) % 4 + 1;
+        return $currentOpponentPrevGroupteam->calcRanking;
     }
 
     private function getNewPlaceNumberRandom4(int $placeNumber, int $groupPosNumber, array $rand4_array): int
