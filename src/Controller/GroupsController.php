@@ -120,13 +120,10 @@ class GroupsController extends AppController
                         };
 
                         $groupTeams = $this->fetchTable('GroupTeams')->find('all', array(
-                            'fields' => array(
-                                'GroupTeams.id',
-                                'Teams.calcTotalPointsPerYear',
-                            ),
+                            'fields' => array('GroupTeams.id'),
                             'contain' => array(
                                 'Groups' => array('fields' => array('name', 'year_id', 'day_id')),
-                                'Teams' => array('fields' => array('calcTotalPointsPerYear')),
+                                'Teams' => array('fields' => array('name')),
                             ),
                             'conditions' => array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']),
                             'order' => $orderArray
@@ -149,7 +146,7 @@ class GroupsController extends AppController
                                 } else { // odd cup: gNumber right to left
                                     $gNumber = ($groupsCount - 1) - ($c % $groupsCount);
                                 }
-                                $gNumber = ($gNumber + 2) % $groupsCount; // group offset
+                                $gNumber = ($gNumber + 3) % $groupsCount; // group offset: 3 => starting at "D"
                                 $newPlacenumber = floor($c / $groupsCount) + 1;
 
                             } else { // $mode == 'standard' -> simply numbered by counter
