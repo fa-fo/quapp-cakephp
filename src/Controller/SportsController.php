@@ -75,7 +75,7 @@ class SportsController extends AppController
 
     private function getResourceFilename(string $dir, int $id): string
     {
-        return $dir . '/resource' . $id . '.html';
+        return $dir . '/resource' . $id . '_' . ($_GET['place'] ?? 'default') . '.html';
     }
 
 
