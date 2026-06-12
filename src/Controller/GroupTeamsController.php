@@ -9,6 +9,7 @@ use App\Model\Entity\Match4schedulingPattern;
 use App\Model\Entity\Round;
 use App\Model\Entity\TeamYear;
 use App\Model\Entity\Year;
+use Cake\Cache\Cache;
 use Cake\Datasource\ResultSetInterface;
 use Cake\I18n\DateTime;
 
@@ -151,6 +152,7 @@ class GroupTeamsController extends AppController
         }
     }
 
+    // Admin: add teams to groups
     public function addAll(): void
     {
         $groupTeams = array();
@@ -189,8 +191,8 @@ class GroupTeamsController extends AppController
                     }
                 }
             }
+            Cache::delete('app_settings', ($_GET['place'] ?? 'default'));
         }
-        //$groupTeams = count($groupTeams) ? $groupTeams : false;
 
         $this->apiReturn(count($groupTeams));
     }
@@ -261,7 +263,7 @@ class GroupTeamsController extends AppController
         return $groupTeams;
     }
 
-
+    // Admin: change placeNumbers
     public function sortPlaceNumberAfterAddAll(string $sortMode = 'none', string $doPrecheck = '0'): void
     {
         $doCount = 0;
@@ -333,8 +335,8 @@ class GroupTeamsController extends AppController
                             return $results->map(function ($row, $counter = 0) use ($options) {
                                 //Adding Calculated Fields
                                 // initial and for day 1: just some values to use switch options
-                                $prevRankingInQuartet = (($counter % 64) % $options['teamsCountPerGroup']) % 4;
-                                $prevGroupPosNumber = (int)floor((($counter % ($options['teamsCountPerGroup'] * 4)) % $options['teamsCountPerGroup']) / 4);
+                                $prevRankingInQuartet = $counter % $options['teamsCountPerGroup'] % 4;
+                                $prevGroupPosNumber = (int)floor($counter / $options['settings']['groupsCount']);
 
                                 if ($options['settings']['currentDay_id'] > 1) {
                                     $prevGroupteam = $this->GroupTeams->find('all', array(
@@ -347,10 +349,8 @@ class GroupTeamsController extends AppController
                                     $row['prevPlaceNumber'] = $prevGroupteam->placeNumber;
                                     $row['prevGroupId'] = $prevGroupteam->group_id;
 
-                                    if ($options['settings']['groupsCount'] <= 4) { // not compatible with 96 teams modus
-                                        $prevRankingInQuartet = ($prevGroupteam->calcRanking - 1) % 4;
-                                        $prevGroupPosNumber = $this->GroupGet->getGroupPosNumber($prevGroupteam->group_id) % 4;
-                                    }
+                                    $prevRankingInQuartet = ($prevGroupteam->calcRanking - 1) % 4;
+                                    $prevGroupPosNumber = $this->GroupGet->getGroupPosNumber($prevGroupteam->group_id);
                                 }
 
                                 $groupPosNumber = $this->GroupGet->getGroupPosNumber($row['group_id']);
