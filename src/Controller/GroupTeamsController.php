@@ -9,7 +9,6 @@ use App\Model\Entity\Match4schedulingPattern;
 use App\Model\Entity\Round;
 use App\Model\Entity\TeamYear;
 use App\Model\Entity\Year;
-use Cake\Cache\Cache;
 use Cake\Datasource\ResultSetInterface;
 use Cake\I18n\DateTime;
 
@@ -191,7 +190,6 @@ class GroupTeamsController extends AppController
                     }
                 }
             }
-            Cache::delete('app_settings', ($_GET['place'] ?? 'default'));
         }
 
         $this->apiReturn(count($groupTeams));

@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Model\Entity\Group;
 use App\Model\Entity\GroupTeam;
+use Cake\Cache\Cache;
 
 /**
  * Groups Controller
@@ -33,6 +34,7 @@ class GroupsController extends AppController
         $this->apiReturn($year, $year_id, $day_id);
     }
 
+    // Admin: add groups
     public function addAll(string $countGroups = ''): void
     {
         $countGroups = (int)$countGroups;
@@ -84,6 +86,7 @@ class GroupsController extends AppController
                     }
                 }
             }
+            Cache::delete('app_settings', ($_GET['place'] ?? 'default'));
         }
 
         $this->apiReturn(count($groups));
