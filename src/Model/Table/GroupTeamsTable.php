@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -81,27 +80,27 @@ class GroupTeamsTable extends Table
 
         $validator
             ->integer('calcCountMatches')
-            ->allowEmptyString('calcCountMatches');
+            ->notEmptyString('calcCountMatches');
 
         $validator
             ->integer('calcGoalsScored')
-            ->allowEmptyString('calcGoalsScored');
+            ->notEmptyString('calcGoalsScored');
 
         $validator
             ->integer('calcGoalsReceived')
-            ->allowEmptyString('calcGoalsReceived');
+            ->notEmptyString('calcGoalsReceived');
 
         $validator
             ->integer('calcGoalsDiff')
-            ->allowEmptyString('calcGoalsDiff');
+            ->notEmptyString('calcGoalsDiff');
 
         $validator
             ->integer('calcPointsPlus')
-            ->allowEmptyString('calcPointsPlus');
+            ->notEmptyString('calcPointsPlus');
 
         $validator
             ->integer('calcPointsMinus')
-            ->allowEmptyString('calcPointsMinus');
+            ->notEmptyString('calcPointsMinus');
 
         $validator
             ->integer('canceled')

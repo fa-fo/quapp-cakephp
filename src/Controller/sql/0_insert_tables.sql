@@ -50,12 +50,12 @@ CREATE TABLE `group_teams`
     `team_id`             int(11) NOT NULL,
     `calcRanking`         int(11)          DEFAULT NULL,
     `calcRankingSameRank` int(11)          DEFAULT NULL,
-    `calcCountMatches`    int(11)          DEFAULT NULL,
-    `calcGoalsScored`     int(11)          DEFAULT NULL,
-    `calcGoalsReceived`   int(11)          DEFAULT NULL,
-    `calcGoalsDiff`       int(11)          DEFAULT NULL,
-    `calcPointsPlus`      int(11)          DEFAULT NULL,
-    `calcPointsMinus`     int(11)          DEFAULT NULL,
+    `calcCountMatches`    int(11) NOT NULL DEFAULT 0,
+    `calcGoalsScored`     int(11) NOT NULL DEFAULT 0,
+    `calcGoalsReceived`   int(11) NOT NULL DEFAULT 0,
+    `calcGoalsDiff`       int(11) NOT NULL DEFAULT 0,
+    `calcPointsPlus`      int(11) NOT NULL DEFAULT 0,
+    `calcPointsMinus`     int(11) NOT NULL DEFAULT 0,
     `canceled`            int(11) NOT NULL DEFAULT 0
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
@@ -529,7 +529,8 @@ VALUES (1, 'isTest', 1),
        (20, 'showArchieve', 1),
        (21, 'useScoutRatings', 1),
        (22, 'useAutoReload', 1),
-       (23, 'useRefereePref', 0);
+       (23, 'useRefereePref', 0),
+       (24, 'doCalcRankingAfterRoundCompleteConfirmed', 0);
 
 
 CREATE TABLE `sports`
@@ -598,37 +599,6 @@ CREATE TABLE `years`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8
   COLLATE = utf8_general_ci;
-
-INSERT INTO `years` (`id`, `name`, `day1`, `day2`, `teamsCount`, `daysCount`)
-VALUES (1, 1995, '1995-07-15', '1995-07-16', 28, 2),
-       (2, 1996, '1996-07-13', '1996-07-14', 64, 2),
-       (3, 1997, '1997-07-19', '1997-07-20', 61, 2),
-       (4, 1998, '1998-07-18', '1998-07-19', 63, 2),
-       (5, 1999, '1999-07-17', '1999-07-18', 62, 2),
-       (6, 2000, '2000-07-15', '2000-07-16', 63, 2),
-       (7, 2001, '2001-07-14', '2001-07-15', 64, 2),
-       (8, 2002, '2002-07-13', '2002-07-14', 64, 2),
-       (9, 2004, '2004-07-17', '2004-07-18', 61, 2),
-       (10, 2005, '2005-07-16', '2005-07-17', 64, 2),
-       (11, 2006, '2006-07-15', '2006-07-16', 64, 2),
-       (12, 2007, '2007-07-14', '2007-07-15', 63, 2),
-       (13, 2008, '2008-07-19', '2008-07-20', 62, 2),
-       (14, 2009, '2009-07-18', '2009-07-19', 63, 2),
-       (15, 2010, '2010-07-17', '2010-07-18', 60, 2),
-       (16, 2011, '2011-07-16', '2011-07-17', 59, 2),
-       (17, 2012, '2012-07-14', '2012-07-15', 63, 2),
-       (18, 2013, '2013-07-13', '2013-07-14', 63, 2),
-       (19, 2014, '2014-07-19', '2014-07-20', 62, 2),
-       (20, 2015, '2015-07-18', '2015-07-19', 64, 2),
-       (21, 2016, '2016-07-16', '2016-07-17', 64, 2),
-       (22, 2017, '2017-07-15', '2017-07-16', 64, 2),
-       (23, 2018, '2018-07-14', '2018-07-15', 63, 2),
-       (24, 2019, '2019-07-20', '2019-07-21', 62, 2),
-       (25, 2022, '2022-07-16', '2022-07-17', 64, 2),
-       (26, 2023, '2023-07-15', '2023-07-16', 64, 2),
-       (27, 2024, '2024-07-20', '2024-07-21', 64, 2),
-       (28, 2025, '2025-07-19', '2025-07-20', 64, 2);
-
 
 --
 -- Indizes der exportierten Tabellen

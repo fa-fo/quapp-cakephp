@@ -14,12 +14,12 @@ use Cake\ORM\Entity;
  * @property int $team_id
  * @property int|null $calcRanking
  * @property int|null $calcRankingSameRank
- * @property int|null $calcCountMatches
- * @property int|null $calcGoalsScored
- * @property int|null $calcGoalsReceived
- * @property int|null $calcGoalsDiff
- * @property int|null $calcPointsPlus
- * @property int|null $calcPointsMinus
+ * @property int $calcCountMatches
+ * @property int $calcGoalsScored
+ * @property int $calcGoalsReceived
+ * @property int $calcGoalsDiff
+ * @property int $calcPointsPlus
+ * @property int $calcPointsMinus
  * @property int $canceled
  *
  * @property \App\Model\Entity\Group $group
