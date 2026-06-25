@@ -156,9 +156,12 @@ class TeamsController extends AppController
         $this->apiReturn($matches);
     }
 
+
+    // Admin: get before create teamYears
     public function getTestTeamNames(): void
     {
         $return['teamNames'] = '';
+        $settings = $this->Cache->getSettings();
         $year = $this->Cache->getCurrentYear()->toArray();
 
         $teams = $this->Teams->find('all', array(
@@ -183,21 +186,33 @@ class TeamsController extends AppController
              * @var Team|null $team
              */
             $return['teamNames'] .= $return['teamNames'] != '' ? '\n' : '';
-            $return['teamNames'] .= $team->name;
+            $return['teamNames'] .= $team->name . ($settings['useRefereePref'] ? $this->randomSuffix() : '');
         }
 
         $this->apiReturn($return);
     }
 
+    private function randomSuffix(): string
+    {
+        $vals = [1, 1, 1, 1];
+        $pool = [0, 0, 1, 2, 2, 2, 2, 2, 2, 3];
+        $zeroIndex = $pool[array_rand($pool)];
+        if (rand(0, 9) < 9) $vals[$zeroIndex] = 0;
+        return ';' . implode(';', $vals);
+    }
+
+    // Admin: check before create teamYears
     public function checkTeamNames(): void
     {
         $return = array();
+        $settings = $this->Cache->getSettings();
         $postData = $this->request->getData();
-        $teamNames = preg_split('/\r\n|\r|\n/', $postData['teamNames']);
+        $lines = preg_split('/\r\n|\r|\n/', $postData['teamNames']);
 
-        if (is_array($teamNames)) {
-            foreach ($teamNames as $name) {
-                $name = trim($name);
+        if (is_array($lines)) {
+            foreach ($lines as $line) {
+                $array = explode(';', $line);
+                $name = trim($array[0]);
                 $team = $this->Teams->find('all', array(
                     'conditions' => array('name' => $name),
                 ))->first();
@@ -206,7 +221,15 @@ class TeamsController extends AppController
                  */
                 $team_id = $team ? $team->id : 0;
 
-                $return[] = array('name' => $name, 'team_id' => $team_id);
+                $refereePref = '';
+                if ($settings['useRefereePref']) {
+                    $refereePref = implode('', array_map(
+                        fn($i) => strtolower($array[$i]) === 'nein' ? 0 : ($array[$i] > 0 ? $i : 0),
+                        range(1, count($array) - 1)
+                    ));
+                }
+
+                $return[] = array('name' => $name, 'team_id' => $team_id, 'refereePref' => $refereePref);
             }
         }
 

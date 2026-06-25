@@ -284,6 +284,7 @@ class TeamYearsController extends AppController
         }
     }
 
+    // Admin: set end-ranking of tournament
     public function setEndRanking(): void
     {
         $return = 0;
@@ -297,6 +298,7 @@ class TeamYearsController extends AppController
     }
 
     /**
+     * Admin: insert all teamYears
      * @throws \Exception
      */
     public function insert(): void
@@ -312,6 +314,7 @@ class TeamYearsController extends AppController
                 $newTy->set('team_id', $team['team_id']);
                 $newTy->set('year_id', $settings['currentYear_id']);
                 $newTy->set('refereePIN', $this->createUniquePIN($settings['currentYear_id'], $team['team_id']));
+                $newTy->set('refereePref', $team['refereePref']);
                 $this->TeamYears->save($newTy);
 
                 $return[] = $newTy;
