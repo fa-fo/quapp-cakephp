@@ -400,15 +400,20 @@ class MatchesController extends AppController
                         $return[$c] = $match->toArray();
 
                         if ($match->round->autoUpdateResults) {
-                            $calcRanking = $this->Calc->getCalcRanking($match->team1_id, $match->team2_id, $c == $count);
-                            $return['calcRanking'][$c] = $calcRanking;
+                            if ($settings['doCalcRankingAfterRoundCompleteConfirmed'] && !$match->isPlayOff) {
+                                if ($this->MatchGet->getMatchCountUnconfirmedByRound($match->round_id, $settings) == 0) {
+                                    $return[$c]['calcRanking'] = $this->Calc->getCalcRanking();
+                                }
+                            } else {
+                                $return[$c]['calcRanking'] = $this->Calc->getCalcRanking($match->team1_id, $match->team2_id, $c == $count);
 
-                            if (in_array($match->isPlayOff % 10, array(2, 3))) { // Finale, 3rd place match
-                                $matches2PlayOff = $this->fetchTable('Matches')->find('all', conditions: ['isPlayOff >' => (int)($settings['currentYear_id'] . '0'), 'resultTrend IS' => null])->all();
+                                if (in_array($match->isPlayOff % 10, array(2, 3))) { // Finale, 3rd place match
+                                    $matches2PlayOff = $this->fetchTable('Matches')->find('all', conditions: ['isPlayOff >' => (int)($settings['currentYear_id'] . '0'), 'resultTrend IS' => null])->all();
 
-                                if ($matches2PlayOff->count() == 0) {
-                                    $return['setEndRankingAndCalcTotal'][$c] = $this->Calc->setCalcEndRanking();
-                                    $return['showEndRanking'][$c] = $this->Security->setSetting('showEndRanking', 1);
+                                    if ($matches2PlayOff->count() == 0) {
+                                        $return[$c]['setEndRankingAndCalcTotal'] = $this->Calc->setCalcEndRanking();
+                                        $return[$c]['showEndRanking'] = $this->Security->setSetting('showEndRanking', 1);
+                                    }
                                 }
                             }
                         }
@@ -419,6 +424,7 @@ class MatchesController extends AppController
 
         $this->apiReturn($return);
     }
+
 
     private function isConfirmable(\Cake\ORM\Entity $match, array $logsCalc, int $mode): bool
     {
@@ -595,7 +601,7 @@ class MatchesController extends AppController
         }
     }
 
-
+    // Supervisor overview
     public function refereeCanceledMatches(): void
     {
         $return['matches'] = array();
@@ -625,7 +631,7 @@ class MatchesController extends AppController
         $this->apiReturn($return);
     }
 
-    // change ref from canceled team (match_id1) with ref from non-canceled team (match_id2)
+    // Admin: change ref from canceled team (match_id1) with ref from non-canceled team (match_id2)
     public function changeReferees(int $id1, int $id2): void
     {
         $postData = $this->request->getData();
@@ -653,7 +659,7 @@ class MatchesController extends AppController
         }
     }
 
-    // change canceled team (match_id1) with non-canceled team (match_id2)
+    // Admin: change canceled team (match_id1) with non-canceled team (match_id2)
     public function changeTeams(int $id1, int $id2): void
     {
         $postData = $this->request->getData();
@@ -681,8 +687,11 @@ class MatchesController extends AppController
         }
     }
 
-    // change referees to improve preferees
-    public function changeRefereesByPrefs(): void
+    // Admin: change referees to improve preferees
+    // step1: within same round and same group, max 3 refereeJobs per sport
+    // step2: overall rounds, but same group, max 3 refereeJobs per sport
+    // step3: within same round and group, no-max refereeJobs per sport
+    public function changeRefereesByPrefs(int $step = 1): void
     {
         $settings = $this->Cache->getSettings();
         $postData = $this->request->getData();
@@ -706,16 +715,21 @@ class MatchesController extends AppController
                     $m1->set('refereeTeam_id', $this->Matches->find()->where(['id' => $m1->id])->first()->get('refereeTeam_id'));
 
                     if (!$this->MatchGet->isRefereePref($m1)) {
-                        $conditionsArray = array(
-                            'Groups.year_id' => $settings['currentYear_id'],
-                            'Groups.day_id' => $settings['currentDay_id'],
-                            'Matches.group_id' => $m1->group_id,
-                            'Matches.round_id' => $m1->round_id,
-                            'Matches.sport_id !=' => $m1->sport_id,
-                            'Matches.refereeTeam_id !=' => $m1->refereeTeam_id,
-                            'Matches.refereeTeam_id IS NOT' => null,
+                        $conditionsArray = array_merge(
+                            $conditionsArray,
+                            array(
+                                'Matches.group_id' => $m1->group_id,
+                                'Matches.sport_id !=' => $m1->sport_id,
+                                'Matches.refereeTeam_id !=' => $m1->refereeTeam_id
+                            ));
+                        $conditionsArray = array_merge(
+                            $conditionsArray,
+                            $step % 2 == 1 ?
+                                array('Matches.round_id' => $m1->round_id)
+                                : array('Matches.round_id !=' => $m1->round_id)
                         );
                         $matches2 = $this->MatchGet->getMatches($conditionsArray);
+
                         if (is_array($matches2)) {
                             foreach ($matches2 as $m2) {
                                 /**
@@ -725,18 +739,25 @@ class MatchesController extends AppController
                                 $newRef2 = $m1->refereeTeam_id;
 
                                 if ($this->MatchGet->isRefereePref($m1, $newRef1) && $this->MatchGet->isRefereePref($m2, $newRef2)) {
-                                    if ($this->MatchGet->countTeamRefereeBySport($newRef1, $m1->sport_id) < 3) {
-                                        $m1->set('refereeTeam_id', null); // temp because of unique value
-                                        $m2->set('refereeTeam_id', null); // temp because of unique value
 
-                                        if ($this->Matches->save($m1) && $this->Matches->save($m2)) {
-                                            $m1->set('refereeTeam_id', $newRef1);
-                                            $m2->set('refereeTeam_id', $newRef2);
-                                            $this->Matches->save($m1);
-                                            $this->Matches->save($m2);
+                                    $maxRefereePerSport = 1 + floor(($step - 1) / 2); // max before change
+                                    if ($this->MatchGet->countTeamRefereeBySport($newRef1, $m1->sport_id) <= $maxRefereePerSport
+                                        && $this->MatchGet->countTeamRefereeBySport($newRef2, $m2->sport_id) <= $maxRefereePerSport) {
 
-                                            $countRefsChanged++;
-                                            break;
+                                        if ($step % 2 == 1 || ($this->MatchGet->countTeamJobsByRound($newRef1, $m1->round_id) == 0
+                                                && $this->MatchGet->countTeamJobsByRound($newRef2, $m2->round_id) == 0)) {
+                                            $m1->set('refereeTeam_id', null); // temp because of unique value
+                                            $m2->set('refereeTeam_id', null); // temp because of unique value
+
+                                            if ($this->Matches->save($m1) && $this->Matches->save($m2)) {
+                                                $m1->set('refereeTeam_id', $newRef1);
+                                                $m2->set('refereeTeam_id', $newRef2);
+                                                $this->Matches->save($m1);
+                                                $this->Matches->save($m2);
+
+                                                $countRefsChanged++;
+                                                break;
+                                            }
                                         }
                                     }
                                 }
@@ -747,7 +768,7 @@ class MatchesController extends AppController
             }
         }
 
-        $this->apiReturn(array('countRefsChanged' => $countRefsChanged));
+        $this->apiReturn(array('countRefsChangedByPrefs' . $step => $countRefsChanged));
     }
 
     /**
@@ -802,5 +823,6 @@ class MatchesController extends AppController
 
         $this->apiReturn(count($matches));
     }
+
 }
 

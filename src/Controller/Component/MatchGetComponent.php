@@ -128,7 +128,7 @@ class MatchGetComponent extends Component
                         $row['resultGoals1'] = null;
                         $row['resultGoals2'] = null;
                         $row['resultTrend'] = null;
-                        $row['resultAdmin'] = null;
+                        $row['resultAdmin'] = 0;
                     } else {
                         $row['round']['autoUpdateResults'] = 1;
                     }
@@ -504,6 +504,43 @@ class MatchGetComponent extends Component
             'refereeTeam_id' => $newRefereeTeam_id,
             'sport_id' => $sport_id,
             'Matches.canceled' => 0,
+        );
+
+        return FactoryLocator::get('Table')->get('Matches')->find('all', array(
+            'contain' => array('Groups'),
+            'conditions' => $conditionsArray,
+        ))->count();
+    }
+
+    public function countTeamJobsByRound(int $team_id, int $round_id): int
+    {
+        $settings = $this->Cache->getSettings();
+
+        $conditionsArray = array(
+            'Groups.year_id' => $settings['currentYear_id'],
+            'Groups.day_id' => $settings['currentDay_id'],
+            'round_id' => $round_id,
+            'OR' => array(
+                'team1_id' => $team_id,
+                'team2_id' => $team_id,
+                'refereeTeam_id' => $team_id,
+            ),
+            'Matches.canceled' => 0,
+        );
+
+        return FactoryLocator::get('Table')->get('Matches')->find('all', array(
+            'contain' => array('Groups'),
+            'conditions' => $conditionsArray,
+        ))->count();
+    }
+
+    public function getMatchCountUnconfirmedByRound(int $round_id, array $settings): int
+    {
+        $conditionsArray = array(
+            'Groups.year_id' => $settings['currentYear_id'],
+            'Groups.day_id' => $settings['currentDay_id'],
+            'round_id' => $round_id,
+            'resultTrend IS' => null,
         );
 
         return FactoryLocator::get('Table')->get('Matches')->find('all', array(
