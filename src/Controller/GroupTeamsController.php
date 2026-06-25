@@ -332,8 +332,7 @@ class GroupTeamsController extends AppController
                             'order' => array('GroupTeams.group_id' => 'ASC', 'GroupTeams.id' => 'ASC')
                         ))->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($options) {
                             return $results->map(function ($row, $counter = 0) use ($options) {
-                                //Adding Calculated Fields
-                                // initial and for day 1: just some values to use switch options
+                                // adding Calculated Fields
                                 $prevRankingInQuartet = -1;
                                 $prevGroupPosNumber = -1;
 
@@ -377,11 +376,8 @@ class GroupTeamsController extends AppController
                                         break;
                                 }
 
-                                if ($this->isCheckedAndOptimized($options['checks'], $options['sortmode'], $groupPosNumber)) {
-                                    $row['newPlaceNumber'] = $row['placeNumber']; // no change: already optimized by random
-                                }
-                                if ($row['newPlaceNumber'] < 1) {
-                                    $row['newPlaceNumber'] = $row['placeNumber']; // no change
+                                if ($row['newPlaceNumber'] < 1 || $this->isCheckedAndOptimized($options['checks'], $options['sortmode'], $groupPosNumber)) {
+                                    $row['newPlaceNumber'] = $row['placeNumber']; // no change: invalid or already optimized by random
                                 }
 
                                 $counter++; // sic! is used
