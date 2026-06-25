@@ -8,7 +8,7 @@ use App\Model\Entity\GroupTeam;
 use App\Model\Entity\Match4schedulingPattern;
 use App\Model\Entity\Round;
 use App\Model\Entity\TeamYear;
-use App\Model\Entity\Year;
+use Cake\Cache\Cache;
 use Cake\Datasource\ResultSetInterface;
 use Cake\I18n\DateTime;
 
@@ -159,17 +159,16 @@ class GroupTeamsController extends AppController
 
         if (isset($postData['password']) && $this->Security->checkUsernamePassword('admin', $postData['password'])) {
             $settings = $this->Cache->getSettings();
-            $year = $this->Cache->getCurrentYear();
 
             $oldGroupTeams = $this->GroupTeams->find('all', array(
                 'contain' => array('Groups' => array('fields' => array('name', 'year_id', 'day_id'))),
-                'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => $settings['currentDay_id']),
+                'conditions' => array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => $settings['currentDay_id']),
                 'order' => array('GroupTeams.id' => 'ASC')
             ));
 
             if ($oldGroupTeams->count() == 0) {
                 $groups = $this->fetchTable('Groups')->find('all', array(
-                    'conditions' => array('year_id' => $year->id, 'day_id' => $settings['currentDay_id']),
+                    'conditions' => array('year_id' => $settings['currentYear_id'], 'day_id' => $settings['currentDay_id']),
                     'order' => array('id' => 'ASC')
                 ));
 
@@ -181,41 +180,43 @@ class GroupTeamsController extends AppController
                          */
                         if ($group->name != 'Endrunde') {
                             if ($settings['currentDay_id'] == 1) {
-                                $groupTeams = array_merge($groupTeams, $this->addFromTeamYearsOrderById($year, $group, $countGroup));
+                                $groupTeams = array_merge($groupTeams, $this->addFromTeamYearsOrderById($group, $countGroup));
                             } else {
-                                $groupTeams = array_merge($groupTeams, $this->addFromPrevDayRanking($year, $group, $countGroup));
+                                $groupTeams = array_merge($groupTeams, $this->addFromPrevDayRanking($group, $countGroup));
                             }
                         }
                         $countGroup++;
                     }
                 }
             }
+            Cache::delete('app_settings', ($_GET['place'] ?? 'default'));
         }
 
         $this->apiReturn(count($groupTeams));
     }
 
-    private function addFromTeamYearsOrderById(Year $year, Group $group, int $countGroup): array
+    private function addFromTeamYearsOrderById(Group $group, int $countGroup): array
     {
+        $settings = $this->Cache->getSettings();
         $groupTeams = array();
 
         $teamYears = $this->fetchTable('TeamYears')->find('all', array(
-            'conditions' => array('year_id' => $year->id),
+            'conditions' => array('year_id' => $settings['currentYear_id']),
             'order' => array('id' => 'ASC')
         ))->offset($group->teamsCount * $countGroup)->limit($group->teamsCount);
 
         if ($teamYears->count() > 0) {
             $placeNumberCounter = 0;
-            foreach ($teamYears as $teamyear) {
+            foreach ($teamYears as $ty) {
                 /**
-                 * @var TeamYear $teamyear
+                 * @var TeamYear $ty
                  */
                 $placeNumberCounter++;
                 $groupteam = $this->GroupTeams->newEmptyEntity();
                 $groupteam->set('group_id', $group->id);
-                $groupteam->set('team_id', $teamyear->team_id);
+                $groupteam->set('team_id', $ty->team_id);
                 $groupteam->set('placeNumber', $placeNumberCounter);
-                $groupteam->set('canceled', $teamyear->canceled);
+                $groupteam->set('canceled', $ty->canceled);
 
                 if ($this->GroupTeams->save($groupteam)) {
                     $groupTeams[] = $groupteam;
@@ -227,7 +228,7 @@ class GroupTeamsController extends AppController
     }
 
 
-    private function addFromPrevDayRanking(Year $year, Group $group, int $countGroup): array
+    private function addFromPrevDayRanking(Group $group, int $countGroup): array
     {
         $settings = $this->Cache->getSettings();
         $groupTeams = array();
@@ -235,7 +236,7 @@ class GroupTeamsController extends AppController
 
         $prevGroupTeams = $this->GroupTeams->find('all', array(
             'contain' => array('Groups' => array('fields' => array('year_id', 'day_id'))),
-            'conditions' => array('Groups.year_id' => $year->id, 'Groups.day_id' => ($settings['currentDay_id'] - 1)),
+            'conditions' => array('Groups.year_id' => $settings['currentYear_id'], 'Groups.day_id' => ($settings['currentDay_id'] - 1)),
             'order' => $orderArray
         ))->offset($group->teamsCount * $countGroup)->limit($group->teamsCount);
 
@@ -333,8 +334,8 @@ class GroupTeamsController extends AppController
                             return $results->map(function ($row, $counter = 0) use ($options) {
                                 //Adding Calculated Fields
                                 // initial and for day 1: just some values to use switch options
-                                $prevRankingInQuartet = $counter % $options['teamsCountPerGroup'] % 4;
-                                $prevGroupPosNumber = (int)floor($counter / $options['settings']['groupsCount']);
+                                $prevRankingInQuartet = -1;
+                                $prevGroupPosNumber = -1;
 
                                 if ($options['settings']['currentDay_id'] > 1) {
                                     $prevGroupteam = $this->GroupTeams->find('all', array(
@@ -378,6 +379,9 @@ class GroupTeamsController extends AppController
 
                                 if ($this->isCheckedAndOptimized($options['checks'], $options['sortmode'], $groupPosNumber)) {
                                     $row['newPlaceNumber'] = $row['placeNumber']; // no change: already optimized by random
+                                }
+                                if ($row['newPlaceNumber'] < 1) {
+                                    $row['newPlaceNumber'] = $row['placeNumber']; // no change
                                 }
 
                                 $counter++; // sic! is used
