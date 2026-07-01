@@ -213,6 +213,8 @@ class TeamsController extends AppController
             foreach ($lines as $line) {
                 $array = explode(';', $line);
                 $name = trim($array[0]);
+                $name = str_replace(['`', '´'], '\'', $name);
+                $name = str_replace(['–', '—', '−'], '-', $name);
                 $team = $this->Teams->find('all', array(
                     'conditions' => array('name' => $name),
                 ))->first();
@@ -221,10 +223,10 @@ class TeamsController extends AppController
                  */
                 $team_id = $team ? $team->id : 0;
 
-                $refereePref = '';
-                if ($settings['useRefereePref']) {
+                $refereePref = null;
+                if ($settings['useRefereePref'] && count($array) > 1) {
                     $refereePref = implode('', array_map(
-                        fn($i) => strtolower($array[$i]) === 'nein' ? 0 : ($array[$i] > 0 ? $i : 0),
+                        fn($i) => in_array(strtolower($array[$i] ?? '1'), ['nein', '0']) ? 0 : $i,
                         range(1, count($array) - 1)
                     ));
                 }
