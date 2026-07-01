@@ -161,26 +161,30 @@ class MatchGetComponent extends Component
                         unset($row['sport']['goalFactor']); // no need
                     }
 
+                    $row['isTime2login'] = 0;
+
                     if ($row['matchStartTime']) {
                         $stime = DateTime::createFromFormat('Y-m-d H:i:s', $row['matchStartTime']);
                         $now = DateTime::now();
-                        $row['isTime2login'] = $now > $stime->subMinutes($settings['time2LoginMinsBeforeFrom']) && $now < $stime->addMinutes($settings['time2LoginMinsAfterUntil']) ? 1 : 0;
 
-                        if ($row['isTest']) {
-                            $row['isTime2login'] = 1;
+                        if ($settings['useLiveScouting']) {
+                            $row['isTime2login'] = $now > $stime->subMinutes($settings['time2LoginMinsBeforeFrom']) && $now < $stime->addMinutes($settings['time2LoginMinsAfterUntil']) ? 1 : 0;
 
-                            // set test time for isTime2matchEnd and isTime2confirm
-                            $s3 = DateTime::now()->i18nFormat('yyyy-MM-dd HH:');
-                            $s4 = DateTime::now()->i18nFormat('mm');
-                            $mt = $s3 . ((int)$s4 > 29 ? '30' : '00') . ':00'; // set to full half hour
-                            $stime = DateTime::createFromFormat('Y-m-d H:i:s', $mt);
+                            if ($row['isTest']) {
+                                $row['isTime2login'] = 1;
+
+                                // set test time for isTime2matchEnd and isTime2confirm
+                                $s3 = DateTime::now()->i18nFormat('yyyy-MM-dd HH:');
+                                $s4 = DateTime::now()->i18nFormat('mm');
+                                $mt = $s3 . ((int)$s4 > 29 ? '30' : '00') . ':00'; // set to full half hour
+                                $stime = DateTime::createFromFormat('Y-m-d H:i:s', $mt);
+                            }
                         }
                         if ($includeLogs) {
                             $row['isTime2matchEnd'] = ($now > $stime->addMinutes($settings['time2MatchEndMinAfterFrom'])) ? 1 : 0;
-                            $row['isTime2confirm'] = ($now > $stime->addMinutes($settings['time2ConfirmMinsAfterFrom']) && $now < $stime->addMinutes($settings['time2ConfirmMinsAfterUntil'])) ? 1 : 0;
-                        }
-                        if (!$settings['useLiveScouting']) {
-                            $row['isTime2login'] = 0;
+                            $row['isTime2confirm'] = ($now > $stime->addMinutes($settings['time2ConfirmMinsAfterFrom']) && $now < $stime->addMinutes($settings['time2ConfirmMinsAfterUntil']))
+                                ? 1
+                                : ($row['isTest'] && !$settings['useLiveScouting'] ? 1 : 0);
                         }
                     }
 
