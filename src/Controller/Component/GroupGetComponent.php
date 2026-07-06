@@ -57,7 +57,10 @@ class GroupGetComponent extends Component
         $group_id = $group_id ?: $this->getCurrentGroupId(0);
 
         if ($group_id) {
-            $group = FactoryLocator::get('Table')->get('Groups')->find()->where(['id' => $group_id])->first();
+            $group = FactoryLocator::get('Table')->get('Groups')->find('all', array(
+                'conditions' => array('Groups.id' => $group_id),
+                'contain' => array('Years' => array('fields' => array('daysCount'))),
+            ))->first();
             /**
              * @var Group|null $group
              */

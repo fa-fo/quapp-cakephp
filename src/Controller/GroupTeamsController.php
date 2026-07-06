@@ -42,7 +42,7 @@ class GroupTeamsController extends AppController
                     /**
                      * @var Round $roundWithOffset
                      */
-                    $group['showRanking'] = $roundWithOffset->autoUpdateResults;
+                    $group['showRanking'] = $roundWithOffset->autoUpdateResults ?? 1;
                 }
 
                 if ($group['day_id'] == $settings['currentDay_id']) {
@@ -63,13 +63,13 @@ class GroupTeamsController extends AppController
         $groupTeams = $this->GroupTeams->find('all', array(
             'contain' => array(
                 'Groups' => array('fields' => array('group_id' => 'Groups.id', 'group_name' => 'Groups.name', 'year_id', 'day_id')),
-                'Teams' => array('fields' => array('name'))
+                'Teams' => array('fields' => array('name')),
             ),
             'conditions' => array('GroupTeams.group_id' => $group['id'], 'Groups.year_id' => $group['year_id'], 'Groups.day_id' => $group['day_id'], 'Teams.hidden' => 0),
             'order' => array('Groups.id' => 'ASC', 'GroupTeams.canceled' => 'ASC', 'GroupTeams.calcRanking' => 'ASC', 'Teams.name' => 'ASC')
         ))->toArray();
 
-        if ($group['day_id'] == 1) {
+        if ($group['day_id'] == 1 && $group['year']['daysCount'] > 1) {
             $this->getRankingBorders($groupTeams, $group['teamsCount']);
         }
 
@@ -232,7 +232,7 @@ class GroupTeamsController extends AppController
     {
         $settings = $this->Cache->getSettings();
         $groupTeams = array();
-        $orderArray = array('GroupTeams.calcRanking' => 'ASC', 'GroupTeams.calcPointsPlus' => 'ASC', 'GroupTeams.calcGoalsDiff' => 'ASC', 'GroupTeams.calcGoalsScored' => 'ASC', 'GroupTeams.group_id' => 'ASC');
+        $orderArray = array('GroupTeams.calcRanking' => 'ASC', 'GroupTeams.calcPointsPlus' => 'DESC', 'GroupTeams.calcGoalsDiff' => 'DESC', 'GroupTeams.calcGoalsScored' => 'DESC', 'GroupTeams.group_id' => 'ASC');
 
         $prevGroupTeams = $this->GroupTeams->find('all', array(
             'contain' => array('Groups' => array('fields' => array('year_id', 'day_id'))),
