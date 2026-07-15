@@ -62,7 +62,7 @@ class GroupTeamsController extends AppController
     {
         $groupTeams = $this->GroupTeams->find('all', array(
             'contain' => array(
-                'Groups' => array('fields' => array('group_id' => 'Groups.id', 'group_name' => 'Groups.name', 'year_id', 'day_id')),
+                'Groups' => array('fields' => array('group_id' => 'Groups.id', 'group_name' => 'Groups.name', 'year_id', 'day_id', 'teamsCount')),
                 'Teams' => array('fields' => array('name')),
             ),
             'conditions' => array('GroupTeams.group_id' => $group['id'], 'Groups.year_id' => $group['year_id'], 'Groups.day_id' => $group['day_id'], 'Teams.hidden' => 0),
@@ -84,7 +84,7 @@ class GroupTeamsController extends AppController
             /**
              * @var GroupTeam $gt
              */
-            if ($gt->calcRanking > 0) {
+            if ($gt->calcRanking > 0 && $gt->calcRanking < $gt->group->teamsCount) {
                 if ($settings['usePlayOff'] > 0 && $gt->calcRanking == $settings['usePlayOff']) {
                     $gt->showBorderBottom = 1;
                 }
