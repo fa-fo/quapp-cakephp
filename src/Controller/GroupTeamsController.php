@@ -42,7 +42,7 @@ class GroupTeamsController extends AppController
                     /**
                      * @var Round $roundWithOffset
                      */
-                    $group['showRanking'] = $roundWithOffset->autoUpdateResults ?? 1;
+                    $group['showRanking'] = $roundWithOffset->autoUpdateResults ?? !$settings['alwaysAutoUpdateResults'];
                 }
 
                 if ($group['day_id'] == $settings['currentDay_id']) {
