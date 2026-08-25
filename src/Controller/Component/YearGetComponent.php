@@ -17,6 +17,7 @@ class YearGetComponent extends Component
         if ($day_id == 0) {
             $year['daysWithGroups'] = FactoryLocator::get('Table')->get('Groups')->find('all', array(
                 'conditions' => array('year_id' => $year['id']),
+                'fields' => array('day_id'),
                 'group' => 'day_id'
             ))->count();
 
