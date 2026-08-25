@@ -165,7 +165,7 @@ class TeamsController extends AppController
         $year = $this->Cache->getCurrentYear()->toArray();
 
         $teams = $this->Teams->find('all', array(
-            'order' => array('testTeam' => 'DESC', 'calcTotalRanking' => 'ASC', 'id' => 'ASC'),
+            'order' => array('hidden' => 'ASC', 'testTeam' => 'DESC', 'calcTotalRanking' => 'ASC', 'id' => 'ASC'),
         ))->limit($year['teamsCount']);
 
         if ($teams->count() == 0) {
