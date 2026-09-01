@@ -100,6 +100,9 @@ class TeamsController extends AppController
         $return = array();
         $settings = $this->Cache->getSettings();
         $team = $this->Teams->find()->where(['id' => $id])->first();
+        /**
+         * @var Team|null $team
+         */
 
         $conditionsArray = array(
             'Years.id !=' => $settings['showEndRanking'] && !$settings['isTest'] ? 0 : $settings['currentYear_id'],
@@ -123,11 +126,11 @@ class TeamsController extends AppController
                 $return[$m->sport->id][$trend] ??= 0;
                 $return[$m->sport->id][$trend]++;
             }
-
-            $return['sports'] = $this->fetchTable('Sports')->find('all', array(
-                'order' => array('id' => 'ASC')
-            ))->toArray();
         }
+
+        $return['sports'] = $this->fetchTable('Sports')->find('all', array(
+            'order' => array('id' => 'ASC')
+        ))->toArray();
 
         $this->apiReturn($return);
     }
@@ -139,6 +142,9 @@ class TeamsController extends AppController
         $sport_id = (int)$sport_id;
         $settings = $this->Cache->getSettings();
         $team = $this->Teams->find()->where(['id' => $id])->first();
+        /**
+         * @var Team|null $team
+         */
 
         $conditionsArray = array(
             'Years.id !=' => $settings['alwaysAutoUpdateResults'] && !$settings['isTest'] ? 0 : $settings['currentYear_id'],
